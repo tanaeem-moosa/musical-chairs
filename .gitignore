@@ -1,0 +1,17 @@
+# Build artifacts
+/target/
+
+# Rendered audio output
+/output/
+
+# SoundFont binaries
+/soundfonts/*.sf2
+
+# Loose audio files
+*.wav
+*.mp3
+
+# OS and Python artifacts
+.DS_Store
+__pycache__/
+*.pyc
