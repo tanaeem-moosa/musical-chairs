@@ -1,0 +1,9 @@
+[build]
+target = "x86_64-unknown-linux-musl"
+
+[target.x86_64-unknown-linux-musl]
+linker = "/home/deck/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/bin/rust-lld"
+rustflags = ["-C", "linker-flavor=ld.lld", "-C", "link-self-contained=yes"]
+
+[target.x86_64-unknown-linux-gnu]
+linker = "/home/deck/projects/music/.cargo/host-lld.sh"

@@ -1,0 +1,1018 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>53-EDO East-West Audition &amp; 3D Stage Studio</title>
+  <style>
+    :root {
+      --bg: #0f1116;
+      --panel: #171b24;
+      --panel-2: #1e2431;
+      --border: #2a3242;
+      --text: #eef2f7;
+      --muted: #98a4b8;
+      --accent: #7aa2f7;
+      --accent-2: #bb9af7;
+      --keep: #4ade80;
+      --maybe: #fbbf24;
+      --drop: #f87171;
+      --indian: #f59e0b;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.45;
+    }
+    .wrap {
+      max-width: 1260px;
+      margin: 0 auto;
+      padding: 24px 20px 64px;
+    }
+    header {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: flex-end;
+      gap: 16px;
+      margin-bottom: 22px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 16px;
+    }
+    h1 { margin: 0 0 6px; font-size: 1.65rem; letter-spacing: -0.02em; }
+    .subtitle { color: var(--muted); font-size: 0.93rem; max-width: 780px; }
+    .pill {
+      display: inline-block;
+      background: rgba(122, 162, 247, 0.14);
+      border: 1px solid rgba(122, 162, 247, 0.35);
+      color: var(--accent);
+      border-radius: 999px;
+      padding: 4px 12px;
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+
+    .ab-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+      gap: 14px;
+      margin-bottom: 24px;
+    }
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+    }
+    .card.highlight {
+      border-color: rgba(122, 162, 247, 0.6);
+      background: linear-gradient(180deg, rgba(122, 162, 247, 0.10), var(--panel));
+    }
+    .card.gold {
+      border-color: rgba(245, 158, 11, 0.5);
+      background: linear-gradient(180deg, rgba(245, 158, 11, 0.08), var(--panel));
+    }
+    .card.hero {
+      border-color: rgba(187, 154, 247, 0.65);
+      background: linear-gradient(135deg, rgba(122, 162, 247, 0.14), rgba(187, 154, 247, 0.10) 55%, var(--panel));
+      margin-bottom: 16px;
+      padding: 18px 20px;
+    }
+    .hero-head {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 6px;
+    }
+    .hero-jumps {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 10px;
+    }
+    .jump-btn {
+      background: rgba(23, 27, 36, 0.85);
+      border: 1px solid rgba(122, 162, 247, 0.35);
+      color: var(--text);
+      padding: 5px 10px;
+      border-radius: 999px;
+      cursor: pointer;
+      font-size: 0.79rem;
+      font-weight: 600;
+    }
+    .jump-btn:hover {
+      border-color: var(--accent-2);
+      background: rgba(187, 154, 247, 0.18);
+    }
+    .card h2, .card h3 { margin: 0 0 6px; font-size: 1.03rem; }
+    .muted { color: var(--muted); font-size: 0.86rem; }
+    audio { width: 100%; margin-top: 10px; height: 36px; color-scheme: dark; }
+
+    .tabs { display: flex; gap: 8px; margin-bottom: 18px; flex-wrap: wrap; }
+    .tab-btn {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      padding: 9px 16px;
+      border-radius: 9px;
+      cursor: pointer;
+      font-size: 0.92rem;
+      font-weight: 600;
+    }
+    .tab-btn.active {
+      background: var(--accent);
+      color: #0b0e14;
+      border-color: var(--accent);
+    }
+    .section { display: none; }
+    .section.active { display: block; }
+
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .filters { display: flex; flex-wrap: wrap; gap: 6px; }
+    .filter-btn {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      padding: 6px 12px;
+      border-radius: 999px;
+      cursor: pointer;
+      font-size: 0.84rem;
+    }
+    .filter-btn.active {
+      border-color: var(--accent-2);
+      color: var(--text);
+      background: rgba(187, 154, 247, 0.16);
+    }
+    .btn {
+      background: var(--panel-2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 7px 13px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+    .btn:hover { border-color: var(--accent); }
+    .btn.primary { background: var(--accent); color: #0b0e14; border-color: var(--accent); }
+
+    .solo-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+      gap: 14px;
+    }
+    .inst-card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .inst-card.playing {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 1px rgba(122, 162, 247, 0.28);
+    }
+    .inst-title { font-weight: 700; font-size: 1.01rem; }
+    .badges { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 3px; }
+    .badge {
+      font-size: 0.74rem;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: var(--panel-2);
+      border: 1px solid var(--border);
+      color: var(--muted);
+    }
+    .badge.indian { border-color: rgba(245, 158, 11, 0.45); color: #fbbf24; }
+    .player-row { display: flex; align-items: center; gap: 10px; }
+    .play-btn {
+      min-width: 70px;
+      background: var(--panel-2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 6px 10px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.84rem;
+    }
+    .play-btn.active { background: var(--accent); color: #0b0e14; border-color: var(--accent); }
+    .scrub { flex: 1; accent-color: var(--accent); cursor: pointer; }
+    .time {
+      font-variant-numeric: tabular-nums;
+      font-size: 0.78rem;
+      color: var(--muted);
+      min-width: 72px;
+      text-align: right;
+    }
+    .vote-row {
+      display: flex;
+      gap: 6px;
+      padding-top: 4px;
+      border-top: 1px solid rgba(42, 50, 66, 0.55);
+    }
+    .vote-btn {
+      flex: 1;
+      padding: 5px 8px;
+      border-radius: 7px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+    .vote-btn.selected-keep { background: rgba(74, 222, 128, 0.16); border-color: var(--keep); color: var(--keep); }
+    .vote-btn.selected-maybe { background: rgba(251, 191, 36, 0.16); border-color: var(--maybe); color: var(--maybe); }
+    .vote-btn.selected-drop { background: rgba(248, 113, 113, 0.16); border-color: var(--drop); color: var(--drop); }
+    .summary-box {
+      margin-top: 16px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 14px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 0.82rem;
+      color: var(--muted);
+      white-space: pre-wrap;
+    }
+
+    /* 2D Interactive Concert Stage + Spatial Mixer */
+    .mixer-transport {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 16px;
+      margin-bottom: 14px;
+    }
+    .stage-layout {
+      display: grid;
+      grid-template-columns: 460px 1fr;
+      gap: 16px;
+      align-items: start;
+    }
+    @media (max-width: 1020px) {
+      .stage-layout { grid-template-columns: 1fr; }
+    }
+    .stage-box {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px;
+    }
+    #stage-canvas {
+      width: 100%;
+      aspect-ratio: 1 / 0.92;
+      background: radial-gradient(circle at 50% 92%, rgba(122, 162, 247, 0.12), #0d1017 70%);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      cursor: grab;
+      display: block;
+      touch-action: none;
+    }
+    #stage-canvas:active { cursor: grabbing; }
+    .preset-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 10px;
+    }
+    .mixer-list { display: flex; flex-direction: column; gap: 7px; }
+    .stem-row {
+      display: grid;
+      grid-template-columns: 170px 84px 1fr 48px 92px;
+      align-items: center;
+      gap: 10px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 9px 12px;
+    }
+    @media (max-width: 720px) {
+      .stem-row { grid-template-columns: 1fr; gap: 6px; }
+    }
+    .sm-btns { display: flex; gap: 6px; }
+    .sm-btn {
+      width: 34px;
+      height: 28px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: var(--panel-2);
+      color: var(--muted);
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .sm-btn.solo.on { background: rgba(251, 191, 36, 0.22); border-color: var(--maybe); color: var(--maybe); }
+    .sm-btn.mute.on { background: rgba(248, 113, 113, 0.22); border-color: var(--drop); color: var(--drop); }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div>
+        <h1>53-EDO East–West Audition &amp; 3D Stage Studio</h1>
+        <div class="subtitle">
+          Exact 53-EDO intonation across sampled Western chamber instruments, Sitar (with <em>meend</em> glides),
+          physically modeled Ektara &amp; Dotara, and a 3D HRTF concert-stage placement mixer.
+        </div>
+      </div>
+      <span class="pill">53-EDO &middot; 3D ITD/ILD + HRTF &middot; 48 kHz</span>
+    </header>
+
+    <div class="card hero">
+      <div class="hero-head">
+        <h2>Featured: 5-Minute 53-EDO Symphony Showcase — Harmonia Mundi</h2>
+        <span class="pill">4 Connected Movements &middot; 53-EDO &middot; Pipe Organ Finale</span>
+      </div>
+      <div class="muted">
+        Mozartian poise &amp; counterpoint &rarr; Debussy 7-limit (4:5:6:7:9) &amp; Indian shruti mist (+1 comma lift) &rarr;
+        Beethovenian chromatic-mediant diesis summit (+3) &amp; triple downward comma cascade home &rarr;
+        Cathedral Pipe Organ apotheosis (final ~50s). Scored exclusively for your curated orchestra.
+      </div>
+      <audio id="symphony-5min-audio" controls preload="metadata" src="../output/sample_5min.wav"></audio>
+      <div class="hero-jumps">
+        <button class="jump-btn" data-jump="0">I. Dawn &amp; Clarity (0:00)</button>
+        <button class="jump-btn" data-jump="73.5">II. Lotus &amp; Mist (1:14)</button>
+        <button class="jump-btn" data-jump="151">III. Tempest Across the Comma (2:31)</button>
+        <button class="jump-btn" data-jump="227">IV. Transfiguration (3:47)</button>
+        <button class="jump-btn" data-jump="247.6">Pipe Organ Entrance (4:08)</button>
+      </div>
+    </div>
+
+    <div class="ab-grid">
+      <div class="card highlight">
+        <h2>New: 3D East–West 53-EDO Chamber Fusion</h2>
+        <div class="muted">
+          Built ONLY from your favorites (Harp, Clarinet, French Horn, Viola, Cello, String Ensemble, Pizzicato) + Bassoon, Sitar, Dotara &amp; Ektara on a physical 3D concert stage.
+        </div>
+        <audio controls preload="metadata" src="../output/preview_fusion.wav"></audio>
+      </div>
+      <div class="card gold">
+        <h2>Harp: Full 53-Note Octave Showcase</h2>
+        <div class="muted">
+          Ascending all 53 distinct pitches inside one octave (0 &rarr; 53), followed by 5-limit &amp; 7-limit chords.
+        </div>
+        <audio controls preload="metadata" src="../output/audition/harp_53edo.wav"></audio>
+      </div>
+      <div class="card">
+        <h2>Earlier: Sampled Chamber Preview</h2>
+        <div class="muted">
+          Previous Western chamber mix before removing Oboe, Violin, Contrabass, Organ &amp; Slow Strings.
+        </div>
+        <audio controls preload="metadata" src="../output/preview_sf2.wav"></audio>
+      </div>
+    </div>
+
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="solo">1. Solo Instrument Auditions (22)</button>
+      <button class="tab-btn" data-tab="stage">2. Interactive 2D Concert Stage &amp; Spatial Mixer</button>
+    </div>
+
+    <!-- TAB 1: SOLO AUDITIONS -->
+    <section id="tab-solo" class="section active">
+      <div class="toolbar">
+        <div class="filters" id="family-filters"></div>
+        <div style="display:flex; gap:8px; align-items:center;">
+          <button class="btn" id="stop-all-solo">Stop Audio</button>
+          <button class="btn primary" id="copy-selection">Copy Selected Ensemble</button>
+        </div>
+      </div>
+      <div class="solo-grid" id="solo-grid"></div>
+      <div class="summary-box" id="selection-summary"></div>
+    </section>
+
+    <!-- TAB 2: INTERACTIVE 2D STAGE & SPATIAL MIXER -->
+    <section id="tab-stage" class="section">
+      <div class="mixer-transport">
+        <button class="btn primary" id="mix-play">Play Spatial Stage</button>
+        <button class="btn" id="mix-pause">Pause</button>
+        <button class="btn" id="mix-restart">Restart</button>
+        <input class="scrub" id="mix-seek" type="range" min="0" max="100" step="0.05" value="0" />
+        <span class="time" id="mix-time" style="min-width:110px;">0:00 / 0:00</span>
+        <button class="btn" id="mix-reset">Reset S/M</button>
+        <button class="btn" id="copy-stage">Copy Stage Layout</button>
+        <span class="muted" id="mix-status">Click Play to load 11 synced stems (HRTF 3D + Hall Reverb)</span>
+      </div>
+
+      <div class="stage-layout">
+        <div class="stage-box">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+            <strong>2D Concert Stage (Drag Players Live)</strong>
+            <span class="muted" id="hover-coords">Front = intimate, Back = hall bloom</span>
+          </div>
+          <canvas id="stage-canvas" width="520" height="478"></canvas>
+          <div class="preset-row">
+            <button class="btn" data-preset="default">Concert Stage</button>
+            <button class="btn" data-preset="intimate">Intimate Circle</button>
+            <button class="btn" data-preset="split">East Left / West Right</button>
+          </div>
+        </div>
+
+        <div class="mixer-list" id="mixer-list"></div>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const fmtTime = (s) => {
+      if (!isFinite(s) || s < 0) s = 0;
+      const m = Math.floor(s / 60);
+      const sec = Math.floor(s % 60);
+      return `${m}:${sec.toString().padStart(2, '0')}`;
+    };
+
+    document.querySelectorAll('.jump-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const audio = document.getElementById('symphony-5min-audio');
+        if (!audio) return;
+        audio.currentTime = parseFloat(btn.dataset.jump) || 0;
+        audio.play().catch(() => {});
+      });
+    });
+
+    document.querySelectorAll('.tab-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById(`tab-${btn.dataset.tab}`).classList.add('active');
+      });
+    });
+
+    let manifest = null;
+    const votes = {};
+    const soloPlayers = [];
+
+    function stopAllSolo(exceptAudio = null) {
+      for (const p of soloPlayers) {
+        if (p.audio !== exceptAudio && !p.audio.paused) p.audio.pause();
+      }
+    }
+
+    function updateSummary() {
+      if (!manifest) return;
+      const groups = { keep: [], maybe: [], drop: [] };
+      for (const inst of manifest.solo_instruments) {
+        const v = votes[inst.id];
+        if (v) groups[v].push(inst.name);
+      }
+      document.getElementById('selection-summary').textContent = [
+        `KEEP  (${groups.keep.length}): ${groups.keep.join(', ') || '(none yet)'}`,
+        `MAYBE (${groups.maybe.length}): ${groups.maybe.join(', ') || '(none)'}`,
+        `DROP  (${groups.drop.length}): ${groups.drop.join(', ') || '(none)'}`,
+      ].join('\n');
+    }
+
+    function renderSoloUI(filterFamily = 'All') {
+      const grid = document.getElementById('solo-grid');
+      grid.innerHTML = '';
+      soloPlayers.length = 0;
+
+      const items = manifest.solo_instruments.filter(
+        (x) => filterFamily === 'All' || x.family === filterFamily
+      );
+
+      for (const inst of items) {
+        const card = document.createElement('div');
+        card.className = 'inst-card';
+        const audio = new Audio(inst.wav);
+        audio.preload = 'metadata';
+
+        const famClass = inst.family.includes('Indian') ? 'badge indian' : 'badge';
+        card.innerHTML = `
+          <div>
+            <div class="inst-title">${inst.name}</div>
+            <div class="badges">
+              <span class="${famClass}">${inst.family}</span>
+              <span class="badge">${inst.register}</span>
+            </div>
+          </div>
+          <div class="muted">${inst.role}</div>
+          <div class="player-row">
+            <button class="play-btn">Play</button>
+            <input class="scrub" type="range" min="0" max="100" step="0.05" value="0" />
+            <span class="time">0:00 / 0:00</span>
+          </div>
+          <div class="vote-row">
+            <button class="vote-btn" data-vote="keep">Keep</button>
+            <button class="vote-btn" data-vote="maybe">Maybe</button>
+            <button class="vote-btn" data-vote="drop">Drop</button>
+          </div>
+        `;
+
+        const playBtn = card.querySelector('.play-btn');
+        const scrub = card.querySelector('.scrub');
+        const timeEl = card.querySelector('.time');
+        soloPlayers.push({ audio, card, btn: playBtn, scrub, timeEl });
+
+        const syncTime = () => {
+          const d = audio.duration || 0;
+          const c = audio.currentTime || 0;
+          scrub.max = d || 100;
+          scrub.value = c;
+          timeEl.textContent = `${fmtTime(c)} / ${fmtTime(d)}`;
+        };
+
+        audio.addEventListener('loadedmetadata', syncTime);
+        audio.addEventListener('timeupdate', syncTime);
+        audio.addEventListener('play', () => {
+          stopAllSolo(audio);
+          playBtn.textContent = 'Pause';
+          playBtn.classList.add('active');
+          card.classList.add('playing');
+        });
+        audio.addEventListener('pause', () => {
+          playBtn.textContent = 'Play';
+          playBtn.classList.remove('active');
+          card.classList.remove('playing');
+        });
+        audio.addEventListener('ended', () => { audio.currentTime = 0; syncTime(); });
+
+        playBtn.addEventListener('click', () => (audio.paused ? audio.play() : audio.pause()));
+        scrub.addEventListener('input', () => { audio.currentTime = parseFloat(scrub.value); syncTime(); });
+
+        const voteBtns = card.querySelectorAll('.vote-btn');
+        const refreshVotes = () => {
+          voteBtns.forEach((b) => {
+            b.className = 'vote-btn';
+            if (votes[inst.id] === b.dataset.vote) b.classList.add(`selected-${b.dataset.vote}`);
+          });
+        };
+        voteBtns.forEach((b) => {
+          b.addEventListener('click', () => {
+            votes[inst.id] = votes[inst.id] === b.dataset.vote ? null : b.dataset.vote;
+            refreshVotes();
+            updateSummary();
+          });
+        });
+        refreshVotes();
+        grid.appendChild(card);
+      }
+    }
+
+    document.getElementById('stop-all-solo').addEventListener('click', () => stopAllSolo(null));
+    document.getElementById('copy-selection').addEventListener('click', async () => {
+      updateSummary();
+      try {
+        await navigator.clipboard.writeText(document.getElementById('selection-summary').textContent);
+        const btn = document.getElementById('copy-selection');
+        const old = btn.textContent;
+        btn.textContent = 'Copied!';
+        setTimeout(() => (btn.textContent = old), 1400);
+      } catch (_) {}
+    });
+
+    // =========================================================================
+    // Interactive 2D Concert Stage + HRTF PannerNode + Hall ConvolverNode
+    // =========================================================================
+    let audioCtx = null;
+    let hallConvolver = null;
+    const stemState = [];
+    let stemsLoaded = false;
+    let loadingPromise = null;
+    let isPlaying = false;
+    let startWallTime = 0;
+    let offsetSeconds = 0;
+    let durationSeconds = 0;
+    let rafId = null;
+
+    const FAMILY_COLORS = {
+      'Indian Classical': '#f59e0b',
+      'Keys & Plucked': '#bb9af7',
+      'Strings': '#7aa2f7',
+      'Woodwinds': '#4ade80',
+      'Brass': '#fb7185',
+    };
+
+    function createConcertHallIR(ctx) {
+      const sr = ctx.sampleRate;
+      const len = Math.floor(sr * 2.2);
+      const buf = ctx.createBuffer(2, len, sr);
+      for (let ch = 0; ch < 2; ch++) {
+        const data = buf.getChannelData(ch);
+        let lp = 0;
+        for (let i = 0; i < len; i++) {
+          const t = i / sr;
+          const env = Math.exp(-3.1 * t) * Math.min(1, t / 0.015);
+          const n = Math.random() * 2 - 1;
+          lp = 0.70 * n + 0.30 * lp;
+          data[i] = lp * env * 0.22;
+        }
+      }
+      return buf;
+    }
+
+    function applySpatialParams(s) {
+      const dist = Math.hypot(s.x, s.y);
+      const directScale = Math.min(1.12, Math.max(0.58, Math.pow(3.8 / Math.max(1.5, dist), 0.42)));
+      const revSend = Math.min(0.45, Math.max(0.14, 0.13 + 0.025 * dist));
+      const airCutoff = Math.min(19000, Math.max(4800, 19500 - 900 * Math.max(0, dist - 2.0)));
+
+      if (s.rowEls) {
+        s.rowEls.posEl.textContent = `(${s.x.toFixed(1)}m, ${s.y.toFixed(1)}m)`;
+      }
+      if (!audioCtx || !s.panner) return;
+      const now = audioCtx.currentTime;
+      s.panner.positionX.setTargetAtTime(s.x, now, 0.02);
+      s.panner.positionY.setTargetAtTime(0, now, 0.02);
+      s.panner.positionZ.setTargetAtTime(-s.y, now, 0.02);
+      s.airFilter.frequency.setTargetAtTime(airCutoff, now, 0.02);
+      s.directGain.gain.setTargetAtTime(directScale, now, 0.02);
+      s.revGain.gain.setTargetAtTime(revSend, now, 0.02);
+    }
+
+    function updateMixerGains() {
+      const anySolo = stemState.some((s) => s.solo);
+      for (const s of stemState) {
+        const active = anySolo ? s.solo && !s.muted : !s.muted;
+        const target = active ? s.vol : 0.0;
+        if (s.gainNode && audioCtx) {
+          s.gainNode.gain.setTargetAtTime(target, audioCtx.currentTime, 0.015);
+        }
+      }
+    }
+
+    async function ensureStemsLoaded() {
+      if (stemsLoaded) return;
+      if (loadingPromise) return loadingPromise;
+      const status = document.getElementById('mix-status');
+      status.textContent = 'Decoding 11 synced fusion stems...';
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if (audioCtx.state === 'suspended') await audioCtx.resume();
+      if (!hallConvolver) {
+        hallConvolver = audioCtx.createConvolver();
+        hallConvolver.buffer = createConcertHallIR(audioCtx);
+        hallConvolver.connect(audioCtx.destination);
+      }
+
+      loadingPromise = Promise.all(
+        stemState.map(async (s) => {
+          const resp = await fetch(s.spec.wav);
+          const buf = await resp.arrayBuffer();
+          s.buffer = await audioCtx.decodeAudioData(buf);
+          durationSeconds = Math.max(durationSeconds, s.buffer.duration);
+        })
+      ).then(() => {
+        stemsLoaded = true;
+        document.getElementById('mix-seek').max = durationSeconds;
+        document.getElementById('mix-time').textContent = `${fmtTime(offsetSeconds)} / ${fmtTime(durationSeconds)}`;
+        status.textContent = 'Ready (HRTF 3D Stage + Hall Reverb)';
+      });
+      return loadingPromise;
+    }
+
+    function stopSources() {
+      for (const s of stemState) {
+        if (s.source) {
+          try { s.source.stop(); } catch (_) {}
+          s.source.disconnect();
+          s.source = null;
+        }
+      }
+      if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+    }
+
+    function updateTransportUI() {
+      const cur = isPlaying
+        ? Math.min(durationSeconds, offsetSeconds + (audioCtx.currentTime - startWallTime))
+        : offsetSeconds;
+      document.getElementById('mix-seek').value = cur;
+      document.getElementById('mix-time').textContent = `${fmtTime(cur)} / ${fmtTime(durationSeconds)}`;
+      if (isPlaying && cur >= durationSeconds - 0.03) {
+        pauseMixer();
+        offsetSeconds = 0;
+        updateTransportUI();
+        return;
+      }
+      if (isPlaying) rafId = requestAnimationFrame(updateTransportUI);
+    }
+
+    async function playMixer() {
+      stopAllSolo(null);
+      await ensureStemsLoaded();
+      if (audioCtx.state === 'suspended') await audioCtx.resume();
+      stopSources();
+
+      startWallTime = audioCtx.currentTime + 0.04;
+      for (const s of stemState) {
+        const src = audioCtx.createBufferSource();
+        src.buffer = s.buffer;
+
+        const g = audioCtx.createGain();
+        const air = audioCtx.createBiquadFilter();
+        air.type = 'lowpass';
+        air.Q.value = 0.707;
+
+        const panner = audioCtx.createPanner();
+        panner.panningModel = 'HRTF';
+        panner.distanceModel = 'inverse';
+        panner.refDistance = 3.0;
+        panner.rolloffFactor = 0.35;
+
+        const dg = audioCtx.createGain();
+        const rg = audioCtx.createGain();
+
+        src.connect(g);
+        g.connect(air);
+        air.connect(panner);
+        panner.connect(dg);
+        dg.connect(audioCtx.destination);
+        panner.connect(rg);
+        rg.connect(hallConvolver);
+
+        s.source = src;
+        s.gainNode = g;
+        s.airFilter = air;
+        s.panner = panner;
+        s.directGain = dg;
+        s.revGain = rg;
+        applySpatialParams(s);
+      }
+      updateMixerGains();
+      for (const s of stemState) s.source.start(startWallTime, offsetSeconds);
+      isPlaying = true;
+      document.getElementById('mix-status').textContent = 'Playing live 3D stage';
+      rafId = requestAnimationFrame(updateTransportUI);
+    }
+
+    function pauseMixer() {
+      if (!isPlaying) return;
+      offsetSeconds = Math.min(durationSeconds, offsetSeconds + (audioCtx.currentTime - startWallTime));
+      stopSources();
+      isPlaying = false;
+      document.getElementById('mix-status').textContent = 'Paused';
+      updateTransportUI();
+    }
+
+    document.getElementById('mix-play').addEventListener('click', playMixer);
+    document.getElementById('mix-pause').addEventListener('click', pauseMixer);
+    document.getElementById('mix-restart').addEventListener('click', () => { offsetSeconds = 0; playMixer(); });
+    document.getElementById('mix-seek').addEventListener('input', (e) => {
+      offsetSeconds = parseFloat(e.target.value) || 0;
+      if (isPlaying) playMixer(); else updateTransportUI();
+    });
+    document.getElementById('mix-reset').addEventListener('click', () => {
+      for (const s of stemState) {
+        s.solo = false; s.muted = false; s.vol = 1.0;
+        s.rowEls.soloBtn.classList.remove('on');
+        s.rowEls.muteBtn.classList.remove('on');
+        s.rowEls.volSlider.value = 100;
+        s.rowEls.volVal.textContent = '100%';
+      }
+      updateMixerGains();
+    });
+
+    // Canvas 2D Stage Rendering & Dragging
+    const canvas = document.getElementById('stage-canvas');
+    const ctx2d = canvas.getContext('2d');
+    let dragStem = null;
+
+    function stageToPx(x, y) {
+      const px = ((x + 6.0) / 12.0) * (canvas.width - 60) + 30;
+      const py = canvas.height - 46 - ((y - 1.5) / 10.5) * (canvas.height - 80);
+      return [px, py];
+    }
+    function pxToStage(px, py) {
+      const x = (((px - 30) / (canvas.width - 60)) * 12.0 - 6.0);
+      const y = (((canvas.height - 46 - py) / (canvas.height - 80)) * 10.5 + 1.5);
+      return [Math.max(-5.8, Math.min(5.8, x)), Math.max(2.0, Math.min(11.5, y))];
+    }
+
+    function drawStage() {
+      ctx2d.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Depth arcs around listener
+      const [lx, ly] = stageToPx(0, 0.2);
+      ctx2d.strokeStyle = 'rgba(152, 164, 184, 0.16)';
+      ctx2d.lineWidth = 1;
+      for (const meters of [3, 6, 9, 12]) {
+        const [, ry] = stageToPx(0, meters);
+        const r = ly - ry;
+        ctx2d.beginPath();
+        ctx2d.arc(lx, ly, r, Math.PI * 1.12, Math.PI * 1.88);
+        ctx2d.stroke();
+        ctx2d.fillStyle = 'rgba(152, 164, 184, 0.45)';
+        ctx2d.font = '11px Inter, sans-serif';
+        ctx2d.fillText(`${meters}m`, lx + 6, ry + 12);
+      }
+
+      // Listener marker
+      ctx2d.fillStyle = '#eef2f7';
+      ctx2d.beginPath();
+      ctx2d.arc(lx, canvas.height - 20, 7, 0, Math.PI * 2);
+      ctx2d.fill();
+      ctx2d.font = '600 11px Inter, sans-serif';
+      ctx2d.textAlign = 'center';
+      ctx2d.fillText('LISTENER (0m)', lx, canvas.height - 6);
+
+      // Draw each player node
+      for (const s of stemState) {
+        const [px, py] = stageToPx(s.x, s.y);
+        const anySolo = stemState.some(t => t.solo);
+        const active = anySolo ? (s.solo && !s.muted) : !s.muted;
+        const color = FAMILY_COLORS[s.spec.family] || '#7aa2f7';
+
+        ctx2d.globalAlpha = active ? 1.0 : 0.32;
+        ctx2d.fillStyle = color;
+        ctx2d.beginPath();
+        ctx2d.arc(px, py, dragStem === s ? 14 : 11, 0, Math.PI * 2);
+        ctx2d.fill();
+        ctx2d.strokeStyle = '#0f1116';
+        ctx2d.lineWidth = 2;
+        ctx2d.stroke();
+
+        ctx2d.fillStyle = '#eef2f7';
+        ctx2d.font = '600 11px Inter, sans-serif';
+        ctx2d.textAlign = 'center';
+        ctx2d.fillText(s.spec.name.replace('Orchestral ', '').replace('Solo ', ''), px, py - 15);
+        ctx2d.globalAlpha = 1.0;
+      }
+    }
+
+    function canvasCoords(e) {
+      const rect = canvas.getBoundingClientRect();
+      return [
+        (e.clientX - rect.left) * (canvas.width / rect.width),
+        (e.clientY - rect.top) * (canvas.height / rect.height),
+      ];
+    }
+
+    canvas.addEventListener('pointerdown', (e) => {
+      const [mx, my] = canvasCoords(e);
+      let best = null;
+      let bestD = 24;
+      for (const s of stemState) {
+        const [px, py] = stageToPx(s.x, s.y);
+        const d = Math.hypot(mx - px, my - py);
+        if (d < bestD) { bestD = d; best = s; }
+      }
+      if (best) {
+        dragStem = best;
+        canvas.setPointerCapture(e.pointerId);
+        drawStage();
+      }
+    });
+
+    canvas.addEventListener('pointermove', (e) => {
+      if (!dragStem) return;
+      const [mx, my] = canvasCoords(e);
+      const [sx, sy] = pxToStage(mx, my);
+      dragStem.x = sx;
+      dragStem.y = sy;
+      applySpatialParams(dragStem);
+      document.getElementById('hover-coords').textContent = `${dragStem.spec.name}: (${sx.toFixed(1)}m, ${sy.toFixed(1)}m)`;
+      drawStage();
+    });
+
+    canvas.addEventListener('pointerup', () => { dragStem = null; drawStage(); });
+
+    const STAGE_PRESETS = {
+      default: null, // uses manifest coordinates
+      intimate: {
+        harp: [-2.1, 2.8], sitar: [-1.0, 2.3], dotara: [1.1, 2.3], ektara: [0.0, 2.9],
+        viola: [-1.8, 3.6], cello: [1.8, 3.6], pizzicato: [0.9, 3.8],
+        clarinet: [-0.9, 4.3], french_horn: [1.4, 5.2], bassoon: [0.2, 4.6], strings_ens: [0.0, 4.9],
+      },
+      split: {
+        sitar: [-3.4, 2.8], dotara: [-2.1, 2.5], ektara: [-2.8, 3.8],
+        harp: [-0.6, 3.5], pizzicato: [1.2, 3.6], viola: [2.2, 3.8], cello: [3.4, 3.6],
+        clarinet: [1.6, 5.4], bassoon: [2.8, 5.8], french_horn: [3.8, 7.6], strings_ens: [1.8, 7.2],
+      },
+    };
+
+    document.querySelectorAll('[data-preset]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const key = btn.dataset.preset;
+        for (const s of stemState) {
+          if (key === 'default') {
+            s.x = s.spec.x; s.y = s.spec.y;
+          } else if (STAGE_PRESETS[key][s.spec.id]) {
+            [s.x, s.y] = STAGE_PRESETS[key][s.spec.id];
+          }
+          applySpatialParams(s);
+        }
+        drawStage();
+      });
+    });
+
+    document.getElementById('copy-stage').addEventListener('click', async () => {
+      const lines = stemState.map(s => `${s.spec.name}: x=${s.x.toFixed(1)}m, y=${s.y.toFixed(1)}m${s.muted ? ' [MUTED]' : ''}${s.solo ? ' [SOLO]' : ''}`);
+      try {
+        await navigator.clipboard.writeText(lines.join('\n'));
+        const btn = document.getElementById('copy-stage');
+        const old = btn.textContent;
+        btn.textContent = 'Copied!';
+        setTimeout(() => (btn.textContent = old), 1400);
+      } catch (_) {}
+    });
+
+    function buildMixerUI() {
+      const list = document.getElementById('mixer-list');
+      list.innerHTML = '';
+      for (const spec of manifest.fusion_stems) {
+        const row = document.createElement('div');
+        row.className = 'stem-row';
+        const color = FAMILY_COLORS[spec.family] || '#7aa2f7';
+        row.innerHTML = `
+          <div>
+            <div style="font-weight:600; display:flex; align-items:center; gap:7px;">
+              <span style="width:9px; height:9px; border-radius:50%; background:${color}; display:inline-block;"></span>
+              ${spec.name}
+            </div>
+            <div class="muted">${spec.family}</div>
+          </div>
+          <div class="sm-btns">
+            <button class="sm-btn solo" title="Solo">S</button>
+            <button class="sm-btn mute" title="Mute">M</button>
+          </div>
+          <input class="scrub" type="range" min="0" max="150" value="100" />
+          <span class="time" style="min-width:44px;">100%</span>
+          <span class="time pos-label" style="min-width:86px;">(${spec.x.toFixed(1)}m, ${spec.y.toFixed(1)}m)</span>
+        `;
+        const soloBtn = row.querySelector('.solo');
+        const muteBtn = row.querySelector('.mute');
+        const volSlider = row.querySelector('.scrub');
+        const volVal = row.querySelector('.time');
+        const posEl = row.querySelector('.pos-label');
+
+        const state = {
+          spec, x: spec.x, y: spec.y, buffer: null, source: null, gainNode: null,
+          airFilter: null, panner: null, directGain: null, revGain: null,
+          solo: false, muted: false, vol: 1.0,
+          rowEls: { soloBtn, muteBtn, volSlider, volVal, posEl },
+        };
+
+        soloBtn.addEventListener('click', () => {
+          state.solo = !state.solo;
+          soloBtn.classList.toggle('on', state.solo);
+          updateMixerGains();
+          drawStage();
+        });
+        muteBtn.addEventListener('click', () => {
+          state.muted = !state.muted;
+          muteBtn.classList.toggle('on', state.muted);
+          updateMixerGains();
+          drawStage();
+        });
+        volSlider.addEventListener('input', () => {
+          const pct = parseInt(volSlider.value, 10);
+          state.vol = pct / 100.0;
+          volVal.textContent = `${pct}%`;
+          updateMixerGains();
+        });
+
+        stemState.push(state);
+        list.appendChild(row);
+      }
+      drawStage();
+    }
+
+    async function init() {
+      const resp = await fetch('../output/audition/manifest.json');
+      manifest = await resp.json();
+
+      for (const inst of manifest.solo_instruments) {
+        if (inst.default_vote) votes[inst.id] = inst.default_vote;
+      }
+
+      const families = ['All', ...new Set(manifest.solo_instruments.map((x) => x.family))];
+      const filterBar = document.getElementById('family-filters');
+      families.forEach((fam, idx) => {
+        const btn = document.createElement('button');
+        btn.className = `filter-btn ${idx === 0 ? 'active' : ''}`;
+        btn.textContent = fam;
+        btn.addEventListener('click', () => {
+          filterBar.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          stopAllSolo(null);
+          renderSoloUI(fam);
+        });
+        filterBar.appendChild(btn);
+      });
+
+      renderSoloUI('All');
+      updateSummary();
+      buildMixerUI();
+    }
+
+    init();
+  </script>
+</body>
+</html>
