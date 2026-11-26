@@ -205,6 +205,42 @@
     .section { display: none; }
     .section.active { display: block; }
 
+    .gallery3d-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(460px, 1fr));
+      gap: 18px;
+    }
+    .gallery3d-card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .gallery3d-video {
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: #080a10;
+      display: block;
+    }
+    .gallery3d-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .gallery3d-tag {
+      font-size: 0.74rem;
+      padding: 2px 8px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: var(--chip);
+      color: var(--muted);
+    }
+
     .toolbar {
       display: flex;
       flex-wrap: wrap;
@@ -517,6 +553,7 @@
     <div class="tabs">
       <button class="tab-btn active" data-tab="solo">1. Solo Instrument Auditions (27)</button>
       <button class="tab-btn" data-tab="stage">2. Interactive 2D Concert Stage &amp; Spatial Mixer</button>
+      <button class="tab-btn" data-tab="gallery3d">3. 3D Instruments (Blender)</button>
     </div>
 
     <!-- TAB 1: SOLO AUDITIONS -->
@@ -563,6 +600,53 @@
         </div>
 
         <div class="mixer-list" id="mixer-list"></div>
+      </div>
+    </section>
+
+    <!-- TAB 3: 3D INSTRUMENTS (BLENDER 4.2 EEVEE NEXT) -->
+    <section id="tab-gallery3d" class="section">
+      <div class="card" style="margin-bottom:16px;">
+        <div class="hero-head">
+          <h2>53-EDO Fictional Concert Instruments &mdash; Blender 4.2 Stage Prototypes</h2>
+          <span class="badge">1080p24 VP9+Opus &bull; EEVEE Next</span>
+        </div>
+        <div class="muted">
+          Modular 3D instrument rigs rendered on a unified midnight concert pedestal (<code>z = 0.09m</code>) for upcoming placement onto the full <em>Ode to the Primes</em> concert stage.
+        </div>
+      </div>
+
+      <div class="gallery3d-grid">
+        <div class="gallery3d-card">
+          <div class="hero-head">
+            <h3>01. Alexandrian 53-EDO Arch-Harp</h3>
+            <span class="badge">138 Strings &bull; 14.25s</span>
+          </div>
+          <div class="muted">
+            ~2.0m rosewood &amp; mahogany concert harp with 53 individual strings per octave color-coded across canonical 53-EDO intervals (Ruby Tonic, Amber 5-step, Emerald 5/4 Major 3rd, Sapphire 3/2 Fifth, Amethyst 7-limit 7th, Gold), damped pluck displacement, emission bloom, and golden bead pulses.
+          </div>
+          <video class="gallery3d-video" controls preload="metadata" loop src="../output/showcase_3d/01_harp_53edo.webm"></video>
+          <div class="gallery3d-meta">
+            <span class="gallery3d-tag">Model: <code>blender_gallery/instruments/harp_53edo.py</code></span>
+            <span class="gallery3d-tag">Scene: <code>output/showcase_3d/01_harp_53edo.blend</code></span>
+            <span class="gallery3d-tag">Score: <code>scores/showcase_3d/01_harp_53edo.json</code></span>
+          </div>
+        </div>
+
+        <div class="gallery3d-card">
+          <div class="hero-head">
+            <h3>03. Bosanquet 5-Tier Concert Grand Piano</h3>
+            <span class="badge">162 Keys &bull; 5 Comma Planes &bull; 13.82s</span>
+          </div>
+          <div class="muted">
+            Gloss-ebony S-rim grand piano featuring 5 elevated syntonic comma terraces (<code>k = -2..+2</code>), propped 34&deg; lid revealing a cast-gold interior harp plate with 95 overstrung strings, synchronized interior hammers, and an animated right damper pedal.
+          </div>
+          <video class="gallery3d-video" controls preload="metadata" loop src="../output/showcase_3d/03_piano_bosanquet.webm"></video>
+          <div class="gallery3d-meta">
+            <span class="gallery3d-tag">Model: <code>blender_gallery/instruments/piano_bosanquet.py</code></span>
+            <span class="gallery3d-tag">Scene: <code>output/showcase_3d/03_piano_bosanquet.blend</code></span>
+            <span class="gallery3d-tag">Score: <code>scores/showcase_3d/03_piano_bosanquet.json</code></span>
+          </div>
+        </div>
       </div>
     </section>
   </div>

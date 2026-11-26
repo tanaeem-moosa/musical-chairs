@@ -13,6 +13,8 @@
 *.wav
 *.mp3
 *.webm
+*.blend
+*.blend1
 
 # OS and Python artifacts
 .DS_Store
