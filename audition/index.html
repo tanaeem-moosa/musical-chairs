@@ -438,32 +438,29 @@
         <span class="muted" style="font-weight:700; font-size:0.79rem; text-transform:uppercase; letter-spacing:0.04em;">Select Score:</span>
       </div>
       <div class="hero-head">
-        <h2 id="hero-title">Featured: 5-Minute Symphony Showcase — Harmonia Mundi (53-EDO vs 12-TET A/B)</h2>
-        <span class="pill" id="hero-pill">2-Input Stage Engine &middot; 53-EDO vs 12-TET</span>
+        <h2 id="hero-title">The Shattered Semitone (Symphonia 53 contra 12) &mdash; Seven Studies in the Syntonic Abyss</h2>
+        <span class="pill" id="hero-pill">17 tracks &middot; 2987 notes &middot; scores/edo53_vs_12tet_10min.json</span>
       </div>
       <div class="muted" id="hero-desc">
-        Pure music score (<code>scores/sample_5min.json</code>) rendered through <code>stages/concert_hall.json</code>:
-        Mozartian poise &rarr; Debussy 7-limit (4:5:6:7:9) &amp; Indian shruti mist (+1 comma lift) &rarr;
-        Beethovenian chromatic-mediant diesis summit (+3) &amp; triple downward comma cascade home &rarr;
-        Cathedral Pipe Organ apotheosis (final ~50s) + 30s trailing silence. Compare exact 53-EDO against 12-TET below!
+        A concert-grade ~10-minute stage-independent 53-EDO symphonic classical work specifically composed to maximize the structural and acoustic divergence between 53-EDO and 12-TET. Features 5-comma melodic arches and 4-voice canons inside single 12-TET semitone buckets ({-2..+2}, {12..15}, {16..19}, {20..24}, {29..33}, {38..41}, {42..46}), septimal 7:6 vs 6:5 and 7:4 vs 9:5 shruti mirrors, a 6-stage continuous syntonic comma passacaglia spiral (k = -2 to +3), chromatic-mediant diesis ladders where pure [38, 2, 16] Ab++ Major shears into A minor in 12-TET, a hushed Adagio lament of beat-free glass chords, and a final Cathedral Pipe Organ apotheosis.
       </div>
 
       <div class="hero-ab">
         <div class="hero-player-box active-ab" id="ab-box-53">
           <div class="hero-player-title">
             <span>A. Exact 53-EDO Just Intonation</span>
-            <a class="badge" id="hero-wav-53" style="text-decoration:none;" href="../output/sample_5min.wav" target="_blank">WAV</a>
+            <a class="badge" id="hero-wav-53" style="text-decoration:none;" href="../output/edo53_vs_12tet_10min.wav" target="_blank">WAV</a>
           </div>
           <div class="muted">Beat-free 5-limit triads, 7:4 harmonic 7ths, 22-shruti glides &amp; smooth comma/diesis shifts.</div>
-          <audio id="symphony-5min-audio" controls preload="auto" src="../output/sample_5min.mp3"></audio>
+          <audio id="symphony-5min-audio" controls preload="auto" src="../output/edo53_vs_12tet_10min.mp3"></audio>
         </div>
         <div class="hero-player-box" id="ab-box-12">
           <div class="hero-player-title">
             <span>B. 12-TET Standard Approximation</span>
-            <a class="badge" id="hero-wav-12" style="text-decoration:none;" href="../output/sample_5min_12tet.wav" target="_blank">WAV</a>
+            <a class="badge" id="hero-wav-12" style="text-decoration:none;" href="../output/edo53_vs_12tet_10min_12tet.wav" target="_blank">WAV</a>
           </div>
-          <div class="muted" id="hero-12-note">Same score &amp; stage quantized to 12-EDO semitones (toggle A/B at any moment to compare!).</div>
-          <audio id="symphony-12tet-audio" controls preload="auto" src="../output/sample_5min_12tet.mp3"></audio>
+          <div class="muted" id="hero-12-note">Same score &amp; stage quantized to 12-EDO semitones (click A/B Switch &minus;10s to compare any phrase!).</div>
+          <audio id="symphony-12tet-audio" controls preload="auto" src="../output/edo53_vs_12tet_10min_12tet.mp3"></audio>
         </div>
       </div>
 
@@ -471,23 +468,23 @@
         <button class="btn primary" id="ab-flip-btn" style="padding:5px 12px; font-size:0.8rem;" title="Rewinds 10 seconds so you immediately compare the exact phrase in the other tuning">A/B Switch (&minus;10s)</button>
         <span class="muted" style="font-size:0.77rem;">Rewinds 10s so you compare the exact phrase</span>
         <span id="dynamic-jumps" style="display:contents;">
-          <button class="jump-btn" data-jump="0">I. Dawn (0:00)</button>
-          <button class="jump-btn" data-jump="73.5">II. Lotus &amp; Mist (1:14)</button>
-          <button class="jump-btn" data-jump="151">III. Tempest (2:31)</button>
-          <button class="jump-btn" data-jump="174.8">Diesis Summit (2:55)</button>
-          <button class="jump-btn" data-jump="198.2">Comma Cascade (3:18)</button>
-          <button class="jump-btn" data-jump="227">IV. Transfiguration (3:47)</button>
-          <button class="jump-btn" data-jump="247.6">Pipe Organ (4:08)</button>
+          <button class="jump-btn" data-jump="0">I. Prologus &mdash; The Fivefold Unison &amp; Septimal Dawn (0:00)</button>
+          <button class="jump-btn" data-jump="84.22">II. Canon Per Tonos Syntonicos &mdash; Four-Voice Collapse Fugato (1:24)</button>
+          <button class="jump-btn" data-jump="158.82">III. Nocturne of the Vanishing Shrutis &mdash; Septimal &amp; Shruti Mirror (2:39)</button>
+          <button class="jump-btn" data-jump="252.95">IV. Passacaglia of the Endless Comma Spiral (k = -2 to +3) (4:13)</button>
+          <button class="jump-btn" data-jump="336.01">V. Scherzo &mdash; The Diesis Labyrinth &amp; Major-to-Minor Shear (5:36)</button>
+          <button class="jump-btn" data-jump="411.6">VI. Adagio Mesto &mdash; Lament on the Broken Third &amp; Glass Harmonics (6:52)</button>
+          <button class="jump-btn" data-jump="501.82">VII. Finale &amp; Cathedral Organ Apotheosis &mdash; The 53-Tone Continuum (8:22)</button>
         </span>
-        <a class="jump-btn" id="hero-webm-link" style="text-decoration:none; border-color:rgba(187,154,247,0.55); color:var(--accent-2);" href="../output/sample_5min.webm" target="_blank">YouTube 1080p WebM</a>
+        <a class="jump-btn" id="hero-webm-link" style="text-decoration:none; border-color:rgba(187,154,247,0.55); color:var(--accent-2);" href="../output/edo53_vs_12tet_10min.webm" target="_blank">YouTube 1080p WebM</a>
         <a class="jump-btn" style="text-decoration:none; border-color:rgba(245,158,11,0.55); color:#fbbf24;" href="../docs/harmonia_mundi_poster.svg" target="_blank">Artistic Poster (SVG)</a>
       </div>
 
       <details class="hero-svg-details" id="hero-svg-box" open>
-        <summary>Score &amp; 2D Concert Stage Visualization (SVG) &mdash; <a id="hero-svg-link" href="../output/sample_5min.svg" target="_blank" style="color:var(--accent-2);">Open Full-Screen</a></summary>
+        <summary>Score &amp; 2D Concert Stage Visualization (SVG) &mdash; <a id="hero-svg-link" href="../output/edo53_vs_12tet_10min.svg" target="_blank" style="color:var(--accent-2);">Open Full-Screen</a></summary>
         <div class="hero-svg-frame">
-          <a id="hero-svg-anchor" href="../output/sample_5min.svg" target="_blank">
-            <img id="hero-svg-img" src="../output/sample_5min.svg" alt="53-EDO Score Stage Map and Pitch-Roll Timeline" loading="lazy" />
+          <a id="hero-svg-anchor" href="../output/edo53_vs_12tet_10min.svg" target="_blank">
+            <img id="hero-svg-img" src="../output/edo53_vs_12tet_10min.svg" alt="53-EDO Score Stage Map and Pitch-Roll Timeline" loading="lazy" />
           </a>
         </div>
       </details>
@@ -1193,6 +1190,112 @@
       drawStage();
     }
 
+    const FALLBACK_COMPOSITIONS = [
+      {
+        id: 'edo53_vs_12tet_10min',
+        title: 'The Shattered Semitone (Symphonia 53 contra 12) — Seven Studies in the Syntonic Abyss',
+        description: 'A concert-grade ~10-minute stage-independent 53-EDO symphonic classical work specifically composed to maximize the structural and acoustic divergence between 53-EDO and 12-TET. Features 5-comma melodic arches and 4-voice canons inside single 12-TET semitone buckets ({-2..+2}, {12..15}, {16..19}, {20..24}, {29..33}, {38..41}, {42..46}), septimal 7:6 vs 6:5 and 7:4 vs 9:5 shruti mirrors, a 6-stage continuous syntonic comma passacaglia spiral (k = -2 to +3), chromatic-mediant diesis ladders where pure [38, 2, 16] Ab++ Major shears into A minor in 12-TET, a hushed Adagio lament of beat-free glass chords, and a final Cathedral Pipe Organ apotheosis.',
+        score_path: 'scores/edo53_vs_12tet_10min.json',
+        track_count: 17,
+        note_count: 2987,
+        audio_53: '../output/edo53_vs_12tet_10min.mp3',
+        wav_53: '../output/edo53_vs_12tet_10min.wav',
+        audio_12: '../output/edo53_vs_12tet_10min_12tet.mp3',
+        wav_12: '../output/edo53_vs_12tet_10min_12tet.wav',
+        svg: '../output/edo53_vs_12tet_10min.svg',
+        webm: '../output/edo53_vs_12tet_10min.webm',
+        sections: [
+          { beat: 0.0, seconds: 0.0, mm_ss: '0:00', title: 'I. Prologus — The Fivefold Unison & Septimal Dawn' },
+          { beat: 88.0, seconds: 84.22, mm_ss: '1:24', title: 'II. Canon Per Tonos Syntonicos — Four-Voice Collapse Fugato' },
+          { beat: 192.0, seconds: 158.82, mm_ss: '2:39', title: 'III. Nocturne of the Vanishing Shrutis — Septimal & Shruti Mirror' },
+          { beat: 296.0, seconds: 252.95, mm_ss: '4:13', title: 'IV. Passacaglia of the Endless Comma Spiral (k = -2 to +3)' },
+          { beat: 416.0, seconds: 336.01, mm_ss: '5:36', title: 'V. Scherzo — The Diesis Labyrinth & Major-to-Minor Shear' },
+          { beat: 536.0, seconds: 411.6, mm_ss: '6:52', title: 'VI. Adagio Mesto — Lament on the Broken Third & Glass Harmonics' },
+          { beat: 632.0, seconds: 501.82, mm_ss: '8:22', title: 'VII. Finale & Cathedral Organ Apotheosis — The 53-Tone Continuum' },
+        ],
+        stems: [],
+      },
+      {
+        id: 'riemann_hypothesis_15min',
+        title: 'Ode to the Riemann Hypothesis — Symphony in 53-EDO',
+        description: 'A monumental ~15-minute (900s) stage-independent 4-movement 53-EDO orchestral symphony tracing the mathematical epic of the Riemann Hypothesis: I. The Primes (prime-limit harmonics 2,3,5,7,11,13,17,19, Sieve of Eratosthenes polyrhythms & Euler Product); II. Analytic Continuation (Re(s)=1 divergence wall, chromatic-mediant diesis rotations, exact xi(s)=xi(1-s) simultaneous mirror-inversion counterpoint & palindromic arch, first nontrivial zero); III. A Century of Small Progress (10-variation Brahmsian/Brucknerian Passacaglia & 4-voice Fugato climbing k=0->+1->+2->+3 to an unresolved summit); IV. The Proof: AI & The Critical Line (hyper-parallel algorithmic lattice locking onto k=0 in a Cathedral Pipe Organ + full-orchestra triple-theme Proof Apotheosis & Critical Line stillness).',
+        score_path: 'scores/riemann_hypothesis_15min.json',
+        track_count: 14,
+        note_count: 4536,
+        audio_53: '../output/riemann_hypothesis_15min.mp3',
+        wav_53: '../output/riemann_hypothesis_15min.wav',
+        audio_12: '../output/riemann_hypothesis_15min_12tet.mp3',
+        wav_12: '../output/riemann_hypothesis_15min_12tet.wav',
+        svg: '../output/riemann_hypothesis_15min.svg',
+        webm: '../output/riemann_hypothesis_15min.webm',
+        sections: [
+          { beat: 0.0, seconds: 0.0, mm_ss: '0:00', title: 'I. The Primes — 1. Genesis of Irreducible Harmonics (2, 3, 5, 7)' },
+          { beat: 60.0, seconds: 53.76, mm_ss: '0:54', title: 'I.2 Sieve of Eratosthenes & Higher Prime Harmonics (11, 13, 17, 19)' },
+          { beat: 132.0, seconds: 112.98, mm_ss: '1:53', title: 'I.3 The Euler Product — Orchestral Prime Convergence' },
+          { beat: 204.0, seconds: 170.59, mm_ss: '2:51', title: 'I.4 Asymptotic Mystery (x / ln x) & Approach to Re(s) = 1' },
+          { beat: 264.0, seconds: 223.65, mm_ss: '3:44', title: 'II. Analytic Continuation — 1. The Divergence Wall at Re(s) = 1' },
+          { beat: 320.0, seconds: 273.98, mm_ss: '4:34', title: 'II.2 Into the Critical Strip (0 < Re(s) < 1) — Nocturne' },
+          { beat: 384.0, seconds: 330.25, mm_ss: '5:30', title: 'II.3 Functional Equation xi(s) = xi(1 - s) — Exact Mirror & Palindrome' },
+          { beat: 456.0, seconds: 391.66, mm_ss: '6:32', title: 'II.4 First Nontrivial Zero (t_1 = 14.1347) — Spectral Stillness' },
+          { beat: 516.0, seconds: 448.66, mm_ss: '7:29', title: 'III. A Century of Small Progress — 1. Granite Passacaglia (Hadamard & Hardy, k=0->+1)' },
+          { beat: 612.0, seconds: 524.5, mm_ss: '8:45', title: 'III.2 Four-Voice Fugato & Selberg Parity Setback (k=+1->+2)' },
+          { beat: 708.0, seconds: 593.94, mm_ss: '9:54', title: 'III.3 Montgomery–Odlyzko Pair Correlation & Comma Ascent (k=+2->+3)' },
+          { beat: 772.0, seconds: 637.58, mm_ss: '10:38', title: 'III.4 The Unresolved Summit at k=+3 — One Step Shy of Truth' },
+          { beat: 836.0, seconds: 687.67, mm_ss: '11:28', title: 'IV. The Proof: AI & The Critical Line — 1. Hyper-Parallel Algorithmic Lattice' },
+          { beat: 908.0, seconds: 732.67, mm_ss: '12:13', title: 'IV.2 Symmetry Lock & Convergence onto Home Comma Plane k = 0' },
+          { beat: 964.0, seconds: 770.31, mm_ss: '12:50', title: 'IV.3 PROOF APOTHEOSIS — Cathedral Pipe Organ & Triple Thematic Unification' },
+          { beat: 1044.0, seconds: 839.17, mm_ss: '13:59', title: 'IV.4 Q.E.D. — Beat-Free Stillness on the Critical Line Re(s) = 1/2' },
+        ],
+        stems: [],
+      },
+      {
+        id: 'orchestral_53edo',
+        title: 'Symphonia Prisma in 53-EDO — Adagio, Scherzo, Diesis & Passacaglia',
+        description: 'An original ~4-minute stage-independent Western orchestral classical work in F Major (anchored around exact concert A4 = step 39 = 440.00 Hz). Showcases glass-pure 5-limit triads (4:5:6) and septimal harmonic ninths (4:5:6:7:9) from Bar 1, an upward syntonic comma lift (+1), a 4-voice woodwind/string fugato scherzo, a Beethovenian chromatic-mediant diesis summit (+1 -> +3) with triple downward comma cascade (+3 -> 0), and a Brahmsian passacaglia culminating in a Cathedral Pipe Organ apotheosis.',
+        score_path: 'scores/orchestral_53edo.json',
+        track_count: 11,
+        note_count: 1897,
+        audio_53: '../output/orchestral_53edo.mp3',
+        wav_53: '../output/orchestral_53edo.wav',
+        audio_12: '../output/orchestral_53edo_12tet.mp3',
+        wav_12: '../output/orchestral_53edo_12tet.wav',
+        svg: '../output/orchestral_53edo.svg',
+        webm: '../output/orchestral_53edo.webm',
+        sections: [
+          { beat: 0.0, seconds: 0.0, mm_ss: '0:00', title: 'I. Adagio Sostenuto' },
+          { beat: 72.0, seconds: 71.25, mm_ss: '1:11', title: 'II. Scherzo & Fugato' },
+          { beat: 148.0, seconds: 123.34, mm_ss: '2:03', title: 'III. Diesis Tempest & Cascade' },
+          { beat: 224.0, seconds: 177.81, mm_ss: '2:58', title: 'IV. Passacaglia' },
+          { beat: 248.0, seconds: 199.34, mm_ss: '3:19', title: 'Cathedral Pipe Organ' },
+        ],
+        stems: [],
+      },
+      {
+        id: 'sample_5min',
+        title: 'Harmonia Mundi in 53-EDO — Four Movements Across the Syntonic Comma',
+        description: 'A ~5-minute stage-independent classical 53-EDO symphonic poem fusing Mozartian lyrical counterpoint, Debussy 7-limit (4:5:6:7:9) impressionism, prominent Indian classical 53-EDO shruti dialogue (Dotara, Ektara, Sitar), Beethovenian rhythmic drama across a chromatic-mediant diesis summit and triple downward comma cascade, and a unified Cathedral Pipe Organ finale. Pair with --stage stages/concert_hall.json (or intimate_circle.json / east_west_split.json).',
+        score_path: 'scores/sample_5min.json',
+        track_count: 14,
+        note_count: 2738,
+        audio_53: '../output/sample_5min.mp3',
+        wav_53: '../output/sample_5min.wav',
+        audio_12: '../output/sample_5min_12tet.mp3',
+        wav_12: '../output/sample_5min_12tet.wav',
+        svg: '../output/sample_5min.svg',
+        webm: '../output/sample_5min.webm',
+        sections: [
+          { beat: 0.0, seconds: 0.0, mm_ss: '0:00', title: 'I. Dawn (0:00)' },
+          { beat: 92.0, seconds: 73.5, mm_ss: '1:14', title: 'II. Lotus & Mist' },
+          { beat: 180.0, seconds: 151.0, mm_ss: '2:31', title: 'III. Tempest' },
+          { beat: 212.0, seconds: 174.8, mm_ss: '2:55', title: 'Diesis Summit' },
+          { beat: 244.0, seconds: 198.2, mm_ss: '3:18', title: 'Comma Cascade' },
+          { beat: 280.0, seconds: 227.0, mm_ss: '3:47', title: 'IV. Transfiguration' },
+          { beat: 304.0, seconds: 247.6, mm_ss: '4:08', title: 'Pipe Organ' },
+        ],
+        stems: [],
+      },
+    ];
+
     function selectComposition(comp, pickerBar) {
       audio53.pause();
       audio12.pause();
@@ -1200,7 +1303,9 @@
       document.getElementById('hero-pill').textContent = `${comp.track_count} tracks · ${comp.note_count} notes · ${comp.score_path}`;
       document.getElementById('hero-desc').textContent = comp.description || `Stage-independent 53-EDO score (${comp.score_path}).`;
 
-      audio53.src = comp.audio_53;
+      if (audio53.getAttribute('src') !== comp.audio_53) {
+        audio53.src = comp.audio_53;
+      }
       const wav53 = document.getElementById('hero-wav-53');
       if (comp.wav_53) { wav53.href = comp.wav_53; wav53.style.display = ''; }
       else { wav53.style.display = 'none'; }
@@ -1208,7 +1313,9 @@
       const wav12 = document.getElementById('hero-wav-12');
       const note12 = document.getElementById('hero-12-note');
       if (comp.audio_12) {
-        audio12.src = comp.audio_12;
+        if (audio12.getAttribute('src') !== comp.audio_12) {
+          audio12.src = comp.audio_12;
+        }
         audio12.style.display = '';
         abFlipBtn.disabled = false;
         note12.textContent = 'Same score & stage quantized to 12-EDO semitones (click A/B Switch −10s to compare any phrase!).';
@@ -1229,7 +1336,7 @@
         const b = document.createElement('button');
         b.className = 'jump-btn';
         b.dataset.jump = sec.seconds;
-        b.textContent = sec.title.includes('(') ? sec.title : `${sec.title} (${sec.mm_ss})`;
+        b.textContent = sec.title.includes(`(${sec.mm_ss})`) ? sec.title : `${sec.title} (${sec.mm_ss})`;
         dynJumps.appendChild(b);
       }
       bindJumpButtons();
@@ -1256,77 +1363,91 @@
     }
 
     async function initLibrary() {
+      let comps = FALLBACK_COMPOSITIONS;
       try {
         const resp = await fetch('/api/library');
-        if (!resp.ok) return;
-        const lib = await resp.json();
-        const comps = lib.compositions || [];
-        if (comps.length > 0) {
-          const picker = document.getElementById('score-picker');
-          picker.style.display = 'flex';
-          for (const comp of comps) {
-            const btn = document.createElement('button');
-            btn.className = 'score-pill';
-            btn.dataset.id = comp.id;
-            btn.textContent = comp.title.split('—')[0].trim();
-            btn.addEventListener('click', () => selectComposition(comp, picker));
-            picker.appendChild(btn);
-          }
-          selectComposition(comps[0], picker);
-
-          // Populate stem-set switcher in Tab 2 if any composition has exported stems
-          const withStems = comps.filter(c => c.stems && c.stems.length > 0);
-          if (withStems.length > 0 && manifest) {
-            const stemPicker = document.getElementById('stem-set-picker');
-            stemPicker.style.display = 'flex';
-            const sets = [
-              { id: 'fusion_default', label: 'East–West Chamber Fusion (11 stems)', stems: manifest.fusion_stems },
-              ...withStems.map(c => ({ id: c.id, label: `${c.title.split('—')[0].trim()} (${c.stems.length} stems)`, stems: c.stems })),
-            ];
-            sets.forEach((setObj, idx) => {
-              const b = document.createElement('button');
-              b.className = `score-pill ${idx === 0 ? 'active' : ''}`;
-              b.textContent = setObj.label;
-              b.addEventListener('click', () => {
-                stemPicker.querySelectorAll('.score-pill').forEach(x => x.classList.remove('active'));
-                b.classList.add('active');
-                buildMixerUI(setObj.stems);
-              });
-              stemPicker.appendChild(b);
-            });
+        if (resp.ok) {
+          const lib = await resp.json();
+          if (Array.isArray(lib.compositions) && lib.compositions.length > 0) {
+            comps = lib.compositions;
           }
         }
       } catch (_) {
-        // Static file fallback — keeps hardcoded sample_5min defaults
+        // Static file / python3 -m http.server fallback — uses FALLBACK_COMPOSITIONS
+      }
+
+      if (comps.length > 0) {
+        const picker = document.getElementById('score-picker');
+        picker.innerHTML = '<span class="muted" style="font-weight:700; font-size:0.79rem; text-transform:uppercase; letter-spacing:0.04em;">Select Score:</span>';
+        picker.style.display = 'flex';
+        for (const comp of comps) {
+          const btn = document.createElement('button');
+          btn.className = 'score-pill';
+          btn.dataset.id = comp.id;
+          btn.textContent = comp.title.split('—')[0].trim();
+          btn.addEventListener('click', () => selectComposition(comp, picker));
+          picker.appendChild(btn);
+        }
+        const initialComp = comps.find(c => c.id === 'edo53_vs_12tet_10min') || comps[0];
+        selectComposition(initialComp, picker);
+
+        // Populate stem-set switcher in Tab 2 if any composition has exported stems
+        const withStems = comps.filter(c => c.stems && c.stems.length > 0);
+        if (withStems.length > 0 && manifest) {
+          const stemPicker = document.getElementById('stem-set-picker');
+          stemPicker.innerHTML = '<span class="muted" style="font-weight:700; font-size:0.79rem; text-transform:uppercase;">Stem Set:</span>';
+          stemPicker.style.display = 'flex';
+          const sets = [
+            { id: 'fusion_default', label: 'East–West Chamber Fusion (11 stems)', stems: manifest.fusion_stems },
+            ...withStems.map(c => ({ id: c.id, label: `${c.title.split('—')[0].trim()} (${c.stems.length} stems)`, stems: c.stems })),
+          ];
+          sets.forEach((setObj, idx) => {
+            const b = document.createElement('button');
+            b.className = `score-pill ${idx === 0 ? 'active' : ''}`;
+            b.textContent = setObj.label;
+            b.addEventListener('click', () => {
+              stemPicker.querySelectorAll('.score-pill').forEach(x => x.classList.remove('active'));
+              b.classList.add('active');
+              buildMixerUI(setObj.stems);
+            });
+            stemPicker.appendChild(b);
+          });
+        }
       }
     }
 
     async function init() {
-      const resp = await fetch('../output/audition/manifest.json');
-      manifest = await resp.json();
+      try {
+        const resp = await fetch('../output/audition/manifest.json');
+        if (resp.ok) {
+          manifest = await resp.json();
 
-      for (const inst of manifest.solo_instruments) {
-        if (inst.default_vote) votes[inst.id] = inst.default_vote;
+          for (const inst of manifest.solo_instruments) {
+            if (inst.default_vote) votes[inst.id] = inst.default_vote;
+          }
+
+          const families = ['All', ...new Set(manifest.solo_instruments.map((x) => x.family))];
+          const filterBar = document.getElementById('family-filters');
+          families.forEach((fam, idx) => {
+            const btn = document.createElement('button');
+            btn.className = `filter-btn ${idx === 0 ? 'active' : ''}`;
+            btn.textContent = fam;
+            btn.addEventListener('click', () => {
+              filterBar.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+              btn.classList.add('active');
+              stopAllSolo(null);
+              renderSoloUI(fam);
+            });
+            filterBar.appendChild(btn);
+          });
+
+          renderSoloUI('All');
+          updateSummary();
+          buildMixerUI();
+        }
+      } catch (_) {
+        // Static file:// mode where fetch() to local JSON is blocked by browser CORS
       }
-
-      const families = ['All', ...new Set(manifest.solo_instruments.map((x) => x.family))];
-      const filterBar = document.getElementById('family-filters');
-      families.forEach((fam, idx) => {
-        const btn = document.createElement('button');
-        btn.className = `filter-btn ${idx === 0 ? 'active' : ''}`;
-        btn.textContent = fam;
-        btn.addEventListener('click', () => {
-          filterBar.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-          btn.classList.add('active');
-          stopAllSolo(null);
-          renderSoloUI(fam);
-        });
-        filterBar.appendChild(btn);
-      });
-
-      renderSoloUI('All');
-      updateSummary();
-      buildMixerUI();
       await initLibrary();
     }
 

@@ -60,6 +60,14 @@ SAMPLE_5MIN_FALLBACK_SECTIONS = [
     {"beat": 304.0, "seconds": 247.6, "mm_ss": "4:08", "title": "Pipe Organ"},
 ]
 
+ORCHESTRAL_53EDO_FALLBACK_BEATS = [
+    (0.0, "I. Adagio Sostenuto"),
+    (72.0, "II. Scherzo & Fugato"),
+    (148.0, "III. Diesis Tempest & Cascade"),
+    (224.0, "IV. Passacaglia"),
+    (248.0, "Cathedral Pipe Organ"),
+]
+
 
 def beat_to_seconds(tempo_pts: List[Dict[str, Any]], beat: float) -> float:
     if not tempo_pts:
@@ -174,6 +182,16 @@ def build_library_payload(repo_root: Path) -> Dict[str, Any]:
         sections_out.sort(key=lambda x: x["seconds"])
         if not sections_out and stem == "sample_5min":
             sections_out = SAMPLE_5MIN_FALLBACK_SECTIONS
+        elif not sections_out and stem == "orchestral_53edo":
+            sections_out = [
+                {
+                    "beat": b,
+                    "seconds": round(beat_to_seconds(tempo_pts, b), 2),
+                    "mm_ss": fmt_mm_ss(beat_to_seconds(tempo_pts, b)),
+                    "title": title,
+                }
+                for b, title in ORCHESTRAL_53EDO_FALLBACK_BEATS
+            ]
 
         tracks = data.get("tracks", [])
         note_count = sum(len(t.get("notes", [])) for t in tracks)
@@ -222,9 +240,15 @@ def build_library_payload(repo_root: Path) -> Dict[str, Any]:
             }
         )
 
-    # Order newest rendered full compositions first (keeping example_minimal at the end)
+    # Always feature The Shattered Semitone (`edo53_vs_12tet_10min`) first, then newest
+    # rendered full compositions, keeping `example_minimal` at the end.
     compositions.sort(
-        key=lambda c: (0 if c["id"] == "example_minimal" else 1, c["mtime"]),
+        key=lambda c: (
+            2
+            if c["id"] == "edo53_vs_12tet_10min"
+            else (0 if c["id"] == "example_minimal" else 1),
+            c["mtime"],
+        ),
         reverse=True,
     )
     return {"compositions": compositions}
