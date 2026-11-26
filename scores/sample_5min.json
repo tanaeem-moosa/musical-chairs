@@ -1,9 +1,7 @@
 {
   "title": "Harmonia Mundi in 53-EDO \u2014 Four Movements Across the Syntonic Comma",
-  "description": "A ~5-minute classical 53-EDO symphonic poem fusing Mozartian lyrical counterpoint, Debussy 7-limit (4:5:6:7:9) impressionism, prominent Indian classical 53-EDO shruti dialogue (Dotara, Ektara, warmed Sitar), Beethovenian rhythmic drama across a chromatic-mediant diesis summit and triple downward comma cascade, and a unified Cathedral Pipe Organ finale.",
+  "description": "A ~5-minute stage-independent classical 53-EDO symphonic poem fusing Mozartian lyrical counterpoint, Debussy 7-limit (4:5:6:7:9) impressionism, prominent Indian classical 53-EDO shruti dialogue (Dotara, Ektara, Sitar), Beethovenian rhythmic drama across a chromatic-mediant diesis summit and triple downward comma cascade, and a unified Cathedral Pipe Organ finale. Pair with --stage stages/concert_hall.json (or intimate_circle.json / east_west_split.json).",
   "sample_rate": 48000,
-  "tail_seconds": 5.0,
-  "reverb_rt60": 2.25,
   "tempo": [
     {
       "beat": 0.0,
@@ -87,9 +85,6 @@
       "id": "piano",
       "name": "Concert Grand Piano",
       "instrument": "piano",
-      "x": -2.3,
-      "y": 3.3,
-      "gain": 0.96,
       "notes": [
         {
           "beat": 0.0,
@@ -4219,9 +4214,6 @@
       "id": "harp",
       "name": "Orchestral Harp (53-EDO)",
       "instrument": "harp",
-      "x": -3.4,
-      "y": 3.7,
-      "gain": 0.98,
       "notes": [
         {
           "beat": 0.0,
@@ -8555,9 +8547,6 @@
       "id": "pizzicato",
       "name": "Pizzicato Strings",
       "instrument": "pizzicato",
-      "x": 1.1,
-      "y": 4.3,
-      "gain": 0.92,
       "notes": [
         {
           "beat": 0.0,
@@ -9015,9 +9004,6 @@
       "id": "viola",
       "name": "Solo Viola",
       "instrument": "viola",
-      "x": -1.8,
-      "y": 4.5,
-      "gain": 0.88,
       "notes": [
         {
           "beat": 34.5,
@@ -9907,9 +9893,6 @@
       "id": "cello",
       "name": "Solo Cello",
       "instrument": "cello",
-      "x": 2.4,
-      "y": 4.1,
-      "gain": 0.92,
       "notes": [
         {
           "beat": 16.5,
@@ -11057,9 +11040,6 @@
       "id": "string_ensemble",
       "name": "String Ensemble",
       "instrument": "string_ensemble",
-      "x": 0.0,
-      "y": 7.6,
-      "gain": 0.72,
       "notes": [
         {
           "beat": 64.0,
@@ -12429,9 +12409,6 @@
       "id": "clarinet",
       "name": "Clarinet",
       "instrument": "clarinet",
-      "x": -1.2,
-      "y": 5.6,
-      "gain": 0.88,
       "notes": [
         {
           "beat": 32.0,
@@ -13552,9 +13529,6 @@
       "id": "english_horn",
       "name": "English Horn",
       "instrument": "english_horn",
-      "x": 1.4,
-      "y": 5.4,
-      "gain": 0.94,
       "notes": [
         {
           "beat": 93.0,
@@ -14234,9 +14208,6 @@
       "id": "bassoon",
       "name": "Bassoon",
       "instrument": "bassoon",
-      "x": 0.4,
-      "y": 6.4,
-      "gain": 0.88,
       "notes": [
         {
           "beat": 32.0,
@@ -14825,9 +14796,6 @@
       "id": "french_horn",
       "name": "French Horn",
       "instrument": "french_horn",
-      "x": 2.3,
-      "y": 7.8,
-      "gain": 0.84,
       "notes": [
         {
           "beat": 64.5,
@@ -15430,9 +15398,6 @@
       "id": "dotara",
       "name": "Dotara",
       "instrument": "dotara",
-      "x": 2.0,
-      "y": 2.8,
-      "gain": 0.98,
       "notes": [
         {
           "beat": 92.5,
@@ -16340,9 +16305,6 @@
       "id": "ektara",
       "name": "Ektara",
       "instrument": "ektara",
-      "x": -0.5,
-      "y": 3.1,
-      "gain": 0.94,
       "notes": [
         {
           "beat": 92.0,
@@ -16665,9 +16627,6 @@
       "id": "sitar",
       "name": "Sitar (Warm Veil)",
       "instrument": "sitar",
-      "x": -1.5,
-      "y": 2.7,
-      "gain": 0.84,
       "notes": [
         {
           "beat": 124.2,
@@ -16828,16 +16787,12 @@
           "vel": 0.658,
           "slide_from_cents": 24.0
         }
-      ],
-      "warm_lowpass_hz": 2700.0
+      ]
     },
     {
       "id": "church_organ",
       "name": "Cathedral Pipe Organ",
       "instrument": "church_organ",
-      "x": 0.0,
-      "y": 10.4,
-      "gain": 0.74,
       "notes": [
         {
           "beat": 304.0,
@@ -17139,8 +17094,7 @@
           "step": 53,
           "vel": 0.34
         }
-      ],
-      "warm_lowpass_hz": 3500.0
+      ]
     }
   ]
 }

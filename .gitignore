@@ -4,8 +4,10 @@
 # Rendered audio output
 /output/
 
-# SoundFont binaries
-/soundfonts/*.sf2
+# SoundFont binaries and third-party SoundFont assets
+/soundfonts/
+*.sf2
+*.sf3
 
 # Loose audio files
 *.wav

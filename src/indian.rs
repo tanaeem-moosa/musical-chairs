@@ -3,7 +3,7 @@
 use std::f64::consts::PI;
 
 use crate::synth::{raised_cosine, BiquadLP, XorShift64, SAMPLE_RATE};
-use crate::tuning::step_to_freq;
+use crate::tuning::{step_cents_to_12tet_freq, step_to_freq};
 
 #[derive(Clone, Copy)]
 struct BiquadBP {
@@ -52,7 +52,17 @@ pub struct IndianNote {
 
 /// Renders an Ektara (single-string gourd/skin resonator with elastic pitch-relaxation & subtle jawari).
 pub fn render_ektara(step: i32, dur_s: f64, vel: f64, meend_cents: f64, seed: u64) -> Vec<f32> {
-    let base_freq = step_to_freq(step);
+    render_ektara_hz(step_to_freq(step), dur_s, vel, meend_cents, seed)
+}
+
+/// Renders an Ektara at an explicit fundamental frequency `base_freq` in Hz.
+pub fn render_ektara_hz(
+    base_freq: f64,
+    dur_s: f64,
+    vel: f64,
+    meend_cents: f64,
+    seed: u64,
+) -> Vec<f32> {
     let sr = SAMPLE_RATE as f64;
     let ring_s = (1.85 - 0.0005 * base_freq).clamp(1.2, 2.0);
     let total_s = dur_s.max(0.25).min(ring_s) + ring_s * 0.55;
@@ -166,7 +176,11 @@ pub fn render_ektara(step: i32, dur_s: f64, vel: f64, meend_cents: f64, seed: u6
 
 /// Renders a Dotara (wooden-plectrum plucked folk lute with crisp attack and taut goatskin resonance).
 pub fn render_dotara(step: i32, dur_s: f64, vel: f64, seed: u64) -> Vec<f32> {
-    let freq = step_to_freq(step);
+    render_dotara_hz(step_to_freq(step), dur_s, vel, seed)
+}
+
+/// Renders a Dotara at an explicit fundamental frequency `freq` in Hz.
+pub fn render_dotara_hz(freq: f64, dur_s: f64, vel: f64, seed: u64) -> Vec<f32> {
     let sr = SAMPLE_RATE as f64;
     let ring_s = (1.55 - 0.0005 * freq).clamp(1.05, 1.65);
     let total_s = dur_s.max(0.20).min(ring_s) + ring_s * 0.55;
@@ -269,6 +283,14 @@ pub fn render_dotara(step: i32, dur_s: f64, vel: f64, seed: u64) -> Vec<f32> {
 }
 
 pub fn render_ektara_track(notes: &[IndianNote], total_samples: usize) -> Vec<(f32, f32)> {
+    render_ektara_track_with_tuning(notes, total_samples, false)
+}
+
+pub fn render_ektara_track_with_tuning(
+    notes: &[IndianNote],
+    total_samples: usize,
+    quantize_12tet: bool,
+) -> Vec<(f32, f32)> {
     let mut out = vec![(0.0_f32, 0.0_f32); total_samples];
     for (idx, n) in notes.iter().enumerate() {
         if n.start_sample >= total_samples {
@@ -276,7 +298,17 @@ pub fn render_ektara_track(notes: &[IndianNote], total_samples: usize) -> Vec<(f
         }
         let dur_s = (n.end_sample.saturating_sub(n.start_sample) as f64 / SAMPLE_RATE as f64).max(0.15);
         let seed = 0xE17A_0000_u64 ^ ((idx as u64).wrapping_mul(0x9E37_79B9_7F4A_7C15));
-        let mono = render_ektara(n.step, dur_s, n.velocity as f64, n.meend_cents as f64, seed);
+        let mono = if quantize_12tet {
+            render_ektara_hz(
+                step_cents_to_12tet_freq(n.step, 0.0),
+                dur_s,
+                n.velocity as f64,
+                0.0,
+                seed,
+            )
+        } else {
+            render_ektara(n.step, dur_s, n.velocity as f64, n.meend_cents as f64, seed)
+        };
         let limit = mono.len().min(total_samples - n.start_sample);
         for i in 0..limit {
             let s = mono[i];
@@ -288,6 +320,14 @@ pub fn render_ektara_track(notes: &[IndianNote], total_samples: usize) -> Vec<(f
 }
 
 pub fn render_dotara_track(notes: &[IndianNote], total_samples: usize) -> Vec<(f32, f32)> {
+    render_dotara_track_with_tuning(notes, total_samples, false)
+}
+
+pub fn render_dotara_track_with_tuning(
+    notes: &[IndianNote],
+    total_samples: usize,
+    quantize_12tet: bool,
+) -> Vec<(f32, f32)> {
     let mut out = vec![(0.0_f32, 0.0_f32); total_samples];
     for (idx, n) in notes.iter().enumerate() {
         if n.start_sample >= total_samples {
@@ -295,7 +335,16 @@ pub fn render_dotara_track(notes: &[IndianNote], total_samples: usize) -> Vec<(f
         }
         let dur_s = (n.end_sample.saturating_sub(n.start_sample) as f64 / SAMPLE_RATE as f64).max(0.15);
         let seed = 0xD07A_0000_u64 ^ ((idx as u64).wrapping_mul(0xBF58_476D_1CE4_E5B9));
-        let mono = render_dotara(n.step, dur_s, n.velocity as f64, seed);
+        let mono = if quantize_12tet {
+            render_dotara_hz(
+                step_cents_to_12tet_freq(n.step, 0.0),
+                dur_s,
+                n.velocity as f64,
+                seed,
+            )
+        } else {
+            render_dotara(n.step, dur_s, n.velocity as f64, seed)
+        };
         let limit = mono.len().min(total_samples - n.start_sample);
         for i in 0..limit {
             let s = mono[i];

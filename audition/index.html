@@ -109,6 +109,55 @@
       border-color: var(--accent-2);
       background: rgba(187, 154, 247, 0.18);
     }
+    .hero-ab {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(310px, 1fr));
+      gap: 12px;
+      margin-top: 12px;
+    }
+    .hero-player-box {
+      background: rgba(15, 17, 22, 0.58);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 14px;
+    }
+    .hero-player-box.active-ab {
+      border-color: rgba(122, 162, 247, 0.72);
+      box-shadow: 0 0 0 1px rgba(122, 162, 247, 0.25);
+    }
+    .hero-player-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      font-weight: 700;
+      font-size: 0.93rem;
+      margin-bottom: 3px;
+    }
+    .hero-svg-details {
+      margin-top: 14px;
+      border-top: 1px solid rgba(42, 50, 66, 0.65);
+      padding-top: 12px;
+    }
+    .hero-svg-details summary {
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.88rem;
+      color: var(--accent);
+      user-select: none;
+    }
+    .hero-svg-frame {
+      margin-top: 10px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      overflow: hidden;
+      background: #0d1017;
+    }
+    .hero-svg-frame img {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
     .card h2, .card h3 { margin: 0 0 6px; font-size: 1.03rem; }
     .muted { color: var(--muted); font-size: 0.86rem; }
     audio { width: 100%; margin-top: 10px; height: 36px; color-scheme: dark; }
@@ -338,22 +387,54 @@
 
     <div class="card hero">
       <div class="hero-head">
-        <h2>Featured: 5-Minute 53-EDO Symphony Showcase — Harmonia Mundi</h2>
-        <span class="pill">4 Connected Movements &middot; 53-EDO &middot; Pipe Organ Finale</span>
+        <h2>Featured: 5-Minute Symphony Showcase — Harmonia Mundi (53-EDO vs 12-TET A/B)</h2>
+        <span class="pill">2-Input Stage Engine &middot; 320k MP3 &middot; +30s Contemplative Silence</span>
       </div>
       <div class="muted">
-        Mozartian poise &amp; counterpoint &rarr; Debussy 7-limit (4:5:6:7:9) &amp; Indian shruti mist (+1 comma lift) &rarr;
+        Pure music score (<code>scores/sample_5min.json</code>) rendered through <code>stages/concert_hall.json</code>:
+        Mozartian poise &rarr; Debussy 7-limit (4:5:6:7:9) &amp; Indian shruti mist (+1 comma lift) &rarr;
         Beethovenian chromatic-mediant diesis summit (+3) &amp; triple downward comma cascade home &rarr;
-        Cathedral Pipe Organ apotheosis (final ~50s). Scored exclusively for your curated orchestra.
+        Cathedral Pipe Organ apotheosis (final ~50s) + 30s trailing silence. Compare exact 53-EDO against 12-TET below!
       </div>
-      <audio id="symphony-5min-audio" controls preload="metadata" src="../output/sample_5min.wav"></audio>
+
+      <div class="hero-ab">
+        <div class="hero-player-box active-ab" id="ab-box-53">
+          <div class="hero-player-title">
+            <span>A. Exact 53-EDO Just Intonation</span>
+            <a class="badge" style="text-decoration:none;" href="../output/sample_5min.wav" target="_blank">WAV</a>
+          </div>
+          <div class="muted">Beat-free 5-limit triads, 7:4 harmonic 7ths, 22-shruti glides &amp; smooth comma/diesis shifts.</div>
+          <audio id="symphony-5min-audio" controls preload="metadata" src="../output/sample_5min.mp3"></audio>
+        </div>
+        <div class="hero-player-box" id="ab-box-12">
+          <div class="hero-player-title">
+            <span>B. 12-TET Standard Approximation</span>
+            <a class="badge" style="text-decoration:none;" href="../output/sample_5min_12tet.wav" target="_blank">WAV</a>
+          </div>
+          <div class="muted">Same score &amp; stage quantized to 12-EDO semitones (listen at 2:55–3:45 to hear the difference!).</div>
+          <audio id="symphony-12tet-audio" controls preload="metadata" src="../output/sample_5min_12tet.mp3"></audio>
+        </div>
+      </div>
+
       <div class="hero-jumps">
-        <button class="jump-btn" data-jump="0">I. Dawn &amp; Clarity (0:00)</button>
+        <button class="btn primary" id="ab-flip-btn" style="padding:5px 12px; font-size:0.8rem;">Live A/B Switch (53-EDO &harr; 12-TET)</button>
+        <button class="jump-btn" data-jump="0">I. Dawn (0:00)</button>
         <button class="jump-btn" data-jump="73.5">II. Lotus &amp; Mist (1:14)</button>
-        <button class="jump-btn" data-jump="151">III. Tempest Across the Comma (2:31)</button>
+        <button class="jump-btn" data-jump="151">III. Tempest (2:31)</button>
+        <button class="jump-btn" data-jump="174.8">Diesis Summit (2:55)</button>
+        <button class="jump-btn" data-jump="198.2">Comma Cascade (3:18)</button>
         <button class="jump-btn" data-jump="227">IV. Transfiguration (3:47)</button>
-        <button class="jump-btn" data-jump="247.6">Pipe Organ Entrance (4:08)</button>
+        <button class="jump-btn" data-jump="247.6">Pipe Organ (4:08)</button>
       </div>
+
+      <details class="hero-svg-details" open>
+        <summary>Score &amp; 2D Concert Stage Visualization (SVG) &mdash; <a href="../output/sample_5min.svg" target="_blank" style="color:var(--accent-2);">Open Full-Screen</a></summary>
+        <div class="hero-svg-frame">
+          <a href="../output/sample_5min.svg" target="_blank">
+            <img src="../output/sample_5min.svg" alt="5-Minute 53-EDO Symphony Stage Map and Pitch-Roll Timeline" loading="lazy" />
+          </a>
+        </div>
+      </details>
     </div>
 
     <div class="ab-grid">
@@ -438,9 +519,46 @@
       return `${m}:${sec.toString().padStart(2, '0')}`;
     };
 
+    const audio53 = document.getElementById('symphony-5min-audio');
+    const audio12 = document.getElementById('symphony-12tet-audio');
+    const box53 = document.getElementById('ab-box-53');
+    const box12 = document.getElementById('ab-box-12');
+    let activeHeroAudio = audio53;
+
+    function setHeroActive(which) {
+      activeHeroAudio = which;
+      if (box53 && box12) {
+        box53.classList.toggle('active-ab', which === audio53);
+        box12.classList.toggle('active-ab', which === audio12);
+      }
+    }
+    if (audio53 && audio12) {
+      audio53.addEventListener('play', () => {
+        if (!audio12.paused) audio12.pause();
+        setHeroActive(audio53);
+      });
+      audio12.addEventListener('play', () => {
+        if (!audio53.paused) audio53.pause();
+        setHeroActive(audio12);
+      });
+    }
+    const abFlipBtn = document.getElementById('ab-flip-btn');
+    if (abFlipBtn && audio53 && audio12) {
+      abFlipBtn.addEventListener('click', () => {
+        const from = activeHeroAudio || audio53;
+        const to = from === audio53 ? audio12 : audio53;
+        const wasPlaying = !from.paused;
+        const t = from.currentTime || 0;
+        from.pause();
+        to.currentTime = t;
+        setHeroActive(to);
+        if (wasPlaying) to.play().catch(() => {});
+      });
+    }
+
     document.querySelectorAll('.jump-btn').forEach((btn) => {
       btn.addEventListener('click', () => {
-        const audio = document.getElementById('symphony-5min-audio');
+        const audio = activeHeroAudio || audio53;
         if (!audio) return;
         audio.currentTime = parseFloat(btn.dataset.jump) || 0;
         audio.play().catch(() => {});

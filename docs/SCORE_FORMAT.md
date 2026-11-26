@@ -1,25 +1,49 @@
-# 53-EDO JSON Score Format & Agent Authoring Guide
+# Musical Chairs — 53-EDO Score & Stage Format Guide
 
-This guide is a self-contained specification for **AI agents and human composers** authoring microtonal classical music in **53-EDO (53 Equal Divisions of the Octave)** for the pure-Rust renderer in this repository.
+This guide is a self-contained specification for **AI agents and human composers** authoring microtonal classical music in **53-EDO (53 Equal Divisions of the Octave)** for **Musical Chairs**.
 
-Hand this file (plus [scores/example_minimal.json](../scores/example_minimal.json)) to any AI agent to let it compose a valid 53-EDO score, render it to 48 kHz stereo WAV + synced stems, and compare results side-by-side.
+Musical Chairs uses a **decoupled 2-input architecture**:
+1. **`score.json`** — Pure stage-independent music (tempo map, instrument tracks, 53-EDO notes & articulation).
+2. **`--stage <stage.json>`** — Reusable concert-stage seating `(x, y)`, per-player mix `gain`, `warm_lowpass_hz`, hall `reverb_rt60`, `tail_seconds`, and `end_silence_seconds`.
+
+Hand this file (plus [scores/example_minimal.json](../scores/example_minimal.json)) to any AI agent so it can compose a valid 53-EDO score, render it on any virtual stage in **53-EDO or 12-TET**, export synchronized dry stems + a **1600×960 dark-studio SVG score/stage map**, and compare compositions side-by-side.
 
 ---
 
 ## 1. Quickstart CLI Commands
 
-All commands run from the repository root (`/home/deck/projects/music`). The project requires `soundfonts/GeneralUser-GS.sf2` and compiles with pure Rust (`x86_64-unknown-linux-musl` via `.cargo/config.toml`).
+All commands run from the repository root (`/home/deck/projects/music`). No SoundFont files are committed or bundled in this repository — see **[Setup: Obtaining a General MIDI SoundFont](../README.md#setup-obtaining-a-general-midi-soundfont-sf2)** in `README.md` to obtain GeneralUser GS (`https://schristiancollins.com/generaluser.php`) or an alternative GM `.sf2` (such as FluidR3_GM or MuseScore General, each under its own license) and place it at `soundfonts/GeneralUser-GS.sf2` or pass `--soundfont /path/to/your.sf2`. The engine compiles with pure Rust (`x86_64-unknown-linux-musl` via `.cargo/config.toml`).
 
 ```bash
-# Render a JSON score (output defaults to output/<input_stem>.wav if omitted)
-cargo run --release -- render scores/example_minimal.json
-cargo run --release -- render scores/example_minimal.json output/example_minimal.wav
+# Render a pure-music score on a reusable stage preset (defaults to output/<stem>.wav)
+cargo run --release -- render scores/example_minimal.json --stage stages/concert_hall.json
 
-# Render a JSON score AND export synchronized centered dry stems (<dir>/<track.id>.wav)
-cargo run --release -- render scores/sample_5min.json output/sample_5min.wav --stems-dir output/stems_5min
+# Full render: 53-EDO + stage preset + 30s intentional trailing silence + 1600x960 SVG visual
+cargo run --release -- render scores/sample_5min.json output/sample_5min.wav \
+  --stage stages/concert_hall.json \
+  --end-silence 30 \
+  --image output/sample_5min.svg
 
-# Override the SoundFont2 file (default: soundfonts/GeneralUser-GS.sf2)
-cargo run --release -- render scores/example_minimal.json output/example_minimal.wav --soundfont path/to/custom.sf2
+# Render the EXACT same score quantized to 12-TET for direct 53-EDO vs 12-TET A/B comparison
+cargo run --release -- render scores/sample_5min.json output/sample_5min_12tet.wav \
+  --stage stages/concert_hall.json \
+  --tuning 12tet \
+  --end-silence 30
+
+# Render AND export synchronized centered dry stems (<dir>/<track.id>.wav)
+cargo run --release -- render scores/sample_5min.json output/sample_5min.wav \
+  --stage stages/concert_hall.json \
+  --stems-dir output/stems_5min
+
+# Fast standalone SVG visualization (~6 ms, no audio rendering required; defaults to output/<stem>.svg)
+cargo run --release -- visualize scores/sample_5min.json output/sample_5min.svg \
+  --stage stages/concert_hall.json \
+  --tuning 53edo
+
+# Override SoundFont2 path (default: soundfonts/GeneralUser-GS.sf2)
+cargo run --release -- render scores/example_minimal.json output/example_minimal.wav \
+  --stage stages/intimate_circle.json \
+  --soundfont path/to/custom.sf2
 
 # Render all isolated 53-EDO instrument auditions, 53-note harp sweep, & fusion showcase
 cargo run --release -- audition
@@ -27,29 +51,41 @@ cargo run --release -- audition
 # Render the pure-Rust additive/physical-model synth preview (no SoundFont)
 cargo run --release -- preview-synth
 
-# Run the full test suite (tuning accuracy, JSON parsing, zero-NaN / zero-clip rendering)
+# Run the full test suite (tuning accuracy, StageConfig precedence, 12-TET quantization, end-silence, SVG)
 cargo test --release
 ```
 
-CLI flags accept both space-separated (`--stems-dir dir`) and `=` (`--stems-dir=dir`) forms. Every `render` invocation prints a verification summary to stdout:
-- Score title, description, duration, sample rate, track count, total note count, tail, and Hall RT60
-- Per-track note count, stage coordinates `(x, y)`, gain, and optional low-pass cutoff
-- Stems summary (when `--stems-dir` is set)
-- Mastering stats: `Peak dBFS`, `RMS L/R dBFS`, `Clipped` sample count (must be `0`), and `NaNs` (must be `0`)
+### Complete CLI Flag Reference
+
+| Subcommand | Flags | Notes |
+|---|---|---|
+| `render <input.json> [output.wav]` | `--stage <stage.json>` | Optional decoupled stage placement, gain, warm LP & hall settings. |
+| | `--tuning <53edo\|12tet>` | Tuning system (default: `53edo`). See §2.3 for 12-TET projection details. |
+| | `--end-silence <seconds>` | Appends exact clean `(0.0, 0.0)` silence after the mastered reverb tail (overrides JSON). |
+| | `--stems-dir <dir>` | Exports synchronized centered dry stems `<dir>/<track.id>.wav` (including trailing silence). |
+| | `--image <out.svg>` | Also writes a 1600×960 dark-studio SVG (2D stage map + pitch-roll timeline). |
+| | `--soundfont <path>` | Custom SoundFont2 file (default: `soundfonts/GeneralUser-GS.sf2`). |
+| `visualize <score.json> [out.svg]` | `--stage <stage.json>`, `--tuning <53edo\|12tet>`, `--end-silence <seconds>` | Pure-Rust SVG generator (`out.svg` defaults to `output/<stem>.svg`). |
+| `audition` | *(none)* | Generates isolated instrument auditions + fusion showcase under `output/`. |
+| `preview-synth` | *(none)* | Generates pure-Rust physical/additive synth preview (`output/preview_60s.wav`). |
+
+All flags accept both space-separated (`--stage stages/concert_hall.json`) and `=` (`--stage=stages/concert_hall.json`) forms. Every `render` run prints title, duration, tuning, stage name, tail/RT60/end-silence, per-track note counts/coords/gain/LP, stems/SVG paths, and mastering stats (`Peak dBFS`, `RMS L/R dBFS`, `Clipped`, `NaNs`).
 
 ---
 
-## 2. Complete JSON Score Schema
+## 2. Decoupled 2-Input Schema (`score.json` + `stage.json`)
 
-### Full Annotated Example
+### 2.1 Pure-Music `score.json` Schema
+
+Recommended practice is to keep `score.json` **purely musical** (omitting `x`, `y`, `gain`, `warm_lowpass_hz`, `reverb_rt60`, `tail_seconds`) and pass `--stage stages/concert_hall.json` at render time. Inline track stage fields remain fully supported for backward compatibility.
+
+#### Minimal Pure-Music Example
 
 ```json
 {
   "title": "Luminous 53-EDO Miniature",
-  "description": "Short multi-track 53-EDO demonstration.",
+  "description": "Stage-independent pure-music 53-EDO score.",
   "sample_rate": 48000,
-  "tail_seconds": 3.0,
-  "reverb_rt60": 2.25,
   "tempo": [
     { "beat": 0.0, "bpm": 90.0 },
     { "beat": 8.0, "bpm": 84.0 }
@@ -59,10 +95,6 @@ CLI flags accept both space-separated (`--stems-dir dir`) and `=` (`--stems-dir=
       "id": "english_horn",
       "name": "English Horn",
       "instrument": "english_horn",
-      "x": 1.4,
-      "y": 4.8,
-      "gain": 0.88,
-      "warm_lowpass_hz": null,
       "notes": [
         {
           "beat": 0.5,
@@ -80,44 +112,45 @@ CLI flags accept both space-separated (`--stems-dir dir`) and `=` (`--stems-dir=
 }
 ```
 
-### Top-Level Fields
+#### Top-Level `score.json` Fields
 
 | Field | Type | Required | Default | Range / Notes |
 |---|---|---|---|---|
-| `title` | `string` | No | `"Untitled 53-EDO Piece"` | Human-readable composition title printed in CLI summary. |
+| `title` | `string` | No | `"Untitled 53-EDO Piece"` | Human-readable composition title printed in CLI & SVG header. |
 | `description` | `string` | No | `""` | Free-form notes (movement outline, tuning notes, agent metadata). |
 | `sample_rate` | `integer` | No | `48000` | Output sample rate in Hz (`8000`–`192000`). **Keep at `48000`** for native physical-model rendering without resampling. |
-| `tail_seconds` | `number` | No | `4.5` | Extra reverb/release tail appended after the final note ends (`>= 0.0`; `2.5`–`6.0` recommended). |
-| `reverb_rt60` | `number` | No | `2.25` | Concert hall 8-channel Walsh-Hadamard FDN RT60 decay time in seconds (`>= 0.0`; `1.2`–`3.5` typical, `2.25` = warm chamber hall). |
+| `tail_seconds` | `number` | No | `4.5` | Extra reverb/release tail appended after the final note ends (`>= 0.0`). Overridden by `stage.json` if set there. |
+| `reverb_rt60` | `number` | No | `2.25` | 8-channel Walsh-Hadamard FDN hall decay time in seconds (`>= 0.0`). Overridden by `stage.json` if set there. |
+| `end_silence_seconds` | `number` | No | `0.0` | Clean trailing silence `(0.0, 0.0)` appended *after* the mastered reverb tail without altering RMS or peak normalization. Precedence: CLI `--end-silence` > `stage.json` > `score.json` > `0.0`. |
 | `tempo` | `TempoPoint[]` | No | `[{"beat": 0.0, "bpm": 70.0}]` | Non-empty piecewise-linear BPM map (see below). |
 | `tracks` | `Track[]` | **Yes** | — | Array of instrument tracks (rendered in parallel across CPU threads). |
 
-### `TempoPoint` Object (`tempo[]`)
+#### `TempoPoint` Object (`tempo[]`)
 
-| Field | Type | Required | Default | Notes |
-|---|---|---|---|---|
-| `beat` | `number` | **Yes** | — | Musical beat position (`>= 0.0`). Segments are sorted ascending by `beat`. |
-| `bpm` | `number` | **Yes** | — | Tempo in beats per minute (`> 0.0`, typically `48.0`–`120.0`). |
+| Field | Type | Required | Notes |
+|---|---|---|---|
+| `beat` | `number` | **Yes** | Musical beat position (`>= 0.0`). Segments are sorted ascending by `beat`. |
+| `bpm` | `number` | **Yes** | Tempo in beats per minute (`> 0.0`, typically `48.0`–`120.0`). |
 
-**How `TempoMap` interpolates:** Between consecutive points `(b1, bpm1)` and `(b2, bpm2)`, BPM changes **linearly** with exact analytical logarithmic time integration (`src/score.rs`).
-- For a **constant tempo** across beats `0..64`, repeat the BPM: `{"beat": 0.0, "bpm": 72.0}, {"beat": 64.0, "bpm": 72.0}`.
-- For a **smooth ritardando / accelerando** across beats `60..64`, set `{"beat": 60.0, "bpm": 72.0}, {"beat": 64.0, "bpm": 60.0}`.
-- For an **abrupt tempo jump** at beat `64`, place a tiny step: `{"beat": 63.999, "bpm": 72.0}, {"beat": 64.0, "bpm": 80.0}`.
+**How `TempoMap` interpolates (`src/score.rs`):** Between consecutive points `(b1, bpm1)` and `(b2, bpm2)`, BPM ramps linearly with exact analytical logarithmic time integration:
+- **Constant tempo** across beats `0..64`: `{"beat": 0.0, "bpm": 72.0}, {"beat": 64.0, "bpm": 72.0}`.
+- **Smooth ritardando / accelerando** across beats `60..64`: `{"beat": 60.0, "bpm": 72.0}, {"beat": 64.0, "bpm": 60.0}`.
+- **Abrupt tempo jump** at beat `64`: `{"beat": 63.999, "bpm": 72.0}, {"beat": 64.0, "bpm": 80.0}`.
 
-### `Track` Object (`tracks[]`)
+#### `Track` Object (`tracks[]`)
 
 | Field | Type | Required | Default | Range / Notes |
 |---|---|---|---|---|
-| `id` | `string` | **Yes** | — | Unique non-empty slug with no path separators (`/`, `\`, `..`). Used as stem filename `<stems-dir>/<id>.wav`. |
-| `name` | `string \| null` | No | `id` | Display name for logs/UI. |
-| `instrument` | `string` | **Yes** | — | Must be one of the 21 supported instrument IDs in Section 4. |
-| `x` | `number` | No | `0.0` | Stage horizontal position in meters (`-6.0` far left to `+6.0` far right). |
-| `y` | `number` | No | `4.5` | Stage depth in meters (`2.0` front to `14.0` rear). Listener is at `(0, 0)` facing `+y`. |
-| `gain` | `number` | No | `1.0` | Linear track mix gain (`>= 0.0`, `0.4`–`1.2` typical) applied after optional low-pass and before spatialization. |
-| `warm_lowpass_hz` | `number \| null` | No | `null` | Optional 2-pole Butterworth low-pass cutoff in Hz (`> 0.0`, clamped internally to `[40, 0.45*sr]`) applied to L/R before spatialization. Ideal for warming bright GM presets (e.g. `2800.0`–`3200.0` for `sitar`). |
+| `id` | `string` | **Yes** | — | Unique non-empty slug with no path separators (`/`, `\`, `..`). Used as stem filename `<stems-dir>/<id>.wav` and primary lookup key in `stage.json`. |
+| `name` | `string \| null` | No | `id` | Display name for CLI logs & SVG stage labels. |
+| `instrument` | `string` | **Yes** | — | Must be one of the 21 supported instrument IDs in Section 4. Also used as fallback lookup key in `stage.json`. |
 | `notes` | `Note[]` | No | `[]` | Array of note events on this track. |
+| `x` *(optional inline)* | `number` | No | `0.0` | Stage horizontal position in meters (`-6.0` left to `+6.0` right). Prefer setting in `stage.json`. |
+| `y` *(optional inline)* | `number` | No | `4.5` | Stage depth in meters (`2.0` front to `14.0` rear). Prefer setting in `stage.json`. |
+| `gain` *(optional inline)* | `number` | No | `1.0` | Linear track mix gain (`>= 0.0`, `0.4`–`1.2` typical). Prefer setting in `stage.json`. |
+| `warm_lowpass_hz` *(optional inline)* | `number \| null` | No | `null` | Optional 2-pole Butterworth low-pass cutoff in Hz (`> 0.0`, clamped internally to `[40, 0.45*sr]`) applied to L/R before spatialization. Prefer setting in `stage.json`. |
 
-### `Note` Object (`tracks[].notes[]`)
+#### `Note` Object (`tracks[].notes[]`)
 
 | Field | Type | Required | Default | Range / Notes |
 |---|---|---|---|---|
@@ -126,9 +159,60 @@ CLI flags accept both space-separated (`--stems-dir dir`) and `=` (`--stems-dir=
 | `step` | `integer` | **Yes** | — | **53-EDO pitch step**, where **`C4 = 0`**, **`A4 = 39` (440 Hz)**, **`OCT = 53`**. |
 | `vel` | `number` | No | `0.75` | Normalized velocity (`0.05`–`1.0`). Shape dynamically (`0.40`–`0.92`) for musical phrasing. |
 | `cents` | `number` | No | `0.0` | Extra fine microtonal pitch offset in cents added on top of `step`. |
-| `slide_from_cents` | `number` | No | `0.0` | **SF2 instruments** (also accepted as fallback by `ektara`). Smooth 140 ms quadratic pitch-bend glide *from* `step + cents + slide_from_cents` *into* `step + cents`. Negative slides up; positive slides down. Keep within `[-150, +150]` (clamped at `±195` cents). |
-| `breath_swell` | `boolean` | No | `false` | **SF2 instruments only.** Applies a smooth MIDI CC 11 expression arch (`82 → 124 → 82`) on notes longer than ~50 ms. Set `true` on winds & brass (`clarinet`, `english_horn`, `bassoon`, `french_horn`). |
-| `meend_cents` | `number` | No | `0.0` | **`ektara` physical model** (also accepted as fallback by SF2 slides). Initial elastic pitch-relaxation offset in cents (exponential decay, τ = 110 ms) into `step`. Positive (`+12` to `+28`) gives authentic gourd-string pluck relaxation. |
+| `slide_from_cents` | `number` | No | `0.0` | **SF2 instruments** (fallback for `ektara`). Smooth 140 ms quadratic pitch-bend glide *from* `step + cents + slide_from_cents` *into* `step + cents`. Negative slides up; positive slides down. Keep within `[-150, +150]` (clamped at `±195¢`). Ignored in `--tuning 12tet`. |
+| `breath_swell` | `boolean` | No | `false` | **SF2 instruments only.** Smooth MIDI CC 11 expression arch (`82 → 124 → 82`) on notes longer than ~50 ms. Set `true` on winds & brass (`clarinet`, `english_horn`, `bassoon`, `french_horn`). |
+| `meend_cents` | `number` | No | `0.0` | **`ektara` physical model** (fallback for SF2 slides). Initial elastic pitch-relaxation offset in cents (exponential decay, τ = 110 ms) into `step`. Positive (`+12` to `+28`) gives authentic gourd-string pluck relaxation. Ignored in `--tuning 12tet`. |
+
+---
+
+### 2.2 Reusable `stage.json` Schema & Precedence
+
+A `stage.json` file separates **room acoustics and concert seating** from the musical score so you can audition the exact same `score.json` in multiple acoustic spaces!
+
+```json
+{
+  "name": "Concert Hall",
+  "description": "Balanced symphonic concert hall seating",
+  "reverb_rt60": 2.25,
+  "tail_seconds": 5.0,
+  "end_silence_seconds": 0.0,
+  "players": {
+    "piano":        { "x": -2.3, "y": 3.3,  "gain": 0.96, "warm_lowpass_hz": null },
+    "sitar":        { "x": -1.5, "y": 2.7,  "gain": 0.84, "warm_lowpass_hz": 2700.0 },
+    "church_organ": { "x":  0.0, "y": 10.4, "gain": 0.74, "warm_lowpass_hz": 3500.0 }
+  }
+}
+```
+
+#### Exact Resolution Precedence (`src/score_json.rs`)
+- **Per-track fields (`x`, `y`, `gain`, `warm_lowpass_hz`):**
+  1. `stage.players[track.id]` (if `--stage` is provided and key exists)
+  2. `stage.players[track.instrument]` (fallback if `track.id` differs from `track.instrument`, e.g. `"piano_lh"` falls back to `"piano"`)
+  3. Inline field on the track in `score.json`
+  4. Engine default (`x = 0.0`, `y = 4.5`, `gain = 1.0`, `warm_lowpass_hz = null`)
+  - *Note on `warm_lowpass_hz`:* An explicit `"warm_lowpass_hz": null` in `stage.json` **explicitly disables** an inline low-pass filter; omitting the key falls back down the precedence chain.
+- **Hall & tail fields (`reverb_rt60`, `tail_seconds`):** `stage.json` (if present) > `score.json` > default (`2.25` / `4.5`).
+- **Trailing silence (`end_silence_seconds`):** CLI `--end-silence` > `stage.json` > `score.json` > `0.0`.
+
+#### Bundled Stage Presets (`stages/`)
+
+| Preset File | Name | `reverb_rt60` | `tail_seconds` | Acoustic Layout |
+|---|---|---:|---:|---|
+| [stages/concert_hall.json](../stages/concert_hall.json) | **Concert Hall** | `2.25 s` | `5.0 s` | Balanced symphonic seating matching the 14-track 5-min ensemble (includes defaults for all 21 instruments, warmed `sitar` LP `2700 Hz`, `church_organ` LP `3500 Hz`). |
+| [stages/intimate_circle.json](../stages/intimate_circle.json) | **Intimate Chamber Circle** | `1.45 s` | `3.8 s` | Close, warm chamber-salon semicircle (`y = 2.2–6.8 m`) with tighter hall bloom and immediate presence. |
+| [stages/east_west_split.json](../stages/east_west_split.json) | **East-West Antiphonal Split** | `2.35 s` | `5.0 s` | Western chamber orchestra arrayed Stage Left (`x < 0`) answering Indian classical shruti instruments (`sitar`, `dotara`, `ektara`) arrayed Stage Right (`x > 0`). |
+
+---
+
+### 2.3 Tuning Modes (`--tuning 53edo|12tet`) & SVG Visualization (`--image` / `visualize`)
+
+- **`--tuning 53edo` (default):** Full exact 53-EDO frequency synthesis (`440 * 2^((step - 39)/53 + cents/1200)`), 14-bit pitch-bent SF2 channels, smooth meend glides, and exact waveguide pitch on `ektara`/`dotara`.
+- **`--tuning 12tet`:** Projects every note's 53-EDO pitch to its nearest 12-TET semitone anchored at `C4 = step 0`:
+  $$\text{midi} = \operatorname{round}\!\left(60 + \frac{12 \cdot \text{step}}{53} + \frac{\text{cents}}{100}\right)$$
+  For example: `C4 (step 0) → MIDI 60 (261.63 Hz)`, `DIESIS (+2) → MIDI 60 (261.63 Hz)` (collapsing the diesis!), and `A4 (step 39) → MIDI 69 (440.00 Hz)`. SF2 tracks use zero pitch bend / glide and `ektara`/`dotara` tune to exact `440 * 2^((midi - 69)/12)` Hz. This makes it trivial to hear how much cleaner 53-EDO triads, 7-limit ninths, and comma modulations sound compared to 12-TET!
+- **SVG Visualizer (`--image <out.svg>` or `visualize <score.json> [out.svg]`):** Generates a crisp **1600×960 dark-studio SVG** in pure Rust (~6 ms for a 5-minute symphony) featuring:
+  - **Left Panel — 2D Concert Stage Map:** Concentric depth arcs (`3m, 6m, 9m, 12m`), listener position at `(0, 0)`, family-colored labeled musician markers from the resolved `stage.json`, and dashed rings indicating active `warm_lowpass_hz` filters.
+  - **Right Panel — Pitch-Roll Timeline:** Every note across the full score color-coded by instrument family, `m:ss` time axis, `C2..C6` octave lines, title/tuning header, and a bottom **comma-drift indicator strip** visualizing 53-EDO comma/diesis motion.
 
 ---
 
@@ -251,48 +335,48 @@ Because every 5-limit chord is pure, harmonic cycles do **not** close on the sam
 
 ## 4. Instrument Catalog, Stage Seating & Acoustic Tips
 
-All **21 supported `instrument` IDs** are rendered with exact 53-EDO tuning:
+All **21 supported `instrument` IDs** render in exact 53-EDO (or 12-TET with `--tuning 12tet`):
 - **19 SoundFont2 instruments** (`GeneralUser-GS.sf2` via `rustysynth`): each track gets **15 dedicated melodic MIDI channels** (channels 0–8, 10–15) with ±2-semitone 14-bit pitch bend so chords never collide in pitch bend, and SF2 chorus/reverb are disabled so 53-EDO intervals stay acoustically pure.
 - **2 Pure-Rust Physical Models** (`src/indian.rs`): Karplus-Strong waveguide models with cubic fractional delay, body formants, and exact 53-EDO pitch (`ektara`, `dotara`).
 
 ### Full 21-Instrument Catalog
 
-| `instrument` ID | Engine | Tier | Sweet-Spot Steps (Pitch) | Rec. Stage `(x, y)` | Features & Acoustic Notes |
+| `instrument` ID | Engine | Tier | Sweet-Spot Steps (Pitch) | Concert Hall `(x, y)` | Features & Acoustic Notes |
 |---|---|---|---|---|---|
-| `piano` | SF2 GM 0 | **Warm Core** | `-106..+92` (C2–A5) | `(-2.4, 3.4)` | Crisp Mozartian clarity & rich chords; user favorite. |
-| `harp` | SF2 GM 46 | **Warm Core** | `-84..+106` (F2–C6) | `(-3.2, 3.2)` | Silky full 53-EDO arpeggios & harmonic sweeps; avoid letting chords bleed across changes. |
-| `pizzicato` | SF2 GM 45 | **Warm Core** | `-53..+70` (C3–E5) | `(0.8, 4.8)` | Crisp plucked pulse for Mozartian lightness. |
-| `string_ensemble` | SF2 GM 48 | **Warm Core** | `-53..+84` (C3–G5) | `(0.0, 7.4)` | Lush full-orchestra sustained bed; gorgeous for pure 5-limit/7-limit swells. |
-| `viola` | SF2 GM 41 | **Warm Core** | `-53..+53` (C3–C5) | `(-2.2, 4.4)` | Rich, warm alto inner counterpoint; far smoother than GM solo violin. |
-| `cello` | SF2 GM 42 | **Warm Core** | `-106..+17` (C2–E4) | `(2.6, 4.2)` | Singing tenor/bass melodies and warm harmonic anchor. |
-| `clarinet` | SF2 GM 71 | **Warm Core** | `-36..+70` (E3–E5) | `(-1.2, 5.8)` | Velvety woody voice; use `breath_swell: true`. |
-| `english_horn` | SF2 GM 69 | **Warm Core** | `-31..+53` (F3–C5) | `(1.4, 4.8)` | Dark, expressive alto double-reed; user favorite — use `breath_swell: true`. |
-| `bassoon` | SF2 GM 70 | **Warm Core** | `-106..0` (C2–C4) | `(0.5, 6.6)` | Warm woody bass foundation without contrabass bow buzz; use `breath_swell: true`. |
-| `french_horn` | SF2 GM 60 | **Warm Core** | `-75..+31` (G2–G4) | `(2.2, 8.2)` | Noble Beethovenian warmth & glowing mid-register pads; use `breath_swell: true`. |
-| `dotara` | Phys. Model | **Indian Color** | `-53..+53` (C3–C5) | `(1.8, 2.8)` | Crisp wooden-plectrum folk lute with goatskin body & sympathetic 12th. |
-| `ektara` | Phys. Model | **Indian Color** | `-84..+17` (F2–E4) | `(-0.4, 3.4)` | Warm single-string gourd drone/pulse; supports `meend_cents` (`+12`..`+28`). |
-| `sitar` | SF2 GM 104 | **Indian Color** | `-53..+31` (C3–G4) | `(-1.6, 2.6)` | Supports `slide_from_cents` meend glides. **Tip:** set `warm_lowpass_hz: 2800.0`, stay in C3–G4, and keep slides `<= 40¢` in dense textures so it stays silky, not sharp. |
-| `church_organ` | SF2 GM 19 | **Finisher Only** | `-106..+53` (C2–C5) | `(0.0, 10.5)` | Cathedral pipe power with slight GM reed edge; save for dramatic finale swells rather than continuous accompaniment. |
-| `celesta` | SF2 GM 8 | *Caution* | `0..+106` (C4–C6) | `(1.8, 3.8)` | Bright bell sparkle; can sound toy-like/synthy if overused. |
-| `flute` | SF2 GM 73 | *Caution* | `0..+106` (C4–C6) | `(-0.8, 5.4)` | GM preset can sound thin/mechanical; prefer `clarinet` or `english_horn`. |
+| `piano` | SF2 GM 0 | **Warm Core** | `-106..+92` (C2–A5) | `(-2.3, 3.3)` | Crisp Mozartian clarity & rich chords; user favorite. |
+| `harp` | SF2 GM 46 | **Warm Core** | `-84..+106` (F2–C6) | `(-3.4, 3.7)` | Silky full 53-EDO arpeggios & harmonic sweeps; stop notes cleanly before chord changes. |
+| `pizzicato` | SF2 GM 45 | **Warm Core** | `-53..+70` (C3–E5) | `(1.1, 4.3)` | Crisp plucked pulse for Mozartian lightness. |
+| `string_ensemble` | SF2 GM 48 | **Warm Core** | `-53..+84` (C3–G5) | `(0.0, 7.6)` | Lush full-orchestra sustained bed; gorgeous for pure 5-limit/7-limit swells. |
+| `viola` | SF2 GM 41 | **Warm Core** | `-53..+53` (C3–C5) | `(-1.8, 4.5)` | Rich, warm alto inner counterpoint; far smoother than GM solo violin. |
+| `cello` | SF2 GM 42 | **Warm Core** | `-106..+17` (C2–E4) | `(2.4, 4.1)` | Singing tenor/bass melodies and warm harmonic anchor. |
+| `clarinet` | SF2 GM 71 | **Warm Core** | `-36..+70` (E3–E5) | `(-1.2, 5.6)` | Velvety woody voice; use `breath_swell: true`. |
+| `english_horn` | SF2 GM 69 | **Warm Core** | `-31..+53` (F3–C5) | `(1.4, 5.4)` | Dark, expressive alto double-reed; user favorite — use `breath_swell: true`. |
+| `bassoon` | SF2 GM 70 | **Warm Core** | `-106..0` (C2–C4) | `(0.4, 6.4)` | Warm woody bass foundation without contrabass bow buzz; use `breath_swell: true`. |
+| `french_horn` | SF2 GM 60 | **Warm Core** | `-75..+31` (G2–G4) | `(2.3, 7.8)` | Noble Beethovenian warmth & glowing mid-register pads; use `breath_swell: true`. |
+| `dotara` | Phys. Model | **Indian Color** | `-53..+53` (C3–C5) | `(2.0, 2.8)` | Crisp wooden-plectrum folk lute with goatskin body & sympathetic 12th. |
+| `ektara` | Phys. Model | **Indian Color** | `-84..+17` (F2–E4) | `(-0.5, 3.1)` | Warm single-string gourd drone/pulse; supports `meend_cents` (`+12`..`+28`). |
+| `sitar` | SF2 GM 104 | **Indian Color** | `-53..+31` (C3–G4) | `(-1.5, 2.7)` | Supports `slide_from_cents` meend glides. **Tip:** `stages/concert_hall.json` applies `warm_lowpass_hz: 2700.0`; stay in C3–G4 and keep slides `<= 40¢` in dense textures. |
+| `church_organ` | SF2 GM 19 | **Finisher Only** | `-106..+53` (C2–C5) | `(0.0, 10.4)` | Cathedral pipe power (`stages/concert_hall.json` applies `warm_lowpass_hz: 3500.0`); save for dramatic finale swells rather than continuous accompaniment. |
+| `celesta` | SF2 GM 8 | *Caution* | `0..+106` (C4–C6) | `(-3.8, 4.8)` | Bright bell sparkle; can sound toy-like/synthy if overused. |
+| `flute` | SF2 GM 73 | *Caution* | `0..+106` (C4–C6) | `(-1.6, 5.4)` | GM preset can sound thin/mechanical; prefer `clarinet` or `english_horn`. |
 | `oboe` | SF2 GM 68 | *Caution* | `0..+70` (C4–E5) | `(0.8, 5.4)` | Bright/piercing GM reed; prefer `english_horn` for warmth. |
-| `shakuhachi` | SF2 GM 77 | *Caution* | `0..+84` (C4–G5) | `(-1.4, 4.6)` | Heavy breath noise in GM preset; use sparingly if at all. |
-| `violin` | SF2 GM 40 | *Caution* | `0..+106` (C4–C6) | `(-2.8, 3.6)` | GM solo violin sounds thin/synthy; prefer `viola` + `string_ensemble`. |
-| `contrabass` | SF2 GM 43 | *Caution* | `-128..-31` (G1–F3) | `(3.2, 6.4)` | Growly bow buzz in GM preset; prefer `bassoon` + `cello` for lush bass. |
-| `slow_strings` | SF2 GM 49 | *Caution* | `-53..+70` (C3–E5) | `(0.0, 8.0)` | Synthy pad character in GM preset; prefer `string_ensemble`. |
+| `shakuhachi` | SF2 GM 77 | *Caution* | `0..+84` (C4–G5) | `(-0.6, 5.0)` | Heavy breath noise in GM preset; use sparingly if at all. |
+| `violin` | SF2 GM 40 | *Caution* | `0..+106` (C4–C6) | `(-2.6, 3.8)` | GM solo violin sounds thin/synthy; prefer `viola` + `string_ensemble`. |
+| `contrabass` | SF2 GM 43 | *Caution* | `-128..-31` (G1–F3) | `(3.4, 5.4)` | Growly bow buzz in GM preset; prefer `bassoon` + `cello` for lush bass. |
+| `slow_strings` | SF2 GM 49 | *Caution* | `-53..+70` (C3–E5) | `(0.0, 8.2)` | Synthy pad character in GM preset; prefer `string_ensemble`. |
 
 ### 3D Concert Stage Geometry (`src/spatial.rs`)
 
 ```
                        REAR OF STAGE (y = 11m)
-                      [ church_organ (0, 10.5) ]
-                  [ french_horn (2.2, 8.2) ]
-                   [ string_ensemble (0.0, 7.4) ]
-                        [ bassoon (0.5, 6.6) ]
-            [ clarinet (-1.2, 5.8) ]   [ english_horn (1.4, 4.8) ]
-   [ viola (-2.2, 4.4) ]   [ pizzicato (0.8, 4.8) ]   [ cello (2.6, 4.2) ]
-[ harp (-3.2, 3.2) ] [ piano (-2.4, 3.4) ] [ ektara (-0.4, 3.4) ] [ dotara (1.8, 2.8) ]
-                        [ sitar (-1.6, 2.6) ]
+                      [ church_organ (0, 10.4) ]
+                  [ french_horn (2.3, 7.8) ]
+                   [ string_ensemble (0.0, 7.6) ]
+                        [ bassoon (0.4, 6.4) ]
+            [ clarinet (-1.2, 5.6) ]   [ english_horn (1.4, 5.4) ]
+   [ viola (-1.8, 4.5) ]   [ pizzicato (1.1, 4.3) ]   [ cello (2.4, 4.1) ]
+[ harp (-3.4, 3.7) ] [ piano (-2.3, 3.3) ] [ ektara (-0.5, 3.1) ] [ dotara (2.0, 2.8) ]
+                        [ sitar (-1.5, 2.7) ]
 
                            LISTENER (0, 0)
                               facing +y
@@ -307,52 +391,70 @@ What `spatial::spatialize_track` physically models from `(x, y)`:
 
 ### Essential Acoustic & Compositional Pitfalls (Agent Checklist)
 
-1. **One coherent harmonic grid per bar:** Never swap incompatible bass roots (e.g. `F2` against a `G` chord), never mix `Bb_harm` (`43`) with `B` (`48`) in the same beat, and never layer a dominant 7th over a pure major triad. When writing a Python generator, add an automated **consonance validator** checking every active note against the bar's chord tones!
-2. **No close thirds below `C3` (`step = -53`):** Close intervals (3rds/2nds) in the bass create severe low-frequency acoustic roughness even in pure JI. Below `C3`, use roots, octaves (`+53`), and pure fifths (`+31`); voice thirds (`+17`/`+14`), 7ths (`+43`), and 9ths (`+62`) at `C3` and above.
+1. **One coherent harmonic grid per bar:** Never swap incompatible bass roots (e.g. `F2` against a `G` chord), never mix `Bb_harm` (`43`) with `B` (`48`) in the same beat, and never layer a dominant 7th over a pure major triad. Add an automated **consonance validator** in your generator script checking every active note against the bar's chord tones!
+2. **No close thirds below `C3` (`step = -53`):** Close intervals (3rds/2nds) in the bass create severe low-frequency roughness even in pure JI. Below `C3`, use roots, octaves (`+53`), and pure fifths (`+31`); voice thirds (`+17`/`+14`), 7ths (`+43`), and 9ths (`+62`) at `C3` and above.
 3. **Stop harp/piano arpeggios cleanly before chord changes:** Release arpeggio notes ~0.1–0.2 beats before the next harmony so previous chord tones don't clash across barlines.
 4. **Always use `breath_swell: true` and breathing rests on winds & horns:** Sustained notes on `clarinet`, `english_horn`, `bassoon`, and `french_horn` sound dramatically more human with `breath_swell: true` and 0.5–2 beat phrase rests between melodic sentences.
 5. **Shape velocities dynamically (`vel`):** Vary `vel` smoothly across phrases (`0.42` pp → `0.68` mp → `0.86` f → `0.48` pp) rather than writing flat `0.75` everywhere.
 6. **Respect the 15-voice per-track SF2 channel pool:** Each SF2 track allocates 15 independent pitch-bent channels; keep simultaneous overlapping notes per SF2 track `<= 15` so the oldest voice isn't stolen mid-decay.
-7. **Warm up `sitar` if used:** Set `"warm_lowpass_hz": 2800.0` on the sitar track, stay in C3–G4 (`-53..+31`), and keep `slide_from_cents` gentle (`<= 40` cents) inside orchestral textures.
-8. **Balance track `gain` (`0.60`–`1.05`):** The master bus applies a soft-knee limiter above `0.85` and peak-normalizes the final stereo mix to `-1.0 dBFS`. Keep soloist tracks slightly higher (`0.85`–`1.00`) and pads/drones slightly lower (`0.60`–`0.82`).
+7. **Warm up `sitar` and `church_organ` via `stage.json`:** `stages/concert_hall.json` applies `warm_lowpass_hz: 2700.0` on `sitar` and `3500.0` on `church_organ` to smooth GM upper reed/string harshness.
+8. **Keep scores stage-independent:** Omit `x`, `y`, `gain`, `warm_lowpass_hz` in `score.json` so anyone can re-stage your composition with `--stage stages/concert_hall.json`, `stages/intimate_circle.json`, or `stages/east_west_split.json`.
 
 ---
 
-## 5. Multi-Agent Composition & Side-by-Side Comparison Workflow
+## 5. Multi-Agent, Stage-Swap & 12-TET Comparison Workflows
 
-This engine was specifically built so you can hand `docs/SCORE_FORMAT.md` to **any other AI agent** (Claude, GPT, Gemini, Codex, etc.), let it compose its own 53-EDO score, render both pieces through the exact same acoustic engine, and compare them objectively and by ear!
+Because the musical score is decoupled from both the **stage** and the **tuning system**, you can run clean controlled experiments across agents, rooms, and tunings!
 
-### Step 1 — Prompt Another Agent
+### A. Compare Two AI Agents on the Exact Same Stage
 
-Give the competing agent a prompt like:
+Give a competing AI agent a prompt like:
 
-> Read `docs/SCORE_FORMAT.md` and `scores/example_minimal.json` in `/home/deck/projects/music`. Compose an original 53-EDO classical piece (~2–5 minutes) using the Warm Core orchestra + subtle Indian color. Write a Python generator or JSON directly to `scores/agent_b.json` conforming strictly to the schema, then render it with:
-> `cargo run --release -- render scores/agent_b.json output/agent_b.wav --stems-dir output/stems_agent_b`
+> Read `docs/SCORE_FORMAT.md` and `scores/example_minimal.json`. Compose an original pure-music 53-EDO classical piece (~2–5 minutes) using the Warm Core orchestra + subtle Indian color (omit inline stage fields so it pairs with `stages/concert_hall.json`). Save the JSON to `scores/agent_b.json`, then render both audio and SVG:
+> `cargo run --release -- render scores/agent_b.json output/agent_b.wav --stage stages/concert_hall.json --image output/agent_b.svg`
 
-### Step 2 — Render Both Scores Through the Same Engine
+Render both scores on the identical stage preset:
 
 ```bash
 # Reference 5-minute showcase
-cargo run --release -- render scores/sample_5min.json output/sample_5min.wav --stems-dir output/stems_5min
+cargo run --release -- render scores/sample_5min.json output/sample_5min.wav \
+  --stage stages/concert_hall.json --image output/sample_5min.svg
 
-# Competing agent's composition
-cargo run --release -- render scores/agent_b.json output/agent_b.wav --stems-dir output/stems_agent_b
+# Competing agent's composition on the exact same virtual stage
+cargo run --release -- render scores/agent_b.json output/agent_b.wav \
+  --stage stages/concert_hall.json --image output/agent_b.svg
 ```
 
-### Step 3 — Compare Loudness, Duration & Dynamics Side-by-Side
+### B. Compare 53-EDO vs 12-TET (or Swap Stages) on the Same Score
 
 ```bash
-for wav in output/sample_5min.wav output/agent_b.wav; do
-  echo "=== $wav ==="
-  ffprobe -v error -show_entries format=duration:stream=sample_rate,channels -of default=nw=1 "$wav"
-  ffmpeg -hide_banner -nostats -i "$wav" -af "volumedetect" -f null - 2>&1 | grep -E "mean_volume|max_volume"
-  ffmpeg -hide_banner -nostats -i "$wav" -af "ebur128=framelog=quiet" -f null - 2>&1 | grep -E "I:|LRA:|True peak:" | tail -n 3
+# 53-EDO vs 12-TET A/B comparison (with 30s trailing contemplation silence)
+cargo run --release -- render scores/sample_5min.json output/sample_5min.wav \
+  --stage stages/concert_hall.json --tuning 53edo --end-silence 30
+cargo run --release -- render scores/sample_5min.json output/sample_5min_12tet.wav \
+  --stage stages/concert_hall.json --tuning 12tet --end-silence 30
+
+# Re-seat the exact same score in an East-West antiphonal hall or intimate chamber salon
+cargo run --release -- render scores/sample_5min.json output/sample_5min_split.wav \
+  --stage stages/east_west_split.json --image output/sample_5min_split.svg
+cargo run --release -- render scores/sample_5min.json output/sample_5min_circle.wav \
+  --stage stages/intimate_circle.json --image output/sample_5min_circle.svg
+```
+
+### C. Objective Loudness, Duration & Dynamics Check
+
+```bash
+for audio in output/sample_5min.wav output/agent_b.wav; do
+  echo "=== $audio ==="
+  ffprobe -v error -show_entries format=duration:stream=sample_rate,channels -of default=nw=1 "$audio"
+  ffmpeg -hide_banner -nostats -i "$audio" -af "volumedetect" -f null - 2>&1 | grep -E "mean_volume|max_volume"
+  ffmpeg -hide_banner -nostats -i "$audio" -af "ebur128=framelog=quiet" -f null - 2>&1 | grep -E "I:|LRA:|True peak:" | tail -n 3
 done
 ```
 
-What to look for when comparing two 53-EDO renders:
+What to check:
 - **Sample rate / format:** `48000 Hz`, 2 channels (stereo), `0` clipped samples, `0` NaNs.
-- **Max peak:** `-1.0 dBFS` (confirming clean peak normalization with zero clipping).
+- **Max peak:** `-1.0 dBFS` (clean peak normalization; `--end-silence` does not distort mastering gain).
 - **Mean volume / Integrated loudness (`I`):** `-22` to `-14 LUFS` is healthy for dynamic classical music.
-- **Loudness Range (`LRA`):** `6–14 LU` indicates real musical contrast (pp passages vs climaxes) rather than flat compression.
-- **Audition by ear:** Serve the repo root locally (`python3 -m http.server 8765`) and listen side-by-side at `http://127.0.0.1:8765/audition/` or directly via `http://127.0.0.1:8765/output/sample_5min.wav` vs `http://127.0.0.1:8765/output/agent_b.wav`.
+- **Loudness Range (`LRA`):** `6–14 LU` confirms genuine dynamic phrasing (`pp` passages vs climaxes).
+- **Audition by ear & eye:** Serve the repo root locally (`python3 -m http.server 8765`) and open `http://127.0.0.1:8765/audition/` to A/B listen and inspect the generated SVGs!

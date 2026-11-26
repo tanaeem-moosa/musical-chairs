@@ -8,6 +8,7 @@ mod sf2_synth;
 mod spatial;
 mod synth;
 mod tuning;
+mod visualize;
 mod wav;
 
 use std::env;
@@ -16,31 +17,85 @@ use std::path::{Path, PathBuf};
 use std::time::Instant;
 
 use preview::build_preview_score;
-use score_json::{load_json_score, render_json_score, RenderOptions};
+use score_json::{
+    load_json_score, load_stage_config, render_json_score, RenderOptions, TuningMode,
+};
 use sf2_synth::DEFAULT_SOUNDFONT_PATH;
 use synth::{render_score, SAMPLE_RATE};
 use tuning::{note_name_approx, COMMA, DIESIS, HARM_7, M3, P5};
+use visualize::render_score_svg;
 use wav::write_stereo_wav_16bit;
 
 fn print_usage() {
     eprintln!("Usage:");
-    eprintln!("  edo53_music render <input.json> [output.wav] [--stems-dir <dir>] [--soundfont <path>]");
+    eprintln!("  edo53_music render <input.json> [output.wav] [OPTIONS]");
+    eprintln!("    --stage <stage.json>       Decoupled stage placement, gain, LP & hall config");
+    eprintln!("    --tuning <53edo|12tet>     Tuning system (default: 53edo)");
+    eprintln!("    --end-silence <seconds>    Appended clean trailing silence after reverb tail");
+    eprintln!("    --stems-dir <dir>          Also export synchronized centered dry stems");
+    eprintln!("    --image <out.svg>          Also render 1600x960 dark-studio SVG score & stage map");
+    eprintln!("    --soundfont <path>         Custom SoundFont2 path (default: soundfonts/GeneralUser-GS.sf2)");
+    eprintln!("  edo53_music visualize <score.json> [out.svg] [--stage <stage.json>] [--tuning <53edo|12tet>] [--end-silence <seconds>]");
     eprintln!("  edo53_music audition");
     eprintln!("  edo53_music preview-synth");
 }
 
-fn default_output_wav(input_path: &Path) -> PathBuf {
+fn default_output_with_ext(input_path: &Path, ext: &str) -> PathBuf {
     let stem = input_path
         .file_stem()
         .and_then(|s| s.to_str())
         .filter(|s| !s.is_empty())
         .unwrap_or("render");
-    PathBuf::from("output").join(format!("{stem}.wav"))
+    PathBuf::from("output").join(format!("{stem}.{ext}"))
+}
+
+fn ensure_parent_dir(path: &Path) {
+    if let Some(parent) = path.parent() {
+        if !parent.as_os_str().is_empty() {
+            if let Err(e) = fs::create_dir_all(parent) {
+                eprintln!("Error creating directory {}: {e}", parent.display());
+                std::process::exit(1);
+            }
+        }
+    }
+}
+
+fn parse_flag_value(flag: &str, args: &[String], i: &mut usize) -> String {
+    if let Some(val) = args[*i].strip_prefix(&format!("{flag}=")) {
+        if val.is_empty() {
+            eprintln!("Error: {flag} requires a non-empty value.");
+            std::process::exit(1);
+        }
+        val.to_string()
+    } else {
+        *i += 1;
+        match args.get(*i) {
+            Some(v) => v.clone(),
+            None => {
+                eprintln!("Error: {flag} requires a value.");
+                std::process::exit(1);
+            }
+        }
+    }
+}
+
+fn parse_nonneg_f64(flag: &str, raw: &str) -> f64 {
+    match raw.parse::<f64>() {
+        Ok(v) if v.is_finite() && v >= 0.0 => v,
+        _ => {
+            eprintln!("Error: {flag} expects a non-negative number, got `{raw}`.");
+            std::process::exit(1);
+        }
+    }
 }
 
 fn run_render_cli(args: &[String]) {
     let mut positional: Vec<String> = Vec::new();
     let mut stems_dir: Option<PathBuf> = None;
+    let mut stage_path: Option<PathBuf> = None;
+    let mut image_path: Option<PathBuf> = None;
+    let mut tuning = TuningMode::Edo53;
+    let mut end_silence_override: Option<f64> = None;
     let mut soundfont_path = PathBuf::from(DEFAULT_SOUNDFONT_PATH);
 
     let mut i = 0;
@@ -49,32 +104,26 @@ fn run_render_cli(args: &[String]) {
         if arg == "--help" || arg == "-h" {
             print_usage();
             return;
-        } else if arg == "--stems-dir" {
-            i += 1;
-            let Some(val) = args.get(i) else {
-                eprintln!("Error: --stems-dir requires a directory argument.");
-                std::process::exit(1);
+        } else if arg == "--stems-dir" || arg.starts_with("--stems-dir=") {
+            stems_dir = Some(PathBuf::from(parse_flag_value("--stems-dir", args, &mut i)));
+        } else if arg == "--stage" || arg.starts_with("--stage=") {
+            stage_path = Some(PathBuf::from(parse_flag_value("--stage", args, &mut i)));
+        } else if arg == "--image" || arg.starts_with("--image=") {
+            image_path = Some(PathBuf::from(parse_flag_value("--image", args, &mut i)));
+        } else if arg == "--tuning" || arg.starts_with("--tuning=") {
+            let raw = parse_flag_value("--tuning", args, &mut i);
+            tuning = match TuningMode::parse(&raw) {
+                Ok(t) => t,
+                Err(e) => {
+                    eprintln!("Error: {e}");
+                    std::process::exit(1);
+                }
             };
-            stems_dir = Some(PathBuf::from(val));
-        } else if let Some(val) = arg.strip_prefix("--stems-dir=") {
-            if val.is_empty() {
-                eprintln!("Error: --stems-dir requires a non-empty directory.");
-                std::process::exit(1);
-            }
-            stems_dir = Some(PathBuf::from(val));
-        } else if arg == "--soundfont" {
-            i += 1;
-            let Some(val) = args.get(i) else {
-                eprintln!("Error: --soundfont requires a file path argument.");
-                std::process::exit(1);
-            };
-            soundfont_path = PathBuf::from(val);
-        } else if let Some(val) = arg.strip_prefix("--soundfont=") {
-            if val.is_empty() {
-                eprintln!("Error: --soundfont requires a non-empty file path.");
-                std::process::exit(1);
-            }
-            soundfont_path = PathBuf::from(val);
+        } else if arg == "--end-silence" || arg.starts_with("--end-silence=") {
+            let raw = parse_flag_value("--end-silence", args, &mut i);
+            end_silence_override = Some(parse_nonneg_f64("--end-silence", &raw));
+        } else if arg == "--soundfont" || arg.starts_with("--soundfont=") {
+            soundfont_path = PathBuf::from(parse_flag_value("--soundfont", args, &mut i));
         } else if arg.starts_with('-') {
             eprintln!("Error: unknown option `{arg}`.");
             print_usage();
@@ -95,7 +144,7 @@ fn run_render_cli(args: &[String]) {
     let output_path = positional
         .get(1)
         .map(PathBuf::from)
-        .unwrap_or_else(|| default_output_wav(&input_path));
+        .unwrap_or_else(|| default_output_with_ext(&input_path, "wav"));
 
     let t0 = Instant::now();
     let score = match load_json_score(&input_path) {
@@ -106,9 +155,20 @@ fn run_render_cli(args: &[String]) {
         }
     };
 
+    let stage = stage_path.as_ref().map(|p| match load_stage_config(p) {
+        Ok(s) => s,
+        Err(e) => {
+            eprintln!("Error loading stage {}: {e}", p.display());
+            std::process::exit(1);
+        }
+    });
+
     let opts = RenderOptions {
         soundfont_path,
         stems_dir: stems_dir.clone(),
+        stage: stage.clone(),
+        tuning,
+        end_silence_override,
     };
 
     let result = match render_json_score(&score, &opts) {
@@ -119,21 +179,25 @@ fn run_render_cli(args: &[String]) {
         }
     };
 
-    if let Some(parent) = output_path.parent() {
-        if !parent.as_os_str().is_empty() {
-            if let Err(e) = fs::create_dir_all(parent) {
-                eprintln!(
-                    "Error creating output directory {}: {e}",
-                    parent.display()
-                );
-                std::process::exit(1);
-            }
-        }
-    }
-
+    ensure_parent_dir(&output_path);
     if let Err(e) = write_stereo_wav_16bit(&output_path, result.sample_rate as u32, &result.audio) {
         eprintln!("Error writing {}: {e}", output_path.display());
         std::process::exit(1);
+    }
+
+    if let Some(svg_path) = &image_path {
+        let svg = match render_score_svg(&score, stage.as_ref(), tuning, end_silence_override) {
+            Ok(s) => s,
+            Err(e) => {
+                eprintln!("Error generating SVG {}: {e}", svg_path.display());
+                std::process::exit(1);
+            }
+        };
+        ensure_parent_dir(svg_path);
+        if let Err(e) = fs::write(svg_path, svg) {
+            eprintln!("Error writing SVG {}: {e}", svg_path.display());
+            std::process::exit(1);
+        }
     }
 
     let elapsed = t0.elapsed().as_secs_f64();
@@ -143,14 +207,27 @@ fn run_render_cli(args: &[String]) {
     if !score.description.is_empty() {
         println!("  Description: {}", score.description);
     }
+    let stage_info = result
+        .stage_name
+        .as_deref()
+        .map(|s| format!(" | Stage: {s}"))
+        .unwrap_or_default();
+    let silence_info = if result.end_silence_seconds > 0.0 {
+        format!(" | End Silence: {:.2}s", result.end_silence_seconds)
+    } else {
+        String::new()
+    };
     println!(
-        "  Duration: {:.2}s @ {} Hz | Tracks: {} | Total Notes: {} | Tail: {:.2}s | Hall RT60: {:.2}s",
+        "  Duration: {:.2}s @ {} Hz | Tuning: {} | Tracks: {} | Total Notes: {} | Tail: {:.2}s | Hall RT60: {:.2}s{}{}",
         result.duration_seconds,
         result.sample_rate,
+        result.tuning.label(),
         result.track_summaries.len(),
         total_notes,
-        score.tail_seconds,
-        score.reverb_rt60
+        result.tail_seconds,
+        result.reverb_rt60,
+        silence_info,
+        stage_info
     );
     for tr in &result.track_summaries {
         let lp_str = match tr.warm_lowpass_hz {
@@ -178,6 +255,9 @@ fn run_render_cli(args: &[String]) {
             );
         }
     }
+    if let Some(svg_path) = &image_path {
+        println!("  Visual SVG: {}", svg_path.display());
+    }
     println!(
         "Rendered {} in {:.2}s | Peak: {:.2} dBFS | RMS L/R: {:.2}/{:.2} dBFS | Clipped: {} | NaNs: {}",
         output_path.display(),
@@ -190,6 +270,94 @@ fn run_render_cli(args: &[String]) {
     );
 }
 
+fn run_visualize_cli(args: &[String]) {
+    let mut positional: Vec<String> = Vec::new();
+    let mut stage_path: Option<PathBuf> = None;
+    let mut tuning = TuningMode::Edo53;
+    let mut end_silence_override: Option<f64> = None;
+
+    let mut i = 0;
+    while i < args.len() {
+        let arg = &args[i];
+        if arg == "--help" || arg == "-h" {
+            print_usage();
+            return;
+        } else if arg == "--stage" || arg.starts_with("--stage=") {
+            stage_path = Some(PathBuf::from(parse_flag_value("--stage", args, &mut i)));
+        } else if arg == "--tuning" || arg.starts_with("--tuning=") {
+            let raw = parse_flag_value("--tuning", args, &mut i);
+            tuning = match TuningMode::parse(&raw) {
+                Ok(t) => t,
+                Err(e) => {
+                    eprintln!("Error: {e}");
+                    std::process::exit(1);
+                }
+            };
+        } else if arg == "--end-silence" || arg.starts_with("--end-silence=") {
+            let raw = parse_flag_value("--end-silence", args, &mut i);
+            end_silence_override = Some(parse_nonneg_f64("--end-silence", &raw));
+        } else if arg.starts_with('-') {
+            eprintln!("Error: unknown option `{arg}`.");
+            print_usage();
+            std::process::exit(1);
+        } else {
+            positional.push(arg.clone());
+        }
+        i += 1;
+    }
+
+    if positional.is_empty() || positional.len() > 2 {
+        eprintln!("Error: `visualize` expects <score.json> and optional [out.svg].");
+        print_usage();
+        std::process::exit(1);
+    }
+
+    let input_path = PathBuf::from(&positional[0]);
+    let out_svg = positional
+        .get(1)
+        .map(PathBuf::from)
+        .unwrap_or_else(|| default_output_with_ext(&input_path, "svg"));
+
+    let t0 = Instant::now();
+    let score = match load_json_score(&input_path) {
+        Ok(s) => s,
+        Err(e) => {
+            eprintln!("Error loading {}: {e}", input_path.display());
+            std::process::exit(1);
+        }
+    };
+    let stage = stage_path.as_ref().map(|p| match load_stage_config(p) {
+        Ok(s) => s,
+        Err(e) => {
+            eprintln!("Error loading stage {}: {e}", p.display());
+            std::process::exit(1);
+        }
+    });
+
+    let svg = match render_score_svg(&score, stage.as_ref(), tuning, end_silence_override) {
+        Ok(s) => s,
+        Err(e) => {
+            eprintln!("Error visualizing {}: {e}", input_path.display());
+            std::process::exit(1);
+        }
+    };
+
+    ensure_parent_dir(&out_svg);
+    if let Err(e) = fs::write(&out_svg, &svg) {
+        eprintln!("Error writing {}: {e}", out_svg.display());
+        std::process::exit(1);
+    }
+
+    println!(
+        "Visualized `{}` -> {} ({} bytes, tuning: {}) in {:.3}s",
+        score.title,
+        out_svg.display(),
+        svg.len(),
+        tuning.label(),
+        t0.elapsed().as_secs_f64()
+    );
+}
+
 fn main() {
     let args: Vec<String> = env::args().collect();
     let mode = args.get(1).map(|s| s.as_str()).unwrap_or("audition");
@@ -197,6 +365,9 @@ fn main() {
     match mode {
         "render" => {
             run_render_cli(&args[2..]);
+        }
+        "visualize" => {
+            run_visualize_cli(&args[2..]);
         }
         "audition" => {
             let t0 = Instant::now();

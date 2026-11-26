@@ -248,10 +248,6 @@ class TrackSpec:
     id: str
     name: str
     instrument: str
-    x: float
-    y: float
-    gain: float
-    warm_lowpass_hz: Optional[float] = None
     notes: List[Dict] = field(default_factory=list)
 
 
@@ -263,22 +259,22 @@ class SymphonyBuilder:
         self._init_tracks()
 
     def _init_tracks(self) -> None:
-        # Balanced v2 gains: prominent Dotara/Ektara/Sitar in Mvt II, translucent strings, singing winds
+        # Pure stage-independent musical tracks (stage seating, gains, LP & hall acoustics live in stages/*.json!)
         specs = [
-            TrackSpec("piano", "Concert Grand Piano", "piano", -2.3, 3.3, 0.96),
-            TrackSpec("harp", "Orchestral Harp (53-EDO)", "harp", -3.4, 3.7, 0.98),
-            TrackSpec("pizzicato", "Pizzicato Strings", "pizzicato", 1.1, 4.3, 0.92),
-            TrackSpec("viola", "Solo Viola", "viola", -1.8, 4.5, 0.88),
-            TrackSpec("cello", "Solo Cello", "cello", 2.4, 4.1, 0.92),
-            TrackSpec("string_ensemble", "String Ensemble", "string_ensemble", 0.0, 7.6, 0.72),
-            TrackSpec("clarinet", "Clarinet", "clarinet", -1.2, 5.6, 0.88),
-            TrackSpec("english_horn", "English Horn", "english_horn", 1.4, 5.4, 0.94),
-            TrackSpec("bassoon", "Bassoon", "bassoon", 0.4, 6.4, 0.88),
-            TrackSpec("french_horn", "French Horn", "french_horn", 2.3, 7.8, 0.84),
-            TrackSpec("dotara", "Dotara", "dotara", 2.0, 2.8, 0.98),
-            TrackSpec("ektara", "Ektara", "ektara", -0.5, 3.1, 0.94),
-            TrackSpec("sitar", "Sitar (Warm Veil)", "sitar", -1.5, 2.7, 0.84, warm_lowpass_hz=2700.0),
-            TrackSpec("church_organ", "Cathedral Pipe Organ", "church_organ", 0.0, 10.4, 0.74, warm_lowpass_hz=3500.0),
+            TrackSpec("piano", "Concert Grand Piano", "piano"),
+            TrackSpec("harp", "Orchestral Harp (53-EDO)", "harp"),
+            TrackSpec("pizzicato", "Pizzicato Strings", "pizzicato"),
+            TrackSpec("viola", "Solo Viola", "viola"),
+            TrackSpec("cello", "Solo Cello", "cello"),
+            TrackSpec("string_ensemble", "String Ensemble", "string_ensemble"),
+            TrackSpec("clarinet", "Clarinet", "clarinet"),
+            TrackSpec("english_horn", "English Horn", "english_horn"),
+            TrackSpec("bassoon", "Bassoon", "bassoon"),
+            TrackSpec("french_horn", "French Horn", "french_horn"),
+            TrackSpec("dotara", "Dotara", "dotara"),
+            TrackSpec("ektara", "Ektara", "ektara"),
+            TrackSpec("sitar", "Sitar (Warm Veil)", "sitar"),
+            TrackSpec("church_organ", "Cathedral Pipe Organ", "church_organ"),
         ]
         for s in specs:
             self.tracks[s.id] = s
@@ -523,31 +519,23 @@ class SymphonyBuilder:
         tracks_json = []
         for tr in self.tracks.values():
             sorted_notes = sorted(tr.notes, key=lambda n: (n["beat"], n["step"]))
-            td: Dict = {
+            tracks_json.append({
                 "id": tr.id,
                 "name": tr.name,
                 "instrument": tr.instrument,
-                "x": tr.x,
-                "y": tr.y,
-                "gain": tr.gain,
                 "notes": sorted_notes,
-            }
-            if tr.warm_lowpass_hz is not None:
-                td["warm_lowpass_hz"] = tr.warm_lowpass_hz
-            tracks_json.append(td)
+            })
 
         return {
             "title": "Harmonia Mundi in 53-EDO — Four Movements Across the Syntonic Comma",
             "description": (
-                "A ~5-minute classical 53-EDO symphonic poem fusing Mozartian lyrical counterpoint, "
-                "Debussy 7-limit (4:5:6:7:9) impressionism, prominent Indian classical 53-EDO shruti "
-                "dialogue (Dotara, Ektara, warmed Sitar), Beethovenian rhythmic drama across a "
-                "chromatic-mediant diesis summit and triple downward comma cascade, and a unified "
-                "Cathedral Pipe Organ finale."
+                "A ~5-minute stage-independent classical 53-EDO symphonic poem fusing Mozartian lyrical "
+                "counterpoint, Debussy 7-limit (4:5:6:7:9) impressionism, prominent Indian classical 53-EDO "
+                "shruti dialogue (Dotara, Ektara, Sitar), Beethovenian rhythmic drama across a chromatic-mediant "
+                "diesis summit and triple downward comma cascade, and a unified Cathedral Pipe Organ finale. "
+                "Pair with --stage stages/concert_hall.json (or intimate_circle.json / east_west_split.json)."
             ),
             "sample_rate": 48000,
-            "tail_seconds": 5.0,
-            "reverb_rt60": 2.25,
             "tempo": self.tempo.to_json(),
             "tracks": tracks_json,
         }
@@ -1659,7 +1647,8 @@ def validate_score(sb: SymphonyBuilder, score: Dict) -> None:
                     f"Low-register mud (<C3): {t0}({s0}) & {t1}({s1}) overlap at beat {b1:.2f} (diff={diff} steps)"
                 )
 
-    total_sec = sb.tempo.beat_to_seconds(max_beat) + score["tail_seconds"]
+    tail_s = score.get("tail_seconds", 5.0)
+    total_sec = sb.tempo.beat_to_seconds(max_beat) + tail_s
     if not (295.0 <= total_sec <= 315.0):
         errors.append(f"Total duration {total_sec:.2f}s outside target [295.0, 315.0]s")
 

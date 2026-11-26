@@ -78,6 +78,27 @@ pub fn step_cents_to_freq(step: i32, cents: f64) -> f64 {
     A4_HZ * 2.0_f64.powf(((step - A4_STEP) as f64 / OCT as f64) + cents / 1200.0)
 }
 
+/// Projects a 53-EDO step (+ microtonal cents) onto its nearest 12-TET MIDI key
+/// anchored at C4 = step 0 (MIDI 60), so C4 (0), C4+comma (+1), and C4+diesis (+2)
+/// quantize to MIDI 60 (C4 = 261.63 Hz) while A4 (39) quantizes to MIDI 69 (440 Hz).
+#[inline]
+pub fn edo53_to_12tet_midi(step: i32, cents: f64) -> i32 {
+    let midi_float = 60.0 + (step as f64 / OCT as f64) * 12.0 + cents / 100.0;
+    midi_float.round().clamp(0.0, 127.0) as i32
+}
+
+/// Converts a 12-TET MIDI note number to exact 12-EDO frequency in Hz (A4 = MIDI 69 = 440 Hz).
+#[inline]
+pub fn midi_to_12tet_freq(midi: i32) -> f64 {
+    A4_HZ * 2.0_f64.powf((midi - 69) as f64 / 12.0)
+}
+
+/// Quantizes a 53-EDO step (+ microtonal cents) to its nearest 12-TET frequency in Hz.
+#[inline]
+pub fn step_cents_to_12tet_freq(step: i32, cents: f64) -> f64 {
+    midi_to_12tet_freq(edo53_to_12tet_midi(step, cents))
+}
+
 /// 5-limit major triad [0, 17, 31] relative to `root`.
 pub fn major_triad(root: i32) -> Vec<i32> {
     vec![root, root + M3, root + P5]

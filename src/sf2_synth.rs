@@ -10,7 +10,7 @@ use rustysynth::{SoundFont, Synthesizer, SynthesizerSettings};
 
 use crate::reverb::{apply_hall_reverb_and_master, AudioStats};
 use crate::synth::SAMPLE_RATE;
-use crate::tuning::{step_cents_to_freq, OCT};
+use crate::tuning::{edo53_to_12tet_midi, step_cents_to_freq, OCT};
 
 pub const DEFAULT_SOUNDFONT_PATH: &str = "soundfonts/GeneralUser-GS.sf2";
 
@@ -422,13 +422,25 @@ pub fn render_sf2_track(
     render_sf2_track_with_sr(sf, inst, notes, total_samples, SAMPLE_RATE)
 }
 
-/// Renders one `Sf2Instrument` track at an explicit `sample_rate`.
+/// Renders one `Sf2Instrument` track at an explicit `sample_rate` in exact 53-EDO.
 pub fn render_sf2_track_with_sr(
     sf: &Arc<SoundFont>,
     inst: Sf2Instrument,
     notes: &[Sf2Note],
     total_samples: usize,
     sample_rate: usize,
+) -> Vec<(f32, f32)> {
+    render_sf2_track_with_options(sf, inst, notes, total_samples, sample_rate, false)
+}
+
+/// Renders one `Sf2Instrument` track at an explicit `sample_rate`, optionally quantized to pure 12-TET.
+pub fn render_sf2_track_with_options(
+    sf: &Arc<SoundFont>,
+    inst: Sf2Instrument,
+    notes: &[Sf2Note],
+    total_samples: usize,
+    sample_rate: usize,
+    quantize_12tet: bool,
 ) -> Vec<(f32, f32)> {
     let settings = SynthesizerSettings::new(sample_rate as i32);
     let mut synth = Synthesizer::new(sf, &settings).expect("Failed to create rustysynth Synthesizer");
@@ -457,10 +469,15 @@ pub fn render_sf2_track_with_sr(
             continue;
         }
         let end_sample = n.end_sample.min(total_samples.saturating_sub(1)).max(n.start_sample + 1);
-        let (midi_key, end_lsb, end_msb) = edo53_to_midi_bend(n.step, n.micro_cents);
+        let (midi_key, end_lsb, end_msb) = if quantize_12tet {
+            // Exact 12-TET semitone, zero pitch bend (14-bit center = 8192 -> LSB 0, MSB 64)
+            (edo53_to_12tet_midi(n.step, n.micro_cents as f64), 0, 64)
+        } else {
+            edo53_to_midi_bend(n.step, n.micro_cents)
+        };
         let vel_7 = (n.velocity.clamp(0.05, 1.0) * 127.0).round() as i32;
 
-        let (init_lsb, init_msb) = if n.slide_from_cents.abs() > 0.5 {
+        let (init_lsb, init_msb) = if !quantize_12tet && n.slide_from_cents.abs() > 0.5 {
             edo53_bend_for_key(n.step, n.micro_cents + n.slide_from_cents, midi_key)
         } else {
             (end_lsb, end_msb)
@@ -478,8 +495,8 @@ pub fn render_sf2_track_with_sr(
             init_expr,
         });
 
-        // Smooth meend glide across the first 140 ms
-        if n.slide_from_cents.abs() > 0.5 {
+        // Smooth meend glide across the first 140 ms (disabled in pure 12-TET comparison mode)
+        if !quantize_12tet && n.slide_from_cents.abs() > 0.5 {
             let glide_samples = ((0.14 * sample_rate as f64) as usize).min(end_sample - n.start_sample);
             let steps = 16usize;
             for k in 1..=steps {

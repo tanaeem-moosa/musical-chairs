@@ -1,9 +1,7 @@
 {
   "title": "Dawn Miniature in 53-EDO",
-  "description": "Minimal 8-second 4-track 53-EDO template demonstrating pure 5-limit triads, Debussy 7-limit 4:5:6:7:9 shimmer, English Horn breath swells, and physically modeled Ektara meend.",
+  "description": "Minimal 8-second pure-music 4-track 53-EDO template (stage-independent; pair with --stage stages/concert_hall.json or any stages/*.json preset). Demonstrates pure 5-limit triads, Debussy 7-limit 4:5:6:7:9 shimmer, English Horn breath swells, and physically modeled Ektara meend.",
   "sample_rate": 48000,
-  "tail_seconds": 2.7,
-  "reverb_rt60": 2.25,
   "tempo": [
     { "beat": 0.0, "bpm": 90.0 },
     { "beat": 6.0, "bpm": 90.0 },
@@ -14,10 +12,6 @@
       "id": "piano",
       "name": "Concert Grand Piano",
       "instrument": "piano",
-      "x": -2.4,
-      "y": 3.4,
-      "gain": 0.9,
-      "warm_lowpass_hz": null,
       "notes": [
         { "beat": 0.0, "dur": 1.9, "step": -53, "vel": 0.64 },
         { "beat": 0.0, "dur": 1.9, "step": -22, "vel": 0.62 },
@@ -44,10 +38,6 @@
       "id": "harp",
       "name": "Orchestral Harp",
       "instrument": "harp",
-      "x": -3.2,
-      "y": 3.2,
-      "gain": 0.92,
-      "warm_lowpass_hz": null,
       "notes": [
         { "beat": 0.0, "dur": 1.8, "step": 0, "vel": 0.66 },
         { "beat": 0.35, "dur": 1.45, "step": 17, "vel": 0.70 },
@@ -74,10 +64,6 @@
       "id": "english_horn",
       "name": "English Horn",
       "instrument": "english_horn",
-      "x": 1.4,
-      "y": 4.8,
-      "gain": 0.88,
-      "warm_lowpass_hz": null,
       "notes": [
         { "beat": 0.5, "dur": 1.4, "step": 31, "vel": 0.74, "breath_swell": true },
         { "beat": 2.0, "dur": 1.1, "step": 43, "vel": 0.82, "breath_swell": true },
@@ -91,10 +77,6 @@
       "id": "ektara",
       "name": "Ektara",
       "instrument": "ektara",
-      "x": -0.4,
-      "y": 3.4,
-      "gain": 0.65,
-      "warm_lowpass_hz": null,
       "notes": [
         { "beat": 0.0, "dur": 1.5, "step": -53, "vel": 0.62, "meend_cents": 18.0 },
         { "beat": 2.0, "dur": 1.5, "step": -22, "vel": 0.56, "meend_cents": 14.0 },

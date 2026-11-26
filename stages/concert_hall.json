@@ -1,0 +1,30 @@
+{
+  "name": "Concert Hall",
+  "description": "Balanced symphonic concert hall seating matching the 14-track East-West 53-EDO ensemble",
+  "reverb_rt60": 2.25,
+  "tail_seconds": 5.0,
+  "end_silence_seconds": 0.0,
+  "players": {
+    "piano":           { "x": -2.3, "y": 3.3,  "gain": 0.96, "warm_lowpass_hz": null },
+    "harp":            { "x": -3.4, "y": 3.7,  "gain": 0.98, "warm_lowpass_hz": null },
+    "celesta":         { "x": -3.8, "y": 4.8,  "gain": 0.85, "warm_lowpass_hz": null },
+    "pizzicato":       { "x":  1.1, "y": 4.3,  "gain": 0.92, "warm_lowpass_hz": null },
+    "violin":          { "x": -2.6, "y": 3.8,  "gain": 0.86, "warm_lowpass_hz": null },
+    "viola":           { "x": -1.8, "y": 4.5,  "gain": 0.88, "warm_lowpass_hz": null },
+    "cello":           { "x":  2.4, "y": 4.1,  "gain": 0.92, "warm_lowpass_hz": null },
+    "contrabass":      { "x":  3.4, "y": 5.4,  "gain": 0.82, "warm_lowpass_hz": null },
+    "string_ensemble": { "x":  0.0, "y": 7.6,  "gain": 0.72, "warm_lowpass_hz": null },
+    "slow_strings":    { "x":  0.0, "y": 8.2,  "gain": 0.72, "warm_lowpass_hz": null },
+    "flute":           { "x": -1.6, "y": 5.4,  "gain": 0.86, "warm_lowpass_hz": null },
+    "clarinet":        { "x": -1.2, "y": 5.6,  "gain": 0.88, "warm_lowpass_hz": null },
+    "oboe":            { "x":  0.8, "y": 5.4,  "gain": 0.82, "warm_lowpass_hz": null },
+    "english_horn":    { "x":  1.4, "y": 5.4,  "gain": 0.94, "warm_lowpass_hz": null },
+    "shakuhachi":      { "x": -0.6, "y": 5.0,  "gain": 0.86, "warm_lowpass_hz": null },
+    "bassoon":         { "x":  0.4, "y": 6.4,  "gain": 0.88, "warm_lowpass_hz": null },
+    "french_horn":     { "x":  2.3, "y": 7.8,  "gain": 0.84, "warm_lowpass_hz": null },
+    "dotara":          { "x":  2.0, "y": 2.8,  "gain": 0.98, "warm_lowpass_hz": null },
+    "ektara":          { "x": -0.5, "y": 3.1,  "gain": 0.94, "warm_lowpass_hz": null },
+    "sitar":           { "x": -1.5, "y": 2.7,  "gain": 0.84, "warm_lowpass_hz": 2700.0 },
+    "church_organ":    { "x":  0.0, "y": 10.4, "gain": 0.74, "warm_lowpass_hz": 3500.0 }
+  }
+}
