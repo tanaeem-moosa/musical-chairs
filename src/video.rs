@@ -4,7 +4,7 @@
 //! - Live 2D Concert Stage Map with additive radial glows, expanding onset ripples, and Pipe Organ crown
 //! - Live 53-EDO / 12-TET Harmonic Mandala Wheel with glowing pitch-class orbs and chord geometry
 //! - Anti-aliased vector-stroke typography (capsule-segment SDF rasterization) & live level meters
-//! - Smooth timeline progress bar with trailing contemplative silence dimming
+//! - Serene contemplative silence dimming during intentional trailing silence
 
 use std::f64::consts::PI;
 use std::fs::{self, File};
@@ -659,6 +659,8 @@ pub struct VideoScene {
     tuning: TuningMode,
     sc: f32,
     stage_clip: (usize, usize, usize, usize),
+    stage_cx: f32,
+    stage_cy: f32,
     wheel_cx: f32,
     wheel_cy: f32,
     wheel_r: f32,
@@ -666,9 +668,6 @@ pub struct VideoScene {
     now_y0: f32,
     now_x1: f32,
     now_y1: f32,
-    bar_x0: f32,
-    bar_x1: f32,
-    bar_y: f32,
     bg: Vec<u8>,
     tracks: Vec<TrackAnim>,
 }
@@ -701,32 +700,27 @@ impl VideoScene {
         let sy = h as f32 / 1080.0;
         let sc = sx.min(sy);
 
-        // Stage viewport bounds (Left ~62% panel)
+        // Stage viewport bounds (Left ~62% panel, extended cleanly to bottom margin)
         let st_x0 = (52.0 * sx).round() as usize;
         let st_y0 = (158.0 * sy).round() as usize;
         let st_x1 = (1188.0 * sx).round().min((w - 1) as f32) as usize;
-        let st_y1 = (952.0 * sy).round().min((h - 1) as f32) as usize;
+        let st_y1 = (1030.0 * sy).round().min((h - 1) as f32) as usize;
         let stage_clip = (st_x0, st_y0, st_x1, st_y1);
 
         let stage_cx = 620.0 * sx;
-        let stage_cy = 918.0 * sy;
-        let px_per_m = 61.5 * sc;
+        let stage_cy = 990.0 * sy;
+        let px_per_m = 67.0 * sc;
 
         // Harmonic Wheel geometry (Top Right card — room below for active steps + live ratios)
         let wheel_cx = 1560.0 * sx;
-        let wheel_cy = 324.0 * sy;
-        let wheel_r = 144.0 * sc;
+        let wheel_cy = 336.0 * sy;
+        let wheel_r = 150.0 * sc;
 
-        // Now Playing telemetry bounds (Bottom Right card)
+        // Now Playing telemetry bounds (Bottom Right card, extended cleanly to bottom margin)
         let now_x0 = 1256.0 * sx;
-        let now_y0 = 644.0 * sy;
+        let now_y0 = 668.0 * sy;
         let now_x1 = 1864.0 * sx;
-        let now_y1 = 954.0 * sy;
-
-        // Bottom Progress Bar geometry
-        let bar_x0 = 148.0 * sx;
-        let bar_x1 = 1772.0 * sx;
-        let bar_y = 1024.0 * sy;
+        let now_y1 = 1034.0 * sy;
 
         // Build per-track sorted timed notes
         let mut max_note_end_s = 0.0_f64;
@@ -910,11 +904,6 @@ impl VideoScene {
             wheel_cx,
             wheel_cy,
             wheel_r,
-            bar_x0,
-            bar_x1,
-            bar_y,
-            musical_end_s,
-            total_dur_s,
         );
 
         Ok(Self {
@@ -925,6 +914,8 @@ impl VideoScene {
             tuning: opts.tuning,
             sc,
             stage_clip,
+            stage_cx,
+            stage_cy,
             wheel_cx,
             wheel_cy,
             wheel_r,
@@ -932,9 +923,6 @@ impl VideoScene {
             now_y0,
             now_x1,
             now_y1,
-            bar_x0,
-            bar_x1,
-            bar_y,
             bg,
             tracks,
         })
@@ -1395,7 +1383,7 @@ impl VideoScene {
         );
 
         let max_rows = self.tracks.len().min(14);
-        let row_pitch = ((self.now_y1 - self.now_y0) / max_rows.max(1) as f32).min(24.0 * sc);
+        let row_pitch = ((self.now_y1 - self.now_y0) / max_rows.max(1) as f32).min(27.0 * sc);
         let bar_start_x = self.now_x0 + 258.0 * sc;
         let bar_w = (self.now_x1 - bar_start_x).max(60.0 * sc);
         let bar_h = (8.5 * sc).max(4.0);
@@ -1460,61 +1448,28 @@ impl VideoScene {
             }
         }
 
-        // 4. Bottom Progress Bar + Playhead + Contemplative Silence Caption
-        let prog = (t_sec / self.total_dur_s).clamp(0.0, 1.0) as f32;
-        let play_x = self.bar_x0 + prog * (self.bar_x1 - self.bar_x0);
-
-        if play_x > self.bar_x0 + 2.0 {
-            let bar_col = if in_silence {
-                Rgb::from_u8(178, 152, 118)
-            } else {
-                Rgb::from_u8(244, 196, 86)
-            };
-            c.fill_rounded_rect(
-                self.bar_x0,
-                self.bar_y - 3.5 * sc,
-                play_x,
-                self.bar_y + 3.5 * sc,
-                3.5 * sc,
-                bar_col,
-                0.92,
-                None,
-            );
-        }
-
-        // Playhead glow orb
-        c.add_radial_glow(
-            play_x,
-            self.bar_y,
-            22.0 * sc,
-            Rgb::from_u8(248, 212, 120),
-            0.55 * glow_mult,
-            None,
-        );
-        c.fill_circle_aa(play_x, self.bar_y, 6.5 * sc, Rgb::from_u8(255, 248, 224), 0.98);
-
-        // Live left timestamp on progress bar
-        c.draw_text_vector(
-            &format_mm_ss(t_sec.min(self.total_dur_s)),
-            self.bar_x0 - 18.0 * sc,
-            self.bar_y - 6.0 * sc,
-            13.0 * sc,
-            1.0 * sc,
-            Rgb::from_u8(244, 218, 146),
-            0.95,
-            TextAlign::Right,
-        );
-
-        // Trailing silence serene caption
+        // 4. Serene Contemplative Silence caption during intentional trailing silence
         if silence_fade > 0.02 {
+            let cap_y = self.stage_cy - 72.0 * sc;
+            let pill_w = 290.0 * sc;
+            c.fill_rounded_rect(
+                self.stage_cx - 0.5 * pill_w,
+                cap_y - 10.0 * sc,
+                self.stage_cx + 0.5 * pill_w,
+                cap_y + 22.0 * sc,
+                16.0 * sc,
+                Rgb::from_u8(12, 18, 34),
+                0.78 * silence_fade,
+                Some((Rgb::from_u8(218, 184, 114), 0.45 * silence_fade, 1.1 * sc)),
+            );
             c.draw_text_vector(
                 "CONTEMPLATIVE SILENCE",
-                0.5 * (self.bar_x0 + self.bar_x1),
-                self.bar_y - 25.0 * sc,
-                11.5 * sc,
-                0.9 * sc,
-                Rgb::from_u8(226, 206, 162),
-                0.88 * silence_fade,
+                self.stage_cx,
+                cap_y,
+                12.0 * sc,
+                0.92 * sc,
+                Rgb::from_u8(232, 212, 166),
+                0.90 * silence_fade,
                 TextAlign::Center,
             );
         }
@@ -1645,11 +1600,6 @@ fn render_static_background(
     wheel_cx: f32,
     wheel_cy: f32,
     wheel_r: f32,
-    bar_x0: f32,
-    bar_x1: f32,
-    bar_y: f32,
-    musical_end_s: f64,
-    total_dur_s: f64,
 ) {
     // 1. Deep midnight-indigo radial gradient with warm subtle amber-lavender concert hall atmosphere
     let inv_w = 1.0 / w as f32;
@@ -1773,12 +1723,12 @@ fn render_static_background(
         TextAlign::Center,
     );
 
-    // 3. Left / Main Panel: 2D Concert Stage Map
+    // 3. Left / Main Panel: 2D Concert Stage Map (extends cleanly to bottom margin)
     c.fill_rounded_rect(
         32.0 * sx,
         108.0 * sy,
         1208.0 * sx,
-        972.0 * sy,
+        1052.0 * sy,
         16.0 * sc,
         card_bg,
         0.86,
@@ -1976,7 +1926,7 @@ fn render_static_background(
         1232.0 * sx,
         108.0 * sy,
         1888.0 * sx,
-        572.0 * sy,
+        596.0 * sy,
         16.0 * sc,
         card_bg,
         0.86,
@@ -2091,12 +2041,12 @@ fn render_static_background(
         }
     }
 
-    // 5. Right Bottom Card: Now Playing Telemetry
+    // 5. Right Bottom Card: Now Playing Telemetry (extends cleanly to bottom margin)
     c.fill_rounded_rect(
         1232.0 * sx,
-        590.0 * sy,
+        614.0 * sy,
         1888.0 * sx,
-        972.0 * sy,
+        1052.0 * sy,
         16.0 * sc,
         card_bg,
         0.86,
@@ -2105,97 +2055,11 @@ fn render_static_background(
     c.draw_text_vector(
         "NOW PLAYING",
         1256.0 * sx,
-        610.0 * sy,
+        634.0 * sy,
         14.0 * sc,
         1.05 * sc,
         Rgb::from_u8(236, 228, 208),
         0.92,
-        TextAlign::Left,
-    );
-
-    // 6. Bottom Progress Bar Card
-    c.fill_rounded_rect(
-        32.0 * sx,
-        988.0 * sy,
-        1888.0 * sx,
-        1060.0 * sy,
-        14.0 * sc,
-        card_bg,
-        0.88,
-        Some((card_border, 0.75, 1.4 * sc)),
-    );
-    // Progress track trough
-    c.fill_rounded_rect(
-        bar_x0,
-        bar_y - 3.5 * sc,
-        bar_x1,
-        bar_y + 3.5 * sc,
-        3.5 * sc,
-        Rgb::from_u8(24, 34, 58),
-        0.95,
-        None,
-    );
-
-    // Marker where music + tail transitions into contemplative trailing silence
-    if total_dur_s > musical_end_s + 1.0 {
-        let sx_sil = bar_x0 + ((musical_end_s / total_dur_s).clamp(0.0, 1.0) as f32) * (bar_x1 - bar_x0);
-        c.draw_capsule_aa(
-            sx_sil,
-            bar_y - 10.0 * sc,
-            sx_sil,
-            bar_y + 10.0 * sc,
-            1.0 * sc,
-            gold_soft,
-            0.55,
-            false,
-            None,
-        );
-    }
-
-    // Clean minute/second time markers below progress bar
-    let tick_s = if total_dur_s <= 30.0 {
-        5.0
-    } else if total_dur_s <= 120.0 {
-        15.0
-    } else {
-        60.0
-    };
-    let mut tm = 0.0;
-    while tm <= total_dur_s - 0.25 * tick_s {
-        let tx = bar_x0 + ((tm / total_dur_s) as f32) * (bar_x1 - bar_x0);
-        c.draw_capsule_aa(
-            tx,
-            bar_y + 7.0 * sc,
-            tx,
-            bar_y + 12.0 * sc,
-            0.7 * sc,
-            slate_muted,
-            0.45,
-            false,
-            None,
-        );
-        c.draw_text_vector(
-            &format_mm_ss(tm),
-            tx,
-            bar_y + 16.0 * sc,
-            9.0 * sc,
-            0.72 * sc,
-            slate_muted,
-            0.65,
-            TextAlign::Center,
-        );
-        tm += tick_s;
-    }
-
-    // Total duration on far right of progress bar
-    c.draw_text_vector(
-        &format_mm_ss(total_dur_s),
-        bar_x1 + 18.0 * sc,
-        bar_y - 6.0 * sc,
-        13.0 * sc,
-        1.0 * sc,
-        slate_muted,
-        0.88,
         TextAlign::Left,
     );
 }
