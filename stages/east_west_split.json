@@ -7,6 +7,8 @@
   "players": {
     "piano":           { "x": -3.4, "y": 3.4,  "width": 1.2, "gain": 0.95, "warm_lowpass_hz": null },
     "harp":            { "x": -1.4, "y": 3.8,  "width": 0.9, "gain": 0.96, "warm_lowpass_hz": null },
+    "nylon_guitar":    { "x": -2.4, "y": 2.9,  "width": 0.0, "gain": 0.96, "warm_lowpass_hz": null },
+    "steel_guitar":    { "x": -0.9, "y": 3.0,  "width": 0.0, "gain": 0.95, "warm_lowpass_hz": null },
     "celesta":         { "x": -4.2, "y": 4.6,  "width": 0.6, "gain": 0.84, "warm_lowpass_hz": null },
     "pizzicato":       { "x": -2.0, "y": 4.4,  "width": 1.6, "gain": 0.92, "warm_lowpass_hz": null },
     "violin":          { "x": -3.6, "y": 4.2,  "width": 0.0, "gain": 0.86, "warm_lowpass_hz": null },

@@ -93,6 +93,8 @@ pub enum Sf2Instrument {
     Celesta,
     ChurchOrgan,
     Harp,
+    NylonGuitar,
+    SteelGuitar,
     Flute,
     Clarinet,
     Oboe,
@@ -117,6 +119,8 @@ impl Sf2Instrument {
     pub fn all() -> &'static [Sf2Instrument] {
         &[
             Sf2Instrument::Harp,
+            Sf2Instrument::NylonGuitar,
+            Sf2Instrument::SteelGuitar,
             Sf2Instrument::Sitar,
             Sf2Instrument::Clarinet,
             Sf2Instrument::EnglishHorn,
@@ -147,6 +151,8 @@ impl Sf2Instrument {
             Sf2Instrument::Celesta => "celesta",
             Sf2Instrument::ChurchOrgan => "church_organ",
             Sf2Instrument::Harp => "harp",
+            Sf2Instrument::NylonGuitar => "nylon_guitar",
+            Sf2Instrument::SteelGuitar => "steel_guitar",
             Sf2Instrument::Flute => "flute",
             Sf2Instrument::Clarinet => "clarinet",
             Sf2Instrument::Oboe => "oboe",
@@ -174,6 +180,8 @@ impl Sf2Instrument {
             "celesta" => Some(Sf2Instrument::Celesta),
             "church_organ" => Some(Sf2Instrument::ChurchOrgan),
             "harp" => Some(Sf2Instrument::Harp),
+            "nylon_guitar" => Some(Sf2Instrument::NylonGuitar),
+            "steel_guitar" => Some(Sf2Instrument::SteelGuitar),
             "flute" => Some(Sf2Instrument::Flute),
             "clarinet" => Some(Sf2Instrument::Clarinet),
             "oboe" => Some(Sf2Instrument::Oboe),
@@ -202,6 +210,8 @@ impl Sf2Instrument {
             Sf2Instrument::Celesta => "Celesta",
             Sf2Instrument::ChurchOrgan => "Church Pipe Organ",
             Sf2Instrument::Harp => "Orchestral Harp",
+            Sf2Instrument::NylonGuitar => "Classical Nylon Guitar",
+            Sf2Instrument::SteelGuitar => "Acoustic Steel Guitar",
             Sf2Instrument::Flute => "Orchestral Flute",
             Sf2Instrument::Clarinet => "Clarinet",
             Sf2Instrument::Oboe => "Oboe",
@@ -225,7 +235,11 @@ impl Sf2Instrument {
 
     pub fn family(self) -> &'static str {
         match self {
-            Sf2Instrument::Piano | Sf2Instrument::Celesta | Sf2Instrument::Harp => "Keys & Plucked",
+            Sf2Instrument::Piano
+            | Sf2Instrument::Celesta
+            | Sf2Instrument::Harp
+            | Sf2Instrument::NylonGuitar
+            | Sf2Instrument::SteelGuitar => "Keys & Plucked",
             Sf2Instrument::Sitar => "Indian Classical",
             Sf2Instrument::ChurchOrgan => "Organ",
             Sf2Instrument::Flute
@@ -252,6 +266,8 @@ impl Sf2Instrument {
             Sf2Instrument::Piano => 0,
             Sf2Instrument::Celesta => 8,
             Sf2Instrument::ChurchOrgan => 19,
+            Sf2Instrument::NylonGuitar => 24,
+            Sf2Instrument::SteelGuitar => 25,
             Sf2Instrument::Harp => 46,
             Sf2Instrument::Flute => 73,
             Sf2Instrument::Clarinet => 71,
@@ -280,6 +296,8 @@ impl Sf2Instrument {
             Sf2Instrument::Celesta => 82,
             Sf2Instrument::ChurchOrgan => 64,
             Sf2Instrument::Harp => 42,
+            Sf2Instrument::NylonGuitar => 44,
+            Sf2Instrument::SteelGuitar => 84,
             Sf2Instrument::Flute => 56,
             Sf2Instrument::Clarinet => 74,
             Sf2Instrument::Oboe => 60,
@@ -313,6 +331,7 @@ impl Sf2Instrument {
             | Sf2Instrument::Trombone
             | Sf2Instrument::Cello => -OCT,
             Sf2Instrument::Contrabass | Sf2Instrument::Timpani => -2 * OCT,
+            Sf2Instrument::NylonGuitar | Sf2Instrument::SteelGuitar => 0,
             _ => 0,
         }
     }
@@ -323,6 +342,8 @@ impl Sf2Instrument {
             Sf2Instrument::Celesta => "C5–G6",
             Sf2Instrument::ChurchOrgan => "C3–G4",
             Sf2Instrument::Harp => "C4–G5",
+            Sf2Instrument::NylonGuitar => "E3–E5",
+            Sf2Instrument::SteelGuitar => "E3–E5",
             Sf2Instrument::Flute => "C5–G6",
             Sf2Instrument::Clarinet => "C4–G5",
             Sf2Instrument::Oboe => "C4–G5",
@@ -350,6 +371,8 @@ impl Sf2Instrument {
             Sf2Instrument::Celesta => "Bell-like Debussy sparkle on upper 7-limit extensions",
             Sf2Instrument::ChurchOrgan => "Cathedral pipe anchor (warmed at 3500 Hz LP on stage)",
             Sf2Instrument::Harp => "Silky arpeggios and full 53-EDO harmonic sweeps",
+            Sf2Instrument::NylonGuitar => "Warm Spanish/classical plucked nylon strings with crystal-clear 53-EDO chord lock",
+            Sf2Instrument::SteelGuitar => "Bright fingerstyle steel strings exposing beatless 5/7-limit overtones vs 12-TET",
             Sf2Instrument::Flute => "Upper lyric melody",
             Sf2Instrument::Clarinet => "Velvety woody alto/tenor voice and warm inner lines",
             Sf2Instrument::Oboe => "Bright double-reed classical solo voice",
@@ -374,6 +397,8 @@ impl Sf2Instrument {
     pub fn default_vote(self) -> Option<&'static str> {
         match self {
             Sf2Instrument::Harp
+            | Sf2Instrument::NylonGuitar
+            | Sf2Instrument::SteelGuitar
             | Sf2Instrument::Clarinet
             | Sf2Instrument::EnglishHorn
             | Sf2Instrument::Bassoon
@@ -403,6 +428,8 @@ impl Sf2Instrument {
                 | Sf2Instrument::Celesta
                 | Sf2Instrument::ChurchOrgan
                 | Sf2Instrument::Harp
+                | Sf2Instrument::NylonGuitar
+                | Sf2Instrument::SteelGuitar
                 | Sf2Instrument::StringEnsemble
                 | Sf2Instrument::TremoloStrings
                 | Sf2Instrument::SlowStrings
@@ -894,6 +921,8 @@ mod tests {
 
         for &(inst, step, label) in &[
             (Sf2Instrument::Piano, 39, "Piano A4"),
+            (Sf2Instrument::NylonGuitar, 0, "NylonGuitar C4(53edo)"),
+            (Sf2Instrument::SteelGuitar, 0, "SteelGuitar C4(53edo)"),
             (Sf2Instrument::Clarinet, 0, "Clarinet C4(53edo)"),
             (Sf2Instrument::Oboe, 0, "Oboe C4(53edo)"),
             (Sf2Instrument::ChurchOrgan, 39 - OCT, "Organ A3"),

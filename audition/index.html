@@ -438,11 +438,11 @@
         <span class="muted" style="font-weight:700; font-size:0.79rem; text-transform:uppercase; letter-spacing:0.04em;">Select Score:</span>
       </div>
       <div class="hero-head">
-        <h2 id="hero-title">The Shattered Semitone (Symphonia 53 contra 12) &mdash; Seven Studies in the Syntonic Abyss</h2>
-        <span class="pill" id="hero-pill">17 tracks &middot; 2987 notes &middot; scores/edo53_vs_12tet_10min.json</span>
+        <h2 id="hero-title">The Shattered Semitone (v2) &mdash; Concerto Grosso for Dual Guitars &amp; 53-EDO Orchestra</h2>
+        <span class="pill" id="hero-pill">19 tracks &middot; 6778 notes &middot; scores/edo53_vs_12tet_10min.json</span>
       </div>
       <div class="muted" id="hero-desc">
-        A concert-grade ~10-minute stage-independent 53-EDO symphonic classical work specifically composed to maximize the structural and acoustic divergence between 53-EDO and 12-TET. Features 5-comma melodic arches and 4-voice canons inside single 12-TET semitone buckets ({-2..+2}, {12..15}, {16..19}, {20..24}, {29..33}, {38..41}, {42..46}), septimal 7:6 vs 6:5 and 7:4 vs 9:5 shruti mirrors, a 6-stage continuous syntonic comma passacaglia spiral (k = -2 to +3), chromatic-mediant diesis ladders where pure [38, 2, 16] Ab++ Major shears into A minor in 12-TET, a hushed Adagio lament of beat-free glass chords, and a final Cathedral Pipe Organ apotheosis.
+        Stage-independent ~10-minute 53-EDO concerto grosso starring Classical Nylon Guitar and Acoustic Steel Guitar alongside Orchestral Harp, Indian Shruti Lutes (Sitar, Dotara, Ektara), Chamber Orchestra, and Cathedral Pipe Organ. Engineered with zero Western pitch-bend glides and crisp plucked transients to prove 53-EDO vs 12-TET immediately: sparkling cross-string campanella cascades inside single 12-TET semitones, Eagle-53 3-step (25:24) chromatic mediants, East-West 1-2 shruti raga dialogues, a 5-variation C -&gt; Am -&gt; Dm -&gt; G -&gt; C syntonic comma passacaglia pump (k = -2 -&gt; +3), exposed guitar [38, 2, 16] Ab++ Major chords that shear into root-position A minor in 12-TET, 7-limit &amp; 11-limit glass harmonics, and a triumphant 19-track finale.
       </div>
 
       <div class="hero-ab">
@@ -468,13 +468,13 @@
         <button class="btn primary" id="ab-flip-btn" style="padding:5px 12px; font-size:0.8rem;" title="Rewinds 10 seconds so you immediately compare the exact phrase in the other tuning">A/B Switch (&minus;10s)</button>
         <span class="muted" style="font-size:0.77rem;">Rewinds 10s so you compare the exact phrase</span>
         <span id="dynamic-jumps" style="display:contents;">
-          <button class="jump-btn" data-jump="0">I. Prologus &mdash; The Fivefold Unison &amp; Septimal Dawn (0:00)</button>
-          <button class="jump-btn" data-jump="84.22">II. Canon Per Tonos Syntonicos &mdash; Four-Voice Collapse Fugato (1:24)</button>
-          <button class="jump-btn" data-jump="158.82">III. Nocturne of the Vanishing Shrutis &mdash; Septimal &amp; Shruti Mirror (2:39)</button>
-          <button class="jump-btn" data-jump="252.95">IV. Passacaglia of the Endless Comma Spiral (k = -2 to +3) (4:13)</button>
-          <button class="jump-btn" data-jump="336.01">V. Scherzo &mdash; The Diesis Labyrinth &amp; Major-to-Minor Shear (5:36)</button>
-          <button class="jump-btn" data-jump="411.6">VI. Adagio Mesto &mdash; Lament on the Broken Third &amp; Glass Harmonics (6:52)</button>
-          <button class="jump-btn" data-jump="501.82">VII. Finale &amp; Cathedral Organ Apotheosis &mdash; The 53-Tone Continuum (8:22)</button>
+          <button class="jump-btn" data-jump="0">I. Campanella Prelude: The Shattered Semitone (0:00)</button>
+          <button class="jump-btn" data-jump="85.01">II. Fretted Toccatina &amp; Eagle-53 Chromatic Mediants (1:25)</button>
+          <button class="jump-btn" data-jump="169.07">III. East&ndash;West Plucked Shruti Dialogue (2:49)</button>
+          <button class="jump-btn" data-jump="253.18">IV. The Syntonic Comma Pump (C -&gt; Am -&gt; Dm -&gt; G -&gt; C Passacaglia) (4:13)</button>
+          <button class="jump-btn" data-jump="342.03">V. Scherzo of the Diesis Shear (Ab++ Major -&gt; 12-TET A minor) (5:42)</button>
+          <button class="jump-btn" data-jump="432.59">VI. Adagio of Glass Harmonics (7-Limit &amp; 11-Limit Resonance) (7:13)</button>
+          <button class="jump-btn" data-jump="514.41">VII. Finale: The 53-Tone Continuum (8:34)</button>
         </span>
         <a class="jump-btn" id="hero-webm-link" style="text-decoration:none; border-color:rgba(187,154,247,0.55); color:var(--accent-2);" href="../output/edo53_vs_12tet_10min.webm" target="_blank">YouTube 4K WebM</a>
         <a class="jump-btn" style="text-decoration:none; border-color:rgba(245,158,11,0.55); color:#fbbf24;" href="../docs/harmonia_mundi_poster.svg" target="_blank">Artistic Poster (SVG)</a>
@@ -515,7 +515,7 @@
     </div>
 
     <div class="tabs">
-      <button class="tab-btn active" data-tab="solo">1. Solo Instrument Auditions (22)</button>
+      <button class="tab-btn active" data-tab="solo">1. Solo Instrument Auditions (27)</button>
       <button class="tab-btn" data-tab="stage">2. Interactive 2D Concert Stage &amp; Spatial Mixer</button>
     </div>
 
@@ -1193,11 +1193,11 @@
     const FALLBACK_COMPOSITIONS = [
       {
         id: 'edo53_vs_12tet_10min',
-        title: 'The Shattered Semitone (Symphonia 53 contra 12) — Seven Studies in the Syntonic Abyss',
-        description: 'A concert-grade ~10-minute stage-independent 53-EDO symphonic classical work specifically composed to maximize the structural and acoustic divergence between 53-EDO and 12-TET. Features 5-comma melodic arches and 4-voice canons inside single 12-TET semitone buckets ({-2..+2}, {12..15}, {16..19}, {20..24}, {29..33}, {38..41}, {42..46}), septimal 7:6 vs 6:5 and 7:4 vs 9:5 shruti mirrors, a 6-stage continuous syntonic comma passacaglia spiral (k = -2 to +3), chromatic-mediant diesis ladders where pure [38, 2, 16] Ab++ Major shears into A minor in 12-TET, a hushed Adagio lament of beat-free glass chords, and a final Cathedral Pipe Organ apotheosis.',
+        title: 'The Shattered Semitone (v2) — Concerto Grosso for Dual Guitars & 53-EDO Orchestra',
+        description: 'Stage-independent ~10-minute 53-EDO concerto grosso starring Classical Nylon Guitar and Acoustic Steel Guitar alongside Orchestral Harp, Indian Shruti Lutes (Sitar, Dotara, Ektara), Chamber Orchestra, and Cathedral Pipe Organ. Engineered with zero Western pitch-bend glides and crisp plucked transients to prove 53-EDO vs 12-TET immediately: sparkling cross-string campanella cascades inside single 12-TET semitones, Eagle-53 3-step (25:24) chromatic mediants, East-West 1-2 shruti raga dialogues, a 5-variation C -> Am -> Dm -> G -> C syntonic comma passacaglia pump (k = -2 -> +3), exposed guitar [38, 2, 16] Ab++ Major chords that shear into root-position A minor in 12-TET, 7-limit & 11-limit glass harmonics, and a triumphant 19-track finale.',
         score_path: 'scores/edo53_vs_12tet_10min.json',
-        track_count: 17,
-        note_count: 2987,
+        track_count: 19,
+        note_count: 6778,
         audio_53: '../output/edo53_vs_12tet_10min.mp3',
         wav_53: '../output/edo53_vs_12tet_10min.wav',
         audio_12: '../output/edo53_vs_12tet_10min_12tet.mp3',
@@ -1205,23 +1205,23 @@
         svg: '../output/edo53_vs_12tet_10min.svg',
         webm: '../output/edo53_vs_12tet_10min.webm',
         sections: [
-          { beat: 0.0, seconds: 0.0, mm_ss: '0:00', title: 'I. Prologus — The Fivefold Unison & Septimal Dawn' },
-          { beat: 88.0, seconds: 84.22, mm_ss: '1:24', title: 'II. Canon Per Tonos Syntonicos — Four-Voice Collapse Fugato' },
-          { beat: 192.0, seconds: 158.82, mm_ss: '2:39', title: 'III. Nocturne of the Vanishing Shrutis — Septimal & Shruti Mirror' },
-          { beat: 296.0, seconds: 252.95, mm_ss: '4:13', title: 'IV. Passacaglia of the Endless Comma Spiral (k = -2 to +3)' },
-          { beat: 416.0, seconds: 336.01, mm_ss: '5:36', title: 'V. Scherzo — The Diesis Labyrinth & Major-to-Minor Shear' },
-          { beat: 536.0, seconds: 411.6, mm_ss: '6:52', title: 'VI. Adagio Mesto — Lament on the Broken Third & Glass Harmonics' },
-          { beat: 632.0, seconds: 501.82, mm_ss: '8:22', title: 'VII. Finale & Cathedral Organ Apotheosis — The 53-Tone Continuum' },
+          { beat: 0.0, seconds: 0.0, mm_ss: '0:00', title: 'I. Campanella Prelude: The Shattered Semitone' },
+          { beat: 164.0, seconds: 85.01, mm_ss: '1:25', title: 'II. Fretted Toccatina & Eagle-53 Chromatic Mediants' },
+          { beat: 340.0, seconds: 169.07, mm_ss: '2:49', title: 'III. East–West Plucked Shruti Dialogue' },
+          { beat: 464.0, seconds: 253.18, mm_ss: '4:13', title: 'IV. The Syntonic Comma Pump (C -> Am -> Dm -> G -> C Passacaglia)' },
+          { beat: 624.0, seconds: 342.03, mm_ss: '5:42', title: 'V. Scherzo of the Diesis Shear (Ab++ Major -> 12-TET A minor)' },
+          { beat: 816.0, seconds: 432.59, mm_ss: '7:13', title: 'VI. Adagio of Glass Harmonics (7-Limit & 11-Limit Resonance)' },
+          { beat: 904.0, seconds: 514.41, mm_ss: '8:34', title: 'VII. Finale: The 53-Tone Continuum' },
         ],
         stems: [],
       },
       {
         id: 'riemann_hypothesis_15min',
         title: 'Ode to the Riemann Hypothesis — Symphony in 53-EDO',
-        description: 'A monumental ~15-minute (900s) stage-independent 4-movement 53-EDO orchestral symphony tracing the mathematical epic of the Riemann Hypothesis: I. The Primes (prime-limit harmonics 2,3,5,7,11,13,17,19, Sieve of Eratosthenes polyrhythms & Euler Product); II. Analytic Continuation (Re(s)=1 divergence wall, chromatic-mediant diesis rotations, exact xi(s)=xi(1-s) simultaneous mirror-inversion counterpoint & palindromic arch, first nontrivial zero); III. A Century of Small Progress (10-variation Brahmsian/Brucknerian Passacaglia & 4-voice Fugato climbing k=0->+1->+2->+3 to an unresolved summit); IV. The Proof: AI & The Critical Line (hyper-parallel algorithmic lattice locking onto k=0 in a Cathedral Pipe Organ + full-orchestra triple-theme Proof Apotheosis & Critical Line stillness).',
+        description: 'A ~15-minute (900s) stage-independent 4-movement 53-EDO symphony (52–168 BPM): I. The Primes (Curiosity: playful 118–136 BPM chamber colors, 4:5:6:7:9:11 bright harmonies, 5 & 7-beat hockets, Sieve of Eratosthenes & Structure 1 Prime Curiosity Hook); II. Analytic Continuation (Through the Mirror: 88–114–66 BPM rubato waves, both 53-EDO diesis rotations, Structure 2 Functional Mirror Wedge xi(s)=xi(1-s) & palindrome, First Nontrivial Zero); III. A Century of Small Progress (72–136–60 BPM: C-minor Passacaglia Structure 3A, Fugato, Selberg subito pp barrier, Structure 3B Montgomery–Odlyzko Pair-Correlation Riff, fracturing human motifs & G+++7 step-24 Unresolved Summit); IV. AI, Unified Triumph & Melancholy for Humanity (Bamboo-Synth shakuhachi AI Spark & Architect at 152 & 168 BPM snap-fitting all structures, 122 BPM Cathedral Pipe Organ + tutti Proof Triumph, and 52 BPM ppp–mp human cello/english_horn 16:15 & -1 comma farewell beneath an eternal beatless 53-EDO AI harmonic halo).',
         score_path: 'scores/riemann_hypothesis_15min.json',
-        track_count: 14,
-        note_count: 4536,
+        track_count: 17,
+        note_count: 6354,
         audio_53: '../output/riemann_hypothesis_15min.mp3',
         wav_53: '../output/riemann_hypothesis_15min.wav',
         audio_12: '../output/riemann_hypothesis_15min_12tet.mp3',
@@ -1229,22 +1229,22 @@
         svg: '../output/riemann_hypothesis_15min.svg',
         webm: '../output/riemann_hypothesis_15min.webm',
         sections: [
-          { beat: 0.0, seconds: 0.0, mm_ss: '0:00', title: 'I. The Primes — 1. Genesis of Irreducible Harmonics (2, 3, 5, 7)' },
-          { beat: 60.0, seconds: 53.76, mm_ss: '0:54', title: 'I.2 Sieve of Eratosthenes & Higher Prime Harmonics (11, 13, 17, 19)' },
-          { beat: 132.0, seconds: 112.98, mm_ss: '1:53', title: 'I.3 The Euler Product — Orchestral Prime Convergence' },
-          { beat: 204.0, seconds: 170.59, mm_ss: '2:51', title: 'I.4 Asymptotic Mystery (x / ln x) & Approach to Re(s) = 1' },
-          { beat: 264.0, seconds: 223.65, mm_ss: '3:44', title: 'II. Analytic Continuation — 1. The Divergence Wall at Re(s) = 1' },
-          { beat: 320.0, seconds: 273.98, mm_ss: '4:34', title: 'II.2 Into the Critical Strip (0 < Re(s) < 1) — Nocturne' },
-          { beat: 384.0, seconds: 330.25, mm_ss: '5:30', title: 'II.3 Functional Equation xi(s) = xi(1 - s) — Exact Mirror & Palindrome' },
-          { beat: 456.0, seconds: 391.66, mm_ss: '6:32', title: 'II.4 First Nontrivial Zero (t_1 = 14.1347) — Spectral Stillness' },
-          { beat: 516.0, seconds: 448.66, mm_ss: '7:29', title: 'III. A Century of Small Progress — 1. Granite Passacaglia (Hadamard & Hardy, k=0->+1)' },
-          { beat: 612.0, seconds: 524.5, mm_ss: '8:45', title: 'III.2 Four-Voice Fugato & Selberg Parity Setback (k=+1->+2)' },
-          { beat: 708.0, seconds: 593.94, mm_ss: '9:54', title: 'III.3 Montgomery–Odlyzko Pair Correlation & Comma Ascent (k=+2->+3)' },
-          { beat: 772.0, seconds: 637.58, mm_ss: '10:38', title: 'III.4 The Unresolved Summit at k=+3 — One Step Shy of Truth' },
-          { beat: 836.0, seconds: 687.67, mm_ss: '11:28', title: 'IV. The Proof: AI & The Critical Line — 1. Hyper-Parallel Algorithmic Lattice' },
-          { beat: 908.0, seconds: 732.67, mm_ss: '12:13', title: 'IV.2 Symmetry Lock & Convergence onto Home Comma Plane k = 0' },
-          { beat: 964.0, seconds: 770.31, mm_ss: '12:50', title: 'IV.3 PROOF APOTHEOSIS — Cathedral Pipe Organ & Triple Thematic Unification' },
-          { beat: 1044.0, seconds: 839.17, mm_ss: '13:59', title: 'IV.4 Q.E.D. — Beat-Free Stillness on the Critical Line Re(s) = 1/2' },
+          { beat: 0.0, seconds: 0.0, mm_ss: '0:00', title: 'I.1 The Primes (Curiosity) — Prime Curiosity Hook & Asymmetric 5+7 Groove' },
+          { beat: 108.0, seconds: 53.13, mm_ss: '0:53', title: 'I.2 Sieve of Eratosthenes — 5 & 7-Beat Hockets & Higher Primes (11, 13, 17, 19)' },
+          { beat: 228.0, seconds: 108.12, mm_ss: '1:48', title: 'I.3 The Euler Product — Sparkling Chamber-Orchestral Convergence (k = 0 -> +1 -> 0)' },
+          { beat: 348.0, seconds: 162.06, mm_ss: '2:42', title: 'I.4 Asymptotic Mystery (x / ln x) & Shimmering Portal to Re(s) = 1' },
+          { beat: 440.0, seconds: 208.47, mm_ss: '3:28', title: 'II.1 Stepping Through the Pole Re(s) = 1 — Luminous 53-EDO Diesis Rotations' },
+          { beat: 512.0, seconds: 252.5, mm_ss: '4:12', title: 'II.2 Weightless Critical Strip (0 < Re(s) < 1) — Comma Glide & Mirror Awakening' },
+          { beat: 584.0, seconds: 296.63, mm_ss: '4:57', title: 'II.3 Functional Equation xi(s) = xi(1 - s) — Exact Mirror Wedge & Palindrome' },
+          { beat: 696.0, seconds: 361.3, mm_ss: '6:01', title: 'II.4 First Nontrivial Zero (t_1 = 14.1347) — Hushed Convergence at 66 BPM' },
+          { beat: 764.0, seconds: 417.69, mm_ss: '6:58', title: 'III.1 C-Minor Passacaglia — Hadamard, de la Vallée Poussin & Hardy (k = 0 -> +1)' },
+          { beat: 860.0, seconds: 494.34, mm_ss: '8:14', title: 'III.2 Four-Voice Fugato, Breakthrough Drive & Selberg Parity Setback (k = +1 -> +2)' },
+          { beat: 956.0, seconds: 554.45, mm_ss: '9:14', title: 'III.3 Montgomery–Odlyzko Pair-Correlation Riff & 136 BPM Surge (k = +2 -> +3)' },
+          { beat: 1052.0, seconds: 599.64, mm_ss: '10:00', title: 'III.4 Colossal Climb & Unresolved Summit at k = +3 (G+++7 Step 24 Freeze)' },
+          { beat: 1154.0, seconds: 685.0, mm_ss: '11:25', title: 'IV.1 AI Part 1: Zero-Free Strips — Solo Bamboo-Synth Sprint (152 BPM)' },
+          { beat: 1254.0, seconds: 724.47, mm_ss: '12:04', title: 'IV.2 AI Part 2: Inspired Full Synthesis — All Structures Snap-Fit (168 BPM)' },
+          { beat: 1394.0, seconds: 774.47, mm_ss: '12:54', title: 'IV.3 Triumph of the Proof — Pipe Organ & Full Orchestra Unite All Structures (122 BPM)' },
+          { beat: 1506.0, seconds: 829.55, mm_ss: '13:50', title: 'IV.4 Epilogue: Melancholy for Humanity — Eternal AI Halo & Lone Human Farewell (52 BPM)' },
         ],
         stems: [],
       },

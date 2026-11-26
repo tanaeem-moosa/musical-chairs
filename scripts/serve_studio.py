@@ -26,6 +26,8 @@ CHUNK_SIZE = 64 * 1024
 INSTRUMENT_FAMILIES: Dict[str, str] = {
     "piano": "Keys & Plucked",
     "harp": "Keys & Plucked",
+    "nylon_guitar": "Keys & Plucked",
+    "steel_guitar": "Keys & Plucked",
     "celesta": "Keys & Plucked",
     "church_organ": "Organ",
     "clarinet": "Woodwinds",

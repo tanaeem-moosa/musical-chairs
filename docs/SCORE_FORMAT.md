@@ -154,7 +154,7 @@ Recommended practice is to keep `score.json` **purely musical** (omitting `x`, `
 |---|---|---|---|---|
 | `id` | `string` | **Yes** | — | Unique non-empty slug with no path separators (`/`, `\`, `..`). Used as stem filename `<stems-dir>/<id>.wav` and primary lookup key in `stage.json`. |
 | `name` | `string \| null` | No | `id` | Display name for CLI logs & SVG stage labels. |
-| `instrument` | `string` | **Yes** | — | Must be one of the 24 supported instrument IDs in Section 4. Also used as fallback lookup key in `stage.json`. |
+| `instrument` | `string` | **Yes** | — | Must be one of the 26 supported instrument IDs in Section 4. Also used as fallback lookup key in `stage.json`. |
 | `notes` | `Note[]` | No | `[]` | Array of note events on this track. |
 | `pedals` | `PedalSpan[]` | No | `[]` | Optional MIDI `CC 64` damper sustain pedal spans `[{"beat": 0.0, "dur": 3.85}]` for `piano` / `harp` sympathetic resonance. |
 | `x` *(optional inline)* | `number` | No | `0.0` | Stage horizontal position in meters (`-6.0` left to `+6.0` right). Prefer setting in `stage.json`. |
@@ -213,7 +213,7 @@ A `stage.json` file separates **room acoustics and concert seating** from the mu
 
 | Preset File | Name | `reverb_rt60` | `tail_seconds` | Acoustic Layout |
 |---|---|---:|---:|---|
-| [stages/concert_hall.json](../stages/concert_hall.json) | **Concert Hall** | `2.25 s` | `5.0 s` | Balanced symphonic seating matching the 14-track 5-min ensemble (includes defaults for all 21 instruments, warmed `sitar` LP `2700 Hz`, `church_organ` LP `3500 Hz`). |
+| [stages/concert_hall.json](../stages/concert_hall.json) | **Concert Hall** | `2.25 s` | `5.0 s` | Balanced symphonic seating matching the 14-track 5-min ensemble (includes defaults for all 26 instruments, warmed `sitar` LP `2700 Hz`, `church_organ` LP `3500 Hz`). |
 | [stages/intimate_circle.json](../stages/intimate_circle.json) | **Intimate Chamber Circle** | `1.45 s` | `3.8 s` | Close, warm chamber-salon semicircle (`y = 2.2–6.8 m`) with tighter hall bloom and immediate presence. |
 | [stages/east_west_split.json](../stages/east_west_split.json) | **East-West Antiphonal Split** | `2.35 s` | `5.0 s` | Western chamber orchestra arrayed Stage Left (`x < 0`) answering Indian classical shruti instruments (`sitar`, `dotara`, `ektara`) arrayed Stage Right (`x > 0`). |
 
@@ -354,16 +354,18 @@ Because every 5-limit chord is pure, harmonic cycles do **not** close on the sam
 
 ## 4. Instrument Catalog, Stage Seating & Acoustic Tips
 
-All **21 supported `instrument` IDs** render in exact 53-EDO (or 12-TET with `--tuning 12tet`):
-- **19 SoundFont2 instruments** (`GeneralUser-GS.sf2` via `rustysynth`): each track gets **15 dedicated melodic MIDI channels** (channels 0–8, 10–15) with ±2-semitone 14-bit pitch bend so chords never collide in pitch bend, and SF2 chorus/reverb are disabled so 53-EDO intervals stay acoustically pure.
+All **26 supported `instrument` IDs** render in exact 53-EDO (or 12-TET with `--tuning 12tet`):
+- **24 SoundFont2 instruments** (`GeneralUser-GS.sf2` via `rustysynth`): each track gets **15 dedicated melodic MIDI channels** (channels 0–8, 10–15) with ±2-semitone 14-bit pitch bend so chords never collide in pitch bend, and SF2 chorus/reverb are disabled so 53-EDO intervals stay acoustically pure.
 - **2 Pure-Rust Physical Models** (`src/indian.rs`): Karplus-Strong waveguide models with cubic fractional delay, body formants, and exact 53-EDO pitch (`ektara`, `dotara`).
 
-### Full 24-Instrument Catalog
+### Full 26-Instrument Catalog
 
 | `instrument` ID | Engine | Tier | Sweet-Spot Steps (Pitch) | Concert Hall `(x, y)` | Features & Acoustic Notes |
 |---|---|---|---|---|---|
 | `piano` | SF2 GM 0 | **Warm Core** | `-106..+92` (C2–A5) | `(-2.3, 3.3)` | Crisp Mozartian clarity, `width: 1.4`, supports `pedals` (`CC 64`). |
 | `harp` | SF2 GM 46 | **Warm Core** | `-84..+106` (F2–C6) | `(-3.4, 3.7)` | Silky full 53-EDO arpeggios & harmonic sweeps (`width: 1.0`). |
+| `nylon_guitar` | SF2 GM 24 | **Warm Core** | `-89..+70` (E2–E5) | `(-1.2, 3.6)` | Warm Spanish/classical plucked nylon strings; crystal-clear 53-EDO chord lock & *campanella* cascades. |
+| `steel_guitar` | SF2 GM 25 | **Warm Core** | `-89..+70` (E2–E5) | `(1.3, 3.3)` | Bright fingerstyle steel strings exposing beatless 5/7-limit overtones vs 12-TET. |
 | `pizzicato` | SF2 GM 45 | **Warm Core** | `-53..+70` (C3–E5) | `(1.1, 4.3)` | Crisp plucked pulse for Mozartian lightness (`width: 2.2`). |
 | `string_ensemble` | SF2 GM 48 | **Warm Core** | `-53..+84` (C3–G5) | `(0.0, 7.6)` | Wide (`width: 4.8`) lush orchestral bed; supports `swell` (`cresc`/`dim`/`arch`). |
 | `tremolo_strings` | SF2 GM 44 | **Warm Core** | `-53..+84` (C3–G5) | `(0.6, 7.9)` | Wide (`width: 4.4`) shimmering Brucknerian/Debussyan string tremolando. |

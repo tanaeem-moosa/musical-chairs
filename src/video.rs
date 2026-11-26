@@ -1627,6 +1627,8 @@ fn concise_stage_label(raw_name: &str, instrument: &str) -> String {
     let canonical = match instrument {
         "piano" if lower.contains("piano") => Some("PIANO"),
         "harp" if lower.contains("harp") => Some("HARP"),
+        "nylon_guitar" if lower.contains("nylon") || lower.contains("guitar") || lower.contains("gtr") => Some("NYLON GTR"),
+        "steel_guitar" if lower.contains("steel") || lower.contains("guitar") || lower.contains("gtr") => Some("STEEL GTR"),
         "celesta" if lower.contains("celesta") => Some("CELESTA"),
         "church_organ" if lower.contains("organ") => Some("PIPE ORGAN"),
         "string_ensemble" if lower.contains("string") => Some("STRINGS"),

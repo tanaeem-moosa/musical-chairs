@@ -88,10 +88,11 @@ pub fn render_all_auditions() {
 
     println!("Rendering isolated 53-EDO instrument auditions...");
     for &inst in Sf2Instrument::all() {
-        if inst == Sf2Instrument::Sitar {
-            render_sitar_audition(&sf);
-        } else {
-            render_solo_audition(&sf, inst);
+        match inst {
+            Sf2Instrument::Sitar => render_sitar_audition(&sf),
+            Sf2Instrument::NylonGuitar => render_nylon_guitar_audition(&sf),
+            Sf2Instrument::SteelGuitar => render_steel_guitar_audition(&sf),
+            _ => render_solo_audition(&sf, inst),
         }
     }
     render_harp_53edo_showcase(&sf);
@@ -279,6 +280,223 @@ fn render_harp_53edo_showcase(sf: &Arc<SoundFont>) {
     println!(
         "  - {:<25} -> {} (Peak {:.2} dB, RMS {:.2} dB)",
         "Harp Full 53-Note Sweep", path, stats.peak_db, stats.rms_l_db
+    );
+}
+
+/// Classical Nylon Guitar showcase: rolled 6-string 53-EDO chord lock, Spanish/baroque
+/// cross-string *campanella* bell cascade, and pure syntonic-comma cadence (zero bends).
+fn render_nylon_guitar_audition(sf: &Arc<SoundFont>) {
+    let tempo = TempoMap::constant(84.0);
+    let mut notes = Vec::new();
+
+    let mut add_pluck = |b: f64, d: f64, st: i32, vel: f32| {
+        notes.push(Sf2Note::simple(
+            beat_to_sample(&tempo, b),
+            beat_to_sample(&tempo, b + d),
+            st,
+            vel,
+        ));
+    };
+
+    // Beats 0..3.8: Warm rolled 6-string pure 4:5:6 C add9 chord + lyrical upper voice
+    for (i, &st) in [pitch(C, 3), pitch(G, 3), pitch(C, 4), pitch(E, 4), pitch(G, 4), pitch(D, 5)]
+        .iter()
+        .enumerate()
+    {
+        add_pluck(i as f64 * 0.06, 2.35 - i as f64 * 0.04, st, 0.78 + 0.015 * i as f32);
+    }
+    for &(b, d, st, vel) in &[
+        (2.0, 0.65, pitch(E, 5), 0.84),
+        (2.5, 0.55, pitch(D, 5), 0.78),
+        (3.0, 0.55, pitch(C, 5), 0.80),
+        (3.5, 0.45, pitch(G, 4), 0.74),
+    ] {
+        add_pluck(b, d, st, vel);
+    }
+
+    // Beats 4.0..8.0: Sparkling cross-string *campanella* cascades (overlapping bell-like strings)
+    add_pluck(4.0, 1.85, pitch(A, 2), 0.80);
+    for (i, &st) in [
+        pitch(E, 3),
+        pitch(C, 4),
+        pitch(A, 3),
+        pitch(E, 4),
+        pitch(C, 4) + M2,
+        pitch(G, 4),
+        pitch(A, 4),
+    ]
+    .iter()
+    .enumerate()
+    {
+        let b = 4.22 + i as f64 * 0.24;
+        add_pluck(b, (5.92 - b).max(0.35), st, 0.74 + (i % 2) as f32 * 0.06);
+    }
+
+    add_pluck(6.0, 1.85, pitch(F, 2), 0.80);
+    for (i, &st) in [
+        pitch(F, 3),
+        pitch(C, 4),
+        pitch(A, 4),
+        pitch(F, 4),
+        pitch(C, 5),
+        pitch(E, 5),
+        pitch(D, 5),
+    ]
+    .iter()
+    .enumerate()
+    {
+        let b = 6.22 + i as f64 * 0.24;
+        add_pluck(b, (7.92 - b).max(0.35), st, 0.75 + (i % 2) as f32 * 0.06);
+    }
+
+    // Beats 8.0..14.4: Pure 53-EDO syntonic-comma cadence I -> IV -> ii -> V9(7:4) -> I(-COMMA)
+    let cadence_chords: &[(f64, f64, &[i32], f32)] = &[
+        (8.0, 1.12, &[pitch(F, 3), pitch(C, 4), pitch(F, 4), pitch(A, 4), pitch(C, 5)], 0.78),
+        (9.2, 1.12, &[-45, -14, 8, 22, 39], 0.76),
+        (10.4, 1.25, &[-23, -6, 8, 20, 39], 0.82),
+        (
+            11.8,
+            2.60,
+            &[
+                pitch(C, 3) - COMMA,
+                pitch(G, 3) - COMMA,
+                -COMMA,
+                M3 - COMMA,
+                P5 - COMMA,
+                OCT - COMMA,
+            ],
+            0.84,
+        ),
+    ];
+    for &(b0, dur, chord, base_vel) in cadence_chords {
+        for (i, &st) in chord.iter().enumerate() {
+            let off = i as f64 * 0.055;
+            add_pluck(b0 + off, (dur - off).max(0.35), st, (base_vel + 0.012 * i as f32).min(0.92));
+        }
+    }
+
+    let total_samples = beat_to_sample(&tempo, 14.6) + (2.5 * SAMPLE_RATE as f64) as usize;
+    let dry = render_sf2_track(sf, Sf2Instrument::NylonGuitar, &notes, total_samples);
+    let (mastered, stats) = master_with_gentle_hall(&dry, Sf2Instrument::NylonGuitar.reverb_send());
+    let path = "output/audition/nylon_guitar.wav";
+    write_stereo_wav_16bit(path, SAMPLE_RATE as u32, &mastered).expect("write nylon_guitar.wav");
+    println!(
+        "  - {:<25} -> {} (Peak {:.2} dB, RMS {:.2} dB)",
+        Sf2Instrument::NylonGuitar.name(),
+        path,
+        stats.peak_db,
+        stats.rms_l_db
+    );
+}
+
+/// Acoustic Steel Guitar showcase: bright fingerstyle Travis picking, beatless 5/7-limit
+/// overtone ring, chromatic-mediant diesis shift (+2c), and *campanella* bell harmonics.
+fn render_steel_guitar_audition(sf: &Arc<SoundFont>) {
+    let tempo = TempoMap::constant(92.0);
+    let mut notes = Vec::new();
+
+    let mut add_pluck = |b: f64, d: f64, st: i32, vel: f32| {
+        notes.push(Sf2Note::simple(
+            beat_to_sample(&tempo, b),
+            beat_to_sample(&tempo, b + d),
+            st,
+            vel,
+        ));
+    };
+
+    // Beats 0..4.0: Crisp fingerstyle Travis pattern on pure 5-limit C add9
+    let travis: &[(f64, f64, i32, f32)] = &[
+        (0.00, 0.90, pitch(C, 3), 0.84),
+        (0.00, 0.72, pitch(E, 4), 0.80),
+        (0.25, 0.65, pitch(G, 3), 0.70),
+        (0.50, 0.70, pitch(C, 4), 0.76),
+        (0.75, 0.85, pitch(D, 5), 0.82),
+        (1.00, 0.90, pitch(G, 3), 0.78),
+        (1.25, 0.70, pitch(G, 4), 0.76),
+        (1.50, 0.75, pitch(E, 4), 0.78),
+        (1.75, 0.85, pitch(C, 5), 0.82),
+        (2.00, 0.90, pitch(C, 3), 0.84),
+        (2.25, 0.70, pitch(G, 4), 0.74),
+        (2.50, 0.75, pitch(D, 5), 0.80),
+        (2.75, 0.95, pitch(E, 5), 0.86),
+        (3.00, 0.90, pitch(G, 3), 0.76),
+        (3.25, 0.65, pitch(C, 5), 0.78),
+        (3.50, 0.45, pitch(G, 4), 0.74),
+    ];
+    for &(b, d, st, vel) in travis {
+        add_pluck(b, d, st, vel);
+    }
+
+    // Beats 4.0..8.0: Exposed 7-limit (4:5:6:7:9) harmonic bell cascade & chromatic-mediant shift
+    for (i, &st) in [
+        pitch(C, 3),
+        pitch(G, 3),
+        pitch(C, 4),
+        pitch(E, 4),
+        pitch(G, 4),
+        HARM_7,
+        OCT + M2,
+        OCT + M3,
+    ]
+    .iter()
+    .enumerate()
+    {
+        let b = 4.0 + i as f64 * 0.22;
+        add_pluck(b, (5.92 - b).max(0.35), st, 0.76 + (i % 2) as f32 * 0.05);
+    }
+
+    // Pure Ab major [-17, 0, 14, 36, 53] -> E major [-34, -17, -3, 19, 36]
+    for (i, &st) in [-17, 0, 14, 36, OCT].iter().enumerate() {
+        let off = i as f64 * 0.06;
+        add_pluck(6.0 + off, 0.95 - off * 0.5, st, 0.80);
+    }
+    for (i, &st) in [-34, -17, -3, 19, 36].iter().enumerate() {
+        let off = i as f64 * 0.06;
+        add_pluck(7.0 + off, 0.95 - off * 0.5, st, 0.82);
+    }
+
+    // Beats 8.0..15.2: Radiant C++ (+2 diesis) chord -> pure G9(7:4) -> ringing home C add9
+    for (i, &st) in [DIESIS - OCT, DIESIS - P4, DIESIS, DIESIS + M3, DIESIS + P5, DIESIS + OCT]
+        .iter()
+        .enumerate()
+    {
+        let off = i as f64 * 0.055;
+        add_pluck(8.0 + off, 1.85 - off, st, 0.84);
+    }
+    for (i, &st) in [pitch(G, 3), pitch(G, 3) + M3, pitch(D, 4), pitch(G, 3) + HARM_7, pitch(A, 4)]
+        .iter()
+        .enumerate()
+    {
+        let off = i as f64 * 0.06;
+        add_pluck(10.0 + off, 1.80 - off, st, 0.80);
+    }
+    for (i, &st) in [
+        pitch(C, 3),
+        pitch(G, 3),
+        pitch(C, 4),
+        pitch(E, 4),
+        pitch(G, 4),
+        pitch(D, 5),
+        pitch(E, 5),
+    ]
+    .iter()
+    .enumerate()
+    {
+        let off = i as f64 * 0.065;
+        add_pluck(12.0 + off, 3.0 - off, st, (0.80 + 0.015 * i as f32).min(0.92));
+    }
+
+    let total_samples = beat_to_sample(&tempo, 15.2) + (2.6 * SAMPLE_RATE as f64) as usize;
+    let dry = render_sf2_track(sf, Sf2Instrument::SteelGuitar, &notes, total_samples);
+    let (mastered, stats) = master_with_gentle_hall(&dry, Sf2Instrument::SteelGuitar.reverb_send());
+    let path = "output/audition/steel_guitar.wav";
+    write_stereo_wav_16bit(path, SAMPLE_RATE as u32, &mastered).expect("write steel_guitar.wav");
+    println!(
+        "  - {:<25} -> {} (Peak {:.2} dB, RMS {:.2} dB)",
+        Sf2Instrument::SteelGuitar.name(),
+        path,
+        stats.peak_db,
+        stats.rms_l_db
     );
 }
 

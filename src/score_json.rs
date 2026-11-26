@@ -23,10 +23,12 @@ use crate::spatial::{spatialize_track_with_width, StagePos};
 use crate::synth::SAMPLE_RATE;
 use crate::wav::write_stereo_wav_16bit;
 
-/// All 24 instrument identifiers supported by the JSON score schema.
-pub const VALID_INSTRUMENTS: [&str; 24] = [
+/// All 26 instrument identifiers supported by the JSON score schema.
+pub const VALID_INSTRUMENTS: [&str; 26] = [
     "piano",
     "harp",
+    "nylon_guitar",
+    "steel_guitar",
     "celesta",
     "church_organ",
     "clarinet",
@@ -1191,12 +1193,21 @@ mod tests {
         assert!(n.breath_swell);
         assert!((n.meend_cents - 5.0).abs() < 1e-6);
 
+        assert_eq!(VALID_INSTRUMENTS.len(), 26);
         for name in VALID_INSTRUMENTS {
             assert!(
                 ScoreInstrument::parse(name).is_ok(),
                 "Expected `{name}` to be supported"
             );
         }
+        assert_eq!(
+            ScoreInstrument::parse("nylon_guitar").unwrap(),
+            ScoreInstrument::Sf2(Sf2Instrument::NylonGuitar)
+        );
+        assert_eq!(
+            ScoreInstrument::parse("steel_guitar").unwrap(),
+            ScoreInstrument::Sf2(Sf2Instrument::SteelGuitar)
+        );
     }
 
     #[test]

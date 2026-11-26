@@ -128,6 +128,34 @@ fn pick_time_tick_step(duration_s: f64) -> f64 {
     120.0
 }
 
+/// Concise stage label helper ensuring long guitar/instrument display names fit cleanly on the 2D stage map.
+fn concise_stage_label(raw_name: &str, instrument: &str) -> String {
+    let trimmed = raw_name.trim();
+    let lower = trimmed.to_ascii_lowercase();
+    match instrument {
+        "nylon_guitar"
+            if lower.contains("nylon") || lower.contains("guitar") || lower.contains("gtr") =>
+        {
+            return "NYLON GTR".to_string();
+        }
+        "steel_guitar"
+            if lower.contains("steel") || lower.contains("guitar") || lower.contains("gtr") =>
+        {
+            return "STEEL GTR".to_string();
+        }
+        _ => {}
+    }
+    if trimmed.chars().count() > 20 {
+        if let Some((base, _)) = trimmed.split_once('(') {
+            let b = base.trim();
+            if !b.is_empty() {
+                return b.to_string();
+            }
+        }
+    }
+    trimmed.to_string()
+}
+
 /// Generates a crisp 1600x960 dark-studio SVG visualizing both the 2D concert stage map
 /// and the full-piece 53-EDO pitch-roll timeline with comma/tuning indicator.
 pub fn render_score_svg(
@@ -397,7 +425,7 @@ pub fn render_score_svg(
                 label_y: sy - radius - 5.0,
                 radius,
                 color: fam.color(),
-                label: track.display_name().to_string(),
+                label: concise_stage_label(track.display_name(), &track.instrument),
                 coords: format!("({:.1}, {:.1})", p.x, p.y),
                 has_lp: p.warm_lowpass_hz.is_some(),
             }
