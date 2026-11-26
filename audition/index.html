@@ -404,7 +404,7 @@
             <a class="badge" style="text-decoration:none;" href="../output/sample_5min.wav" target="_blank">WAV</a>
           </div>
           <div class="muted">Beat-free 5-limit triads, 7:4 harmonic 7ths, 22-shruti glides &amp; smooth comma/diesis shifts.</div>
-          <audio id="symphony-5min-audio" controls preload="metadata" src="../output/sample_5min.mp3"></audio>
+          <audio id="symphony-5min-audio" controls preload="auto" src="../output/sample_5min.mp3"></audio>
         </div>
         <div class="hero-player-box" id="ab-box-12">
           <div class="hero-player-title">
@@ -412,7 +412,7 @@
             <a class="badge" style="text-decoration:none;" href="../output/sample_5min_12tet.wav" target="_blank">WAV</a>
           </div>
           <div class="muted">Same score &amp; stage quantized to 12-EDO semitones (listen at 2:55–3:45 to hear the difference!).</div>
-          <audio id="symphony-12tet-audio" controls preload="metadata" src="../output/sample_5min_12tet.mp3"></audio>
+          <audio id="symphony-12tet-audio" controls preload="auto" src="../output/sample_5min_12tet.mp3"></audio>
         </div>
       </div>
 
@@ -542,6 +542,26 @@
         setHeroActive(audio12);
       });
     }
+    function seekAndPlay(audio, targetTime, shouldPlay = true) {
+      if (!audio) return;
+      const applySeek = () => {
+        const dur = isFinite(audio.duration) ? audio.duration : targetTime;
+        const clamped = Math.max(0, Math.min(dur, targetTime));
+        try {
+          audio.currentTime = clamped;
+        } catch (_) {}
+        if (shouldPlay) {
+          audio.play().catch(() => {});
+        }
+      };
+      if (audio.readyState >= 1) {
+        applySeek();
+      } else {
+        audio.addEventListener('loadedmetadata', applySeek, { once: true });
+        audio.load();
+      }
+    }
+
     const abFlipBtn = document.getElementById('ab-flip-btn');
     if (abFlipBtn && audio53 && audio12) {
       abFlipBtn.addEventListener('click', () => {
@@ -550,18 +570,16 @@
         const wasPlaying = !from.paused;
         const t = from.currentTime || 0;
         from.pause();
-        to.currentTime = t;
         setHeroActive(to);
-        if (wasPlaying) to.play().catch(() => {});
+        seekAndPlay(to, t, wasPlaying);
       });
     }
 
     document.querySelectorAll('.jump-btn').forEach((btn) => {
       btn.addEventListener('click', () => {
         const audio = activeHeroAudio || audio53;
-        if (!audio) return;
-        audio.currentTime = parseFloat(btn.dataset.jump) || 0;
-        audio.play().catch(() => {});
+        const t = parseFloat(btn.dataset.jump) || 0;
+        seekAndPlay(audio, t, true);
       });
     });
 
