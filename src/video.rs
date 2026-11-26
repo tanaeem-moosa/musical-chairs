@@ -496,6 +496,13 @@ fn glyph_strokes(ch: char) -> (f32, &'static [&'static [(f32, f32)]]) {
         '(' => (0.28, &[&[(0.22, 0.0), (0.10, 0.24), (0.08, 0.50), (0.10, 0.76), (0.22, 1.0)]]),
         ')' => (0.28, &[&[(0.06, 0.0), (0.18, 0.24), (0.20, 0.50), (0.18, 0.76), (0.06, 1.0)]]),
         '|' | '·' => (0.22, &[&[(0.11, 0.16), (0.11, 0.84)]]),
+        '~' => (0.56, &[&[(0.04, 0.58), (0.14, 0.42), (0.24, 0.44), (0.34, 0.58), (0.44, 0.56), (0.52, 0.42)]]),
+        '#' => (0.58, &[
+            &[(0.20, 0.08), (0.14, 0.92)],
+            &[(0.44, 0.08), (0.38, 0.92)],
+            &[(0.04, 0.36), (0.54, 0.36)],
+            &[(0.02, 0.66), (0.52, 0.66)],
+        ]),
         '&' => (0.64, &[&[(0.58, 0.96), (0.14, 0.42), (0.14, 0.16), (0.26, 0.02), (0.40, 0.06), (0.44, 0.22), (0.32, 0.42), (0.08, 0.66), (0.10, 0.88), (0.26, 1.0), (0.44, 0.92), (0.58, 0.62)]]),
         ' ' => (0.34, &[]),
         _ => (0.36, &[&[(0.08, 0.52), (0.28, 0.52)]]),
@@ -507,6 +514,46 @@ fn format_mm_ss(seconds: f64) -> String {
     let m = total / 60;
     let s = total % 60;
     format!("{m}:{s:02}")
+}
+
+/// Maps an exact 53-EDO interval `delta_53` (mod 53) to its canonical Pythagorean or Just ratio label.
+pub fn step_interval_ratio_label(delta_53: i32) -> String {
+    let d = delta_53.rem_euclid(OCT);
+    match d {
+        0 => "1:1".to_string(),
+        1 => "81:80".to_string(),
+        2 => "128:125".to_string(),
+        4 => "256:243".to_string(),
+        5 => "16:15".to_string(),
+        8 => "10:9".to_string(),
+        9 => "9:8".to_string(),
+        12 => "7:6".to_string(),
+        13 => "32:27".to_string(),
+        14 => "6:5".to_string(),
+        17 => "5:4".to_string(),
+        18 => "81:64".to_string(),
+        22 => "4:3".to_string(),
+        26 => "7:5".to_string(),
+        31 => "3:2".to_string(),
+        35 => "128:81".to_string(),
+        36 => "8:5".to_string(),
+        39 => "5:3".to_string(),
+        40 => "27:16".to_string(),
+        43 => "7:4".to_string(),
+        44 => "16:9".to_string(),
+        45 => "9:5".to_string(),
+        48 => "15:8".to_string(),
+        49 => "243:128".to_string(),
+        _ => format!("{d}/53"),
+    }
+}
+
+#[inline]
+fn is_pythagorean_interval(delta_53: i32) -> bool {
+    matches!(
+        delta_53.rem_euclid(OCT),
+        0 | 4 | 9 | 13 | 18 | 22 | 31 | 35 | 40 | 44 | 49
+    )
 }
 
 fn comma_offset_from_anchor(step: i32) -> f64 {
@@ -665,10 +712,10 @@ impl VideoScene {
         let stage_cy = 918.0 * sy;
         let px_per_m = 61.5 * sc;
 
-        // Harmonic Wheel geometry (Top Right card)
+        // Harmonic Wheel geometry (Top Right card — room below for active steps + live ratios)
         let wheel_cx = 1560.0 * sx;
-        let wheel_cy = 348.0 * sy;
-        let wheel_r = 166.0 * sc;
+        let wheel_cy = 324.0 * sy;
+        let wheel_r = 144.0 * sc;
 
         // Now Playing telemetry bounds (Bottom Right card)
         let now_x0 = 1256.0 * sx;
@@ -1086,12 +1133,13 @@ impl VideoScene {
         }
 
         // 2. Live 53-EDO / 12-TET Harmonic Mandala Wheel
-        // Collapse simultaneous pitches by discrete wheel bucket (0..52)
+        // Collapse simultaneous pitches by discrete wheel bucket (0..52) and track bass note
         let mut bucket_energy = [0.0_f32; 53];
         let mut bucket_pos = [0.0_f32; 53];
         let mut bucket_col = [Rgb::from_u8(248, 202, 78); 53];
         let mut comma_sum = 0.0_f64;
         let mut comma_weight = 0.0_f64;
+        let mut bass_step: Option<i32> = None;
 
         for ap in &active_pitches {
             let idx = (ap.wheel_pos.round() as i32).rem_euclid(53) as usize;
@@ -1101,26 +1149,33 @@ impl VideoScene {
                 bucket_pos[idx] = ap.wheel_pos;
                 bucket_col[idx] = ap.color;
             }
+            if e > 0.04 {
+                bass_step = Some(match bass_step {
+                    Some(prev) => prev.min(ap.step),
+                    None => ap.step,
+                });
+            }
             comma_sum += comma_offset_from_anchor(ap.step) * e as f64;
             comma_weight += e as f64;
         }
 
-        let mut wheel_nodes: Vec<(f32, f32, f32, Rgb)> = Vec::with_capacity(16);
+        // (step_idx, x, y, energy, color, angle)
+        let mut wheel_nodes: Vec<(usize, f32, f32, f32, Rgb, f64)> = Vec::with_capacity(16);
         for i in 0..53 {
             let e = bucket_energy[i];
             if e > 0.04 {
                 let ang = -PI * 0.5 + 2.0 * PI * (bucket_pos[i] as f64 / 53.0);
                 let nx = self.wheel_cx + (ang.cos() * self.wheel_r as f64) as f32;
                 let ny = self.wheel_cy + (ang.sin() * self.wheel_r as f64) as f32;
-                wheel_nodes.push((nx, ny, e, bucket_col[i]));
+                wheel_nodes.push((i, nx, ny, e, bucket_col[i], ang));
             }
         }
 
         // Translucent harmonic chord geometry lines connecting active pitch classes
         for i in 0..wheel_nodes.len() {
             for j in (i + 1)..wheel_nodes.len() {
-                let (x0, y0, e0, c0) = wheel_nodes[i];
-                let (x1, y1, e1, c1) = wheel_nodes[j];
+                let (_, x0, y0, e0, c0, _) = wheel_nodes[i];
+                let (_, x1, y1, e1, c1, _) = wheel_nodes[j];
                 let line_e = (e0 * e1).sqrt();
                 if line_e > 0.08 {
                     let mid_col = c0.lerp(c1, 0.5).lerp(Rgb::from_u8(248, 224, 156), 0.35);
@@ -1140,18 +1195,63 @@ impl VideoScene {
         }
 
         // Glowing pitch-class orbs on the harmonic wheel
-        for &(nx, ny, e, col) in &wheel_nodes {
-            c.add_radial_glow(nx, ny, (18.0 + 18.0 * e) * sc, col, 0.52 * e, None);
+        for &(_, nx, ny, e, col, _) in &wheel_nodes {
+            c.add_radial_glow(nx, ny, (17.0 + 17.0 * e) * sc, col, 0.52 * e, None);
             c.fill_circle_aa(
                 nx,
                 ny,
-                (5.2 + 3.2 * e) * sc,
+                (5.0 + 3.0 * e) * sc,
                 col.lerp(Rgb::from_u8(255, 250, 236), 0.45),
                 0.95,
             );
         }
 
-        // Subtle center readout inside harmonic wheel
+        // Exact 53-EDO step number badges (0..52) on inner rim beside top active orbs (non-overlapping)
+        if self.tuning == TuningMode::Edo53 && silence_fade < 0.85 {
+            let mut by_energy: Vec<usize> = (0..wheel_nodes.len()).collect();
+            by_energy.sort_by(|&a, &b| wheel_nodes[b].3.total_cmp(&wheel_nodes[a].3));
+            let mut badge_pts: Vec<(f32, f32)> = Vec::new();
+            let badge_r = self.wheel_r - 22.0 * sc;
+
+            for idx in by_energy {
+                let (step_pc, _, _, e, col, ang) = wheel_nodes[idx];
+                let bx = self.wheel_cx + (ang.cos() * badge_r as f64) as f32;
+                let by = self.wheel_cy + (ang.sin() * badge_r as f64) as f32;
+                if badge_pts
+                    .iter()
+                    .any(|&(px, py)| (px - bx).hypot(py - by) < 22.0 * sc)
+                {
+                    continue;
+                }
+                badge_pts.push((bx, by));
+                let step_txt = step_pc.to_string();
+                let pill_w = (measure_vector_text(&step_txt, 9.5 * sc) + 8.0 * sc).max(16.0 * sc);
+                c.fill_rounded_rect(
+                    bx - 0.5 * pill_w,
+                    by - 7.0 * sc,
+                    bx + 0.5 * pill_w,
+                    by + 7.0 * sc,
+                    6.5 * sc,
+                    Rgb::from_u8(10, 16, 30),
+                    0.86 * (1.0 - silence_fade),
+                    Some((col, 0.72 * e.min(1.0), 1.0 * sc)),
+                );
+                c.draw_text_vector(
+                    &step_txt,
+                    bx,
+                    by - 4.7 * sc,
+                    9.5 * sc,
+                    0.82 * sc,
+                    col.lerp(Rgb::from_u8(255, 250, 236), 0.58),
+                    0.96 * (1.0 - silence_fade),
+                    TextAlign::Center,
+                );
+            }
+        }
+
+        // Subtle center readout inside harmonic wheel + bottom Active Steps & Pythagorean/Just Ratios
+        let readout_y1 = self.wheel_cy + self.wheel_r + 44.0 * sc;
+        let readout_y2 = readout_y1 + 21.0 * sc;
         if comma_weight > 0.05 && silence_fade < 0.7 {
             let center_lbl = match self.tuning {
                 TuningMode::Edo53 => {
@@ -1173,9 +1273,9 @@ impl VideoScene {
             c.draw_text_vector(
                 &center_lbl,
                 self.wheel_cx,
-                self.wheel_cy - 12.0 * sc,
-                14.5 * sc,
-                1.05 * sc,
+                self.wheel_cy - 11.0 * sc,
+                13.5 * sc,
+                1.0 * sc,
                 Rgb::from_u8(246, 220, 148),
                 0.86 * (1.0 - silence_fade),
                 TextAlign::Center,
@@ -1183,13 +1283,87 @@ impl VideoScene {
             c.draw_text_vector(
                 &voices_lbl,
                 self.wheel_cx,
-                self.wheel_cy + 12.0 * sc,
-                9.5 * sc,
-                0.78 * sc,
+                self.wheel_cy + 11.0 * sc,
+                9.0 * sc,
+                0.76 * sc,
                 Rgb::from_u8(152, 168, 200),
                 0.75 * (1.0 - silence_fade),
                 TextAlign::Center,
             );
+
+            // Bottom telemetry lines under the wheel: Active Steps & Live Pythagorean/Just Ratios
+            match self.tuning {
+                TuningMode::Edo53 => {
+                    let mut steps_list: Vec<usize> = wheel_nodes.iter().map(|n| n.0).collect();
+                    steps_list.sort_unstable();
+                    steps_list.dedup();
+                    let steps_str = steps_list
+                        .iter()
+                        .take(8)
+                        .map(|s| s.to_string())
+                        .collect::<Vec<_>>()
+                        .join(" ");
+                    let active_line = format!("ACTIVE STEPS: {steps_str}");
+                    c.draw_text_vector(
+                        &active_line,
+                        self.wheel_cx,
+                        readout_y1,
+                        10.5 * sc,
+                        0.86 * sc,
+                        Rgb::from_u8(248, 240, 218),
+                        0.92 * (1.0 - silence_fade),
+                        TextAlign::Center,
+                    );
+
+                    let bass_pc = bass_step
+                        .map(|s| s.rem_euclid(OCT))
+                        .unwrap_or_else(|| steps_list.first().copied().unwrap_or(0) as i32);
+                    let mut deltas: Vec<i32> = steps_list
+                        .iter()
+                        .map(|&pc| (pc as i32 - bass_pc).rem_euclid(OCT))
+                        .collect();
+                    deltas.sort_unstable();
+                    deltas.dedup();
+                    let all_pyth = deltas.len() >= 2 && deltas.iter().all(|&d| is_pythagorean_interval(d));
+                    let has_exotic_pyth = deltas.iter().any(|&d| matches!(d, 4 | 13 | 18 | 35 | 40 | 49));
+                    let ratios_joined = deltas
+                        .iter()
+                        .take(6)
+                        .map(|&d| step_interval_ratio_label(d))
+                        .collect::<Vec<_>>()
+                        .join("  ");
+                    let ratio_prefix = if all_pyth {
+                        "PYTH RATIOS"
+                    } else if has_exotic_pyth {
+                        "JUST/PYTH"
+                    } else {
+                        "RATIOS"
+                    };
+                    let ratio_line = format!("{ratio_prefix}: {ratios_joined}");
+                    c.draw_text_vector(
+                        &ratio_line,
+                        self.wheel_cx,
+                        readout_y2,
+                        10.5 * sc,
+                        0.86 * sc,
+                        Rgb::from_u8(108, 234, 180),
+                        0.92 * (1.0 - silence_fade),
+                        TextAlign::Center,
+                    );
+                }
+                TuningMode::Tet12 => {
+                    c.draw_text_vector(
+                        "12-TET EQUAL SEMITONES (APPROXIMATED)",
+                        self.wheel_cx,
+                        readout_y1 + 8.0 * sc,
+                        10.0 * sc,
+                        0.82 * sc,
+                        Rgb::from_u8(246, 206, 112),
+                        0.85 * (1.0 - silence_fade),
+                        TextAlign::Center,
+                    );
+                }
+            }
         } else if in_silence {
             c.draw_text_vector(
                 "STILLNESS",
@@ -1856,30 +2030,33 @@ fn render_static_background(
         None,
     );
 
-    // 53 golden tick marks around the harmonic circle
+    // 53 crisp golden tick marks around the harmonic circle (accent every 5 steps + 12 ~approximate landmarks)
     const ANCHOR_LABELS: [(i32, &str); 12] = [
-        (0, "C"),
-        (4, "C+"),
-        (9, "D"),
-        (14, "EB"),
-        (17, "E"),
-        (22, "F"),
-        (26, "F+"),
-        (31, "G"),
-        (36, "AB"),
-        (39, "A"),
-        (43, "H7"),
-        (48, "B"),
+        (0, "~C"),
+        (4, "~C#"),
+        (9, "~D"),
+        (14, "~EB"),
+        (17, "~E"),
+        (22, "~F"),
+        (26, "~F#"),
+        (31, "~G"),
+        (36, "~AB"),
+        (39, "~A"),
+        (44, "~BB"),
+        (48, "~B"),
     ];
     for step in 0..53 {
         let ang = -PI * 0.5 + 2.0 * PI * (step as f64 / 53.0);
         let cos_a = ang.cos() as f32;
         let sin_a = ang.sin() as f32;
         let anchor = ANCHOR_LABELS.iter().find(|&&(s, _)| s == step);
+        let is_five = step % 5 == 0;
         let (r_in, r_out, thick, alpha) = if anchor.is_some() {
-            (wheel_r - 9.0 * sc, wheel_r + 6.0 * sc, 1.3 * sc, 0.72)
+            (wheel_r - 9.0 * sc, wheel_r + 6.0 * sc, 1.45 * sc, 0.78)
+        } else if is_five {
+            (wheel_r - 7.0 * sc, wheel_r + 4.5 * sc, 1.2 * sc, 0.62)
         } else {
-            (wheel_r - 4.5 * sc, wheel_r + 2.5 * sc, 0.85 * sc, 0.34)
+            (wheel_r - 4.8 * sc, wheel_r + 2.8 * sc, 0.95 * sc, 0.42)
         };
         c.draw_capsule_aa(
             wheel_cx + cos_a * r_in,
@@ -1895,20 +2072,20 @@ fn render_static_background(
         if let Some(&(_, lbl)) = anchor {
             let lr = wheel_r + 21.0 * sc;
             let lx = wheel_cx + cos_a * lr;
-            let ly = wheel_cy + sin_a * lr - 4.8 * sc;
-            let is_primary = matches!(step, 0 | 17 | 31 | 39 | 43);
+            let ly = wheel_cy + sin_a * lr - 4.4 * sc;
+            let is_primary = matches!(step, 0 | 17 | 31 | 39);
             c.draw_text_vector(
                 lbl,
                 lx,
                 ly,
-                if is_primary { 10.5 * sc } else { 9.0 * sc },
-                0.82 * sc,
+                if is_primary { 9.5 * sc } else { 8.5 * sc },
+                0.76 * sc,
                 if is_primary {
-                    Rgb::from_u8(246, 218, 138)
+                    Rgb::from_u8(196, 178, 134)
                 } else {
                     slate_muted
                 },
-                if is_primary { 0.92 } else { 0.68 },
+                if is_primary { 0.78 } else { 0.60 },
                 TextAlign::Center,
             );
         }
@@ -2193,6 +2370,52 @@ pub fn render_video_webm(
 mod tests {
     use super::*;
     use crate::score_json::{load_stage_config, parse_json_score};
+
+    #[test]
+    fn test_edo53_pythagorean_and_just_ratio_table() {
+        let cases: &[(i32, &str)] = &[
+            (0, "1:1"),
+            (1, "81:80"),
+            (2, "128:125"),
+            (4, "256:243"),
+            (5, "16:15"),
+            (8, "10:9"),
+            (9, "9:8"),
+            (12, "7:6"),
+            (13, "32:27"),
+            (14, "6:5"),
+            (17, "5:4"),
+            (18, "81:64"),
+            (22, "4:3"),
+            (26, "7:5"),
+            (31, "3:2"),
+            (35, "128:81"),
+            (36, "8:5"),
+            (39, "5:3"),
+            (40, "27:16"),
+            (43, "7:4"),
+            (44, "16:9"),
+            (45, "9:5"),
+            (48, "15:8"),
+            (49, "243:128"),
+            (3, "3/53"),
+            (-22, "3:2"),
+        ];
+        for &(delta, expected) in cases {
+            assert_eq!(
+                step_interval_ratio_label(delta),
+                expected,
+                "Unexpected ratio label for delta={delta}"
+            );
+        }
+        assert!(is_pythagorean_interval(31)); // 3:2
+        assert!(is_pythagorean_interval(9)); // 9:8
+        assert!(is_pythagorean_interval(18)); // 81:64
+        assert!(is_pythagorean_interval(13)); // 32:27
+        assert!(is_pythagorean_interval(4)); // 256:243
+        assert!(!is_pythagorean_interval(17)); // 5:4 Just
+        assert!(!is_pythagorean_interval(43)); // 7:4 Just
+    }
 
     #[test]
     fn test_video_frame_render_and_active_glow_brightness() {

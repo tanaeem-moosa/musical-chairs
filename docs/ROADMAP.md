@@ -10,7 +10,7 @@ Lock down the pure-Rust core renderer and studio tooling so composers and AI age
 
 - **Decoupled 2-Input Pipeline:** Pure-music `score.json` paired with reusable 3D concert stages (`stages/concert_hall.json`, `stages/intimate_circle.json`, `stages/east_west_split.json`).
 - **Exact 53-EDO + 12-TET A/B Comparison:** 15-channel per-track 14-bit pitch-bent SoundFont2 rendering, pure-Rust physical models (`ektara`, `dotara`), Woodworth ITD/ILD 3D spatialization, 8-channel Walsh-Hadamard FDN hall reverb, intentional `--end-silence`, and instant `--tuning 12tet` comparison with `A/B Switch (−10s)` in the Byte-Range studio UI (`scripts/serve_studio.py`).
-- **Visualizers:** Pure-Rust 1600×960 dark-studio SVG score/stage maps (`visualize` / `--image`) and 1080p VP9 + Opus animated WebM concert videos (`render-video`).
+- **Visualizers:** Pure-Rust 1600×960 dark-studio SVG score/stage maps (`visualize` / `--image`) and 1080p VP9 + Opus animated WebM concert videos (`render-video`), featuring an upgraded **53-EDO Harmonic Wheel** with `~`-prefixed approximate 12-tone landmarks (`~C`..`~B`), live highlighted active 53-EDO step numbers (`0..52`), and real-time **Pythagorean & Just interval ratio readouts** (`1:1`, `3:2`, `9:8`, `81:64`, `5:4`, `6:5`, `7:4`, `81:80`, etc.).
 
 ---
 
