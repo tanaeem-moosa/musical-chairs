@@ -366,7 +366,7 @@ mod tests {
         for &(step, label) in &[(0, "C4(53edo)"), (-P4, "G3(53edo)")] {
             let target = step_to_freq(step);
 
-            let ekt = render_ektara(step, 1.2, 0.85, 0.0, 101 + step as u64);
+            let ekt = render_ektara(step, 1.2, 0.85, 0.0, 101_u64.wrapping_add(step as u64));
             let ekt_hz = measure_pitch_hz(&ekt, 4800, 14400, target * 0.8, target * 1.25);
             let ekt_err = (1200.0 * (ekt_hz / target).log2()).abs();
             assert!(
@@ -374,7 +374,7 @@ mod tests {
                 "Ektara {label} pitch error {ekt_err:.2} cents (target {target:.2} Hz, measured {ekt_hz:.2} Hz)"
             );
 
-            let dot = render_dotara(step, 1.2, 0.85, 202 + step as u64);
+            let dot = render_dotara(step, 1.2, 0.85, 202_u64.wrapping_add(step as u64));
             let dot_hz = measure_pitch_hz(&dot, 4800, 14400, target * 0.8, target * 1.25);
             let dot_err = (1200.0 * (dot_hz / target).log2()).abs();
             assert!(

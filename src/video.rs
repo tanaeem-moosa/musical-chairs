@@ -1,4 +1,4 @@
-//! Pure-Rust animated YouTube WebM video renderer (1920x1080 VP9 + Opus via ffmpeg pipe).
+//! Pure-Rust animated YouTube 4K UHD WebM video renderer (3840x2160 VP9 + Opus via ffmpeg pipe).
 //!
 //! Renders a luminous midnight-indigo concert-hall visualization featuring:
 //! - Live 2D Concert Stage Map with additive radial glows, expanding onset ripples, and Pipe Organ crown
@@ -33,8 +33,8 @@ pub struct VideoOptions {
 impl Default for VideoOptions {
     fn default() -> Self {
         Self {
-            width: 1920,
-            height: 1080,
+            width: 3840,
+            height: 2160,
             fps: 24,
             stage: None,
             tuning: TuningMode::Edo53,
@@ -2140,7 +2140,7 @@ fn render_static_background(
     );
 }
 
-/// Renders an animated VP9 + Opus YouTube WebM video by streaming raw RGB24 frames to `ffmpeg`.
+/// Renders an animated 4K UHD (default 3840x2160) VP9 + Opus YouTube WebM video by streaming raw RGB24 frames to `ffmpeg`.
 pub fn render_video_webm(
     score: &JsonScore,
     audio_path: impl AsRef<Path>,
@@ -2212,6 +2212,8 @@ pub fn render_video_webm(
             "6",
             "-row-mt",
             "1",
+            "-tile-columns",
+            "2",
             "-pix_fmt",
             "yuv420p",
             "-c:a",
@@ -2355,6 +2357,14 @@ mod tests {
         assert!(is_pythagorean_interval(4)); // 256:243
         assert!(!is_pythagorean_interval(17)); // 5:4 Just
         assert!(!is_pythagorean_interval(43)); // 7:4 Just
+    }
+
+    #[test]
+    fn test_video_options_default_is_4k_uhd() {
+        let def = VideoOptions::default();
+        assert_eq!(def.width, 3840);
+        assert_eq!(def.height, 2160);
+        assert_eq!(def.fps, 24);
     }
 
     #[test]

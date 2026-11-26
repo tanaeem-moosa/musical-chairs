@@ -45,8 +45,8 @@ fn print_usage() {
     eprintln!("    --stage <stage.json>       Decoupled stage placement & hall config");
     eprintln!("    --tuning <53edo|12tet>     Tuning system (default: 53edo)");
     eprintln!("    --fps <24>                 Video frame rate (default: 24)");
-    eprintln!("    --width <1920>             Video width in pixels (default: 1920)");
-    eprintln!("    --height <1080>            Video height in pixels (default: 1080)");
+    eprintln!("    --width <3840>             Video width in pixels (default: 3840)");
+    eprintln!("    --height <2160>            Video height in pixels (default: 2160)");
     eprintln!("  edo53_music audition");
     eprintln!("  edo53_music preview-synth");
 }
@@ -389,9 +389,10 @@ fn run_render_video_cli(args: &[String]) {
     let mut positional: Vec<String> = Vec::new();
     let mut stage_path: Option<PathBuf> = None;
     let mut tuning = TuningMode::Edo53;
-    let mut fps: u32 = 24;
-    let mut width: usize = 1920;
-    let mut height: usize = 1080;
+    let default_opts = VideoOptions::default();
+    let mut fps: u32 = default_opts.fps;
+    let mut width: usize = default_opts.width;
+    let mut height: usize = default_opts.height;
 
     let mut i = 0;
     while i < args.len() {
