@@ -40,6 +40,11 @@ cargo run --release -- visualize scores/sample_5min.json output/sample_5min.svg 
   --stage stages/concert_hall.json \
   --tuning 53edo
 
+# Render YouTube-ready 1080p VP9 + 192k Opus animated WebM concert video (requires ffmpeg; defaults to output/<stem>.webm)
+cargo run --release -- render-video scores/sample_5min.json output/sample_5min.wav output/sample_5min.webm \
+  --stage stages/concert_hall.json \
+  --fps 24
+
 # Override SoundFont2 path (default: soundfonts/GeneralUser-GS.sf2)
 cargo run --release -- render scores/example_minimal.json output/example_minimal.wav \
   --stage stages/intimate_circle.json \
@@ -66,6 +71,7 @@ cargo test --release
 | | `--image <out.svg>` | Also writes a 1600×960 dark-studio SVG (2D stage map + pitch-roll timeline). |
 | | `--soundfont <path>` | Custom SoundFont2 file (default: `soundfonts/GeneralUser-GS.sf2`). |
 | `visualize <score.json> [out.svg]` | `--stage <stage.json>`, `--tuning <53edo\|12tet>`, `--end-silence <seconds>` | Pure-Rust SVG generator (`out.svg` defaults to `output/<stem>.svg`). |
+| `render-video <score.json> <audio.wav> [output.webm]` | `--stage <stage.json>`, `--tuning <53edo\|12tet>`, `--fps <24>`, `--width <1920>`, `--height <1080>` | Pure-Rust animated 1080p VP9 (`yuv420p`) + 192k Opus WebM video piped to `ffmpeg` (`output.webm` defaults to `output/<score_stem>.webm`). Reads exact WAV duration including trailing silence. |
 | `audition` | *(none)* | Generates isolated instrument auditions + fusion showcase under `output/`. |
 | `preview-synth` | *(none)* | Generates pure-Rust physical/additive synth preview (`output/preview_60s.wav`). |
 
@@ -213,6 +219,10 @@ A `stage.json` file separates **room acoustics and concert seating** from the mu
 - **SVG Visualizer (`--image <out.svg>` or `visualize <score.json> [out.svg]`):** Generates a crisp **1600×960 dark-studio SVG** in pure Rust (~6 ms for a 5-minute symphony) featuring:
   - **Left Panel — 2D Concert Stage Map:** Concentric depth arcs (`3m, 6m, 9m, 12m`), listener position at `(0, 0)`, family-colored labeled musician markers from the resolved `stage.json`, and dashed rings indicating active `warm_lowpass_hz` filters.
   - **Right Panel — Pitch-Roll Timeline:** Every note across the full score color-coded by instrument family, `m:ss` time axis, `C2..C6` octave lines, title/tuning header, and a bottom **comma-drift indicator strip** visualizing 53-EDO comma/diesis motion.
+- **Animated YouTube WebM Video (`render-video <score.json> <audio.wav> [output.webm]`):** Pure-Rust multi-threaded frame rasterizer (`src/video.rs`) piping raw `rgb24` frames directly to `ffmpeg` (`libvpx-vp9 -b:v 0 -crf 30 -deadline realtime -cpu-used 6 -row-mt 1 -pix_fmt yuv420p` + `libopus 192k`, ~115 fps at 1080p!). Matches the exact RIFF duration of `<audio.wav>` (including trailing silence) and renders:
+  - **Left Panel:** Live 2D Concert Stage Map with golden `3m/6m/9m/12m` depth arcs, collision-free anti-aliased vector labels, multi-layer additive musician glows (80 ms attack / 320 ms decay), expanding concentric onset ripples, and a warm Pipe Organ crown bloom.
+  - **Right Panel:** Top **53-EDO/12-TET Harmonic Mandala Wheel** (53 golden tick marks, glowing active pitch orbs, translucent harmonic chord lines, live comma readout) + bottom **Now Playing** live instrument level bars and `m:ss / total` timestamp.
+  - **Bottom Progress Bar:** Smooth playhead with subtle `"CONTEMPLATIVE SILENCE"` dimming during trailing silence.
 
 ---
 
@@ -457,4 +467,4 @@ What to check:
 - **Max peak:** `-1.0 dBFS` (clean peak normalization; `--end-silence` does not distort mastering gain).
 - **Mean volume / Integrated loudness (`I`):** `-22` to `-14 LUFS` is healthy for dynamic classical music.
 - **Loudness Range (`LRA`):** `6–14 LU` confirms genuine dynamic phrasing (`pp` passages vs climaxes).
-- **Audition by ear & eye:** Serve the repo root locally (`python3 -m http.server 8765`) and open `http://127.0.0.1:8765/audition/` to A/B listen and inspect the generated SVGs!
+- **Audition by ear & eye:** Serve the repo root with the built-in Byte-Range server (`python3 scripts/serve_studio.py 8765`, supporting HTTP `206 Partial Content` for smooth audio seeking and `A/B Switch (−10s)`) and open `http://127.0.0.1:8765/audition/` to A/B listen and inspect the generated SVGs & WebM videos!

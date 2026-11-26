@@ -8,6 +8,7 @@ mod sf2_synth;
 mod spatial;
 mod synth;
 mod tuning;
+mod video;
 mod visualize;
 mod wav;
 
@@ -23,6 +24,7 @@ use score_json::{
 use sf2_synth::DEFAULT_SOUNDFONT_PATH;
 use synth::{render_score, SAMPLE_RATE};
 use tuning::{note_name_approx, COMMA, DIESIS, HARM_7, M3, P5};
+use video::{render_video_webm, VideoOptions};
 use visualize::render_score_svg;
 use wav::write_stereo_wav_16bit;
 
@@ -36,6 +38,12 @@ fn print_usage() {
     eprintln!("    --image <out.svg>          Also render 1600x960 dark-studio SVG score & stage map");
     eprintln!("    --soundfont <path>         Custom SoundFont2 path (default: soundfonts/GeneralUser-GS.sf2)");
     eprintln!("  edo53_music visualize <score.json> [out.svg] [--stage <stage.json>] [--tuning <53edo|12tet>] [--end-silence <seconds>]");
+    eprintln!("  edo53_music render-video <score.json> <audio.wav> [output.webm] [OPTIONS]");
+    eprintln!("    --stage <stage.json>       Decoupled stage placement & hall config");
+    eprintln!("    --tuning <53edo|12tet>     Tuning system (default: 53edo)");
+    eprintln!("    --fps <24>                 Video frame rate (default: 24)");
+    eprintln!("    --width <1920>             Video width in pixels (default: 1920)");
+    eprintln!("    --height <1080>            Video height in pixels (default: 1080)");
     eprintln!("  edo53_music audition");
     eprintln!("  edo53_music preview-synth");
 }
@@ -358,6 +366,130 @@ fn run_visualize_cli(args: &[String]) {
     );
 }
 
+fn parse_pos_usize(flag: &str, raw: &str) -> usize {
+    match raw.parse::<usize>() {
+        Ok(v) if v > 0 => v,
+        _ => {
+            eprintln!("Error: {flag} expects a positive integer, got `{raw}`.");
+            std::process::exit(1);
+        }
+    }
+}
+
+fn run_render_video_cli(args: &[String]) {
+    let mut positional: Vec<String> = Vec::new();
+    let mut stage_path: Option<PathBuf> = None;
+    let mut tuning = TuningMode::Edo53;
+    let mut fps: u32 = 24;
+    let mut width: usize = 1920;
+    let mut height: usize = 1080;
+
+    let mut i = 0;
+    while i < args.len() {
+        let arg = &args[i];
+        if arg == "--help" || arg == "-h" {
+            print_usage();
+            return;
+        } else if arg == "--stage" || arg.starts_with("--stage=") {
+            stage_path = Some(PathBuf::from(parse_flag_value("--stage", args, &mut i)));
+        } else if arg == "--tuning" || arg.starts_with("--tuning=") {
+            let raw = parse_flag_value("--tuning", args, &mut i);
+            tuning = match TuningMode::parse(&raw) {
+                Ok(t) => t,
+                Err(e) => {
+                    eprintln!("Error: {e}");
+                    std::process::exit(1);
+                }
+            };
+        } else if arg == "--fps" || arg.starts_with("--fps=") {
+            let raw = parse_flag_value("--fps", args, &mut i);
+            fps = parse_pos_usize("--fps", &raw) as u32;
+        } else if arg == "--width" || arg.starts_with("--width=") {
+            let raw = parse_flag_value("--width", args, &mut i);
+            width = parse_pos_usize("--width", &raw);
+        } else if arg == "--height" || arg.starts_with("--height=") {
+            let raw = parse_flag_value("--height", args, &mut i);
+            height = parse_pos_usize("--height", &raw);
+        } else if arg.starts_with('-') {
+            eprintln!("Error: unknown option `{arg}`.");
+            print_usage();
+            std::process::exit(1);
+        } else {
+            positional.push(arg.clone());
+        }
+        i += 1;
+    }
+
+    if positional.len() < 2 || positional.len() > 3 {
+        eprintln!("Error: `render-video` expects <score.json> <audio.wav> [output.webm].");
+        print_usage();
+        std::process::exit(1);
+    }
+
+    let score_path = PathBuf::from(&positional[0]);
+    let audio_path = PathBuf::from(&positional[1]);
+    let output_path = positional
+        .get(2)
+        .map(PathBuf::from)
+        .unwrap_or_else(|| default_output_with_ext(&score_path, "webm"));
+
+    let score = match load_json_score(&score_path) {
+        Ok(s) => s,
+        Err(e) => {
+            eprintln!("Error loading {}: {e}", score_path.display());
+            std::process::exit(1);
+        }
+    };
+    let stage = stage_path.as_ref().map(|p| match load_stage_config(p) {
+        Ok(s) => s,
+        Err(e) => {
+            eprintln!("Error loading stage {}: {e}", p.display());
+            std::process::exit(1);
+        }
+    });
+
+    println!(
+        "Rendering animated WebM video for `{}` ({}x{} @ {} fps, tuning: {})...",
+        score.title,
+        width,
+        height,
+        fps,
+        tuning.label()
+    );
+
+    let opts = VideoOptions {
+        width,
+        height,
+        fps,
+        stage,
+        tuning,
+    };
+
+    match render_video_webm(&score, &audio_path, &output_path, &opts) {
+        Ok(stats) => {
+            let size_mb = fs::metadata(&stats.output_path)
+                .map(|m| m.len() as f64 / (1024.0 * 1024.0))
+                .unwrap_or(0.0);
+            println!(
+                "Rendered {} ({:.2} MB, {}x{} @ {} fps, {} frames, {:.2}s) in {:.2}s ({:.1} fps)",
+                stats.output_path.display(),
+                size_mb,
+                stats.width,
+                stats.height,
+                stats.fps,
+                stats.total_frames,
+                stats.duration_seconds,
+                stats.elapsed_seconds,
+                stats.total_frames as f64 / stats.elapsed_seconds.max(0.001)
+            );
+        }
+        Err(e) => {
+            eprintln!("Error rendering video: {e}");
+            std::process::exit(1);
+        }
+    }
+}
+
 fn main() {
     let args: Vec<String> = env::args().collect();
     let mode = args.get(1).map(|s| s.as_str()).unwrap_or("audition");
@@ -368,6 +500,9 @@ fn main() {
         }
         "visualize" => {
             run_visualize_cli(&args[2..]);
+        }
+        "render-video" => {
+            run_render_video_cli(&args[2..]);
         }
         "audition" => {
             let t0 = Instant::now();

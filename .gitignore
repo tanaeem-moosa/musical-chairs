@@ -9,9 +9,10 @@
 *.sf2
 *.sf3
 
-# Loose audio files
+# Loose audio and video files
 *.wav
 *.mp3
+*.webm
 
 # OS and Python artifacts
 .DS_Store

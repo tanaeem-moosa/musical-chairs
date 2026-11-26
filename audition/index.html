@@ -416,8 +416,9 @@
         </div>
       </div>
 
-      <div class="hero-jumps">
-        <button class="btn primary" id="ab-flip-btn" style="padding:5px 12px; font-size:0.8rem;">Live A/B Switch (53-EDO &harr; 12-TET)</button>
+      <div class="hero-jumps" style="align-items:center;">
+        <button class="btn primary" id="ab-flip-btn" style="padding:5px 12px; font-size:0.8rem;" title="Rewinds 10 seconds so you immediately compare the exact phrase in the other tuning">A/B Switch (&minus;10s)</button>
+        <span class="muted" style="font-size:0.77rem;">Rewinds 10s so you compare the exact phrase</span>
         <button class="jump-btn" data-jump="0">I. Dawn (0:00)</button>
         <button class="jump-btn" data-jump="73.5">II. Lotus &amp; Mist (1:14)</button>
         <button class="jump-btn" data-jump="151">III. Tempest (2:31)</button>
@@ -425,6 +426,8 @@
         <button class="jump-btn" data-jump="198.2">Comma Cascade (3:18)</button>
         <button class="jump-btn" data-jump="227">IV. Transfiguration (3:47)</button>
         <button class="jump-btn" data-jump="247.6">Pipe Organ (4:08)</button>
+        <a class="jump-btn" style="text-decoration:none; border-color:rgba(187,154,247,0.55); color:var(--accent-2);" href="../output/sample_5min.webm" target="_blank">YouTube 1080p WebM</a>
+        <a class="jump-btn" style="text-decoration:none; border-color:rgba(245,158,11,0.55); color:#fbbf24;" href="../docs/harmonia_mundi_poster.svg" target="_blank">Artistic Poster (SVG)</a>
       </div>
 
       <details class="hero-svg-details" open>
@@ -567,11 +570,11 @@
       abFlipBtn.addEventListener('click', () => {
         const from = activeHeroAudio || audio53;
         const to = from === audio53 ? audio12 : audio53;
-        const wasPlaying = !from.paused;
-        const t = from.currentTime || 0;
+        const cur = from.currentTime || 0;
+        const targetTime = Math.max(0, cur - 10);
         from.pause();
         setHeroActive(to);
-        seekAndPlay(to, t, wasPlaying);
+        seekAndPlay(to, targetTime, true);
       });
     }
 
