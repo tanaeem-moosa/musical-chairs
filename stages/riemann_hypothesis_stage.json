@@ -11,7 +11,7 @@
     "cello":           { "x":  1.7, "y":  3.5, "width": 0.0, "gain": 0.96, "warm_lowpass_hz": null },
     "pizzicato":       { "x":  0.0, "y":  4.4, "width": 2.0, "gain": 0.94, "warm_lowpass_hz": null },
     "flute":           { "x": -2.0, "y":  5.1, "width": 0.0, "gain": 0.90, "warm_lowpass_hz": null },
-    "ai_strip":        { "x":  2.0, "y":  5.1, "width": 0.0, "gain": 0.92, "warm_lowpass_hz": null },
+    "ai_strip":        { "x":  2.0, "y":  5.1, "width": 0.0, "gain": 0.78, "warm_lowpass_hz": null },
     "viola":           { "x": -3.6, "y":  6.0, "width": 0.0, "gain": 0.95, "warm_lowpass_hz": null },
     "clarinet":        { "x":  3.6, "y":  6.0, "width": 0.0, "gain": 0.92, "warm_lowpass_hz": null },
     "ai_architect":    { "x":  0.0, "y":  6.3, "width": 0.0, "gain": 0.86, "warm_lowpass_hz": null },

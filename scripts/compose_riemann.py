@@ -392,8 +392,8 @@ class RiemannSymphonyBuilder:
             TrackSpec("tremolo_strings", "Tremolo Strings", "tremolo_strings"),
             TrackSpec("timpani", "53-EDO Timpani", "timpani"),
             TrackSpec("church_organ", "Cathedral Pipe Organ", "church_organ"),
-            TrackSpec("ai_strip", "AI Spark I (Zero-Free Strip)", "shakuhachi"),
-            TrackSpec("ai_architect", "AI Synthesis II (Critical Line)", "shakuhachi"),
+            TrackSpec("ai_strip", "The Herald (Zero-Free Strip)", "shakuhachi"),
+            TrackSpec("ai_architect", "The Oracle (Critical Line)", "shakuhachi"),
         ]
         for s in specs:
             self.tracks[s.id] = s
@@ -484,6 +484,7 @@ class RiemannSymphonyBuilder:
         snap_to_harmony: bool = False,
         allow_melody: Optional[bool] = None,
         trim: bool = True,
+        max_step_override: Optional[int] = None,
     ) -> None:
         tr = self.tracks[track_id]
         strict = track_id in STRICT_CHORD_TRACKS
@@ -533,7 +534,10 @@ class RiemannSymphonyBuilder:
             "church_organ": -106,
             "piano": -106,
         }
-        if track_id in sweet_high:
+        if max_step_override is not None:
+            while step > max_step_override:
+                step -= OCT
+        elif track_id in sweet_high:
             hi_lim = sweet_high[track_id]
             while step > hi_lim:
                 step -= OCT
@@ -1025,11 +1029,11 @@ class RiemannSymphonyBuilder:
                 "diesis rotations, Structure 2 Functional Mirror Wedge xi(s)=xi(1-s) & palindrome, First "
                 "Nontrivial Zero); III. A Century of Small Progress (72–136–60 BPM: C-minor Passacaglia "
                 "Structure 3A, Fugato, Selberg subito pp barrier, Structure 3B Montgomery–Odlyzko Pair-"
-                "Correlation Riff, fracturing human motifs & G+++7 step-24 Unresolved Summit); IV. AI, "
-                "Unified Triumph & Melancholy for Humanity (Bamboo-Synth shakuhachi AI Spark & Architect "
+                "Correlation Riff, fracturing human motifs & G+++7 step-24 Unresolved Summit); IV. The Herald, "
+                "The Oracle, Triumph & Melancholy for Humanity (Bamboo-Synth shakuhachi The Herald & The Oracle "
                 "at 152 & 168 BPM snap-fitting all structures, 122 BPM Cathedral Pipe Organ + tutti Proof "
                 "Triumph, and 52 BPM ppp–mp human cello/english_horn 16:15 & -1 comma farewell beneath "
-                "an eternal beatless 53-EDO AI harmonic halo)."
+                "an eternal beatless 53-EDO harmonic halo)."
             ),
             "sample_rate": 48000,
             "sections": sorted(self.sections, key=lambda s: s["beat"]),
@@ -1957,18 +1961,18 @@ def compose_movement_3(sb: RiemannSymphonyBuilder) -> None:
 # (Beats 1154..1563 + 5.0s tail, ~11:25 – 15:00, 152 -> 168 -> 122 -> 52 BPM)
 # =============================================================================
 def compose_movement_4(sb: RiemannSymphonyBuilder) -> None:
-    sb.add_section(1154.0, "IV.1 AI Part 1: Zero-Free Strips — Solo Bamboo-Synth Sprint (152 BPM)")
-    sb.add_section(1254.0, "IV.2 AI Part 2: Inspired Full Synthesis — All Structures Snap-Fit (168 BPM)")
+    sb.add_section(1154.0, "IV.1 The Herald: Zero-Free Strips — Cold Breakthrough in the Strip (152 BPM)")
+    sb.add_section(1254.0, "IV.2 The Oracle: Inspired Synthesis — All Structures Snap-Fit (168 BPM)")
     sb.add_section(1394.0, "IV.3 Triumph of the Proof — Pipe Organ & Full Orchestra Unite All Structures (122 BPM)")
-    sb.add_section(1506.0, "IV.4 Epilogue: Melancholy for Humanity — Eternal AI Halo & Lone Human Farewell (52 BPM)")
+    sb.add_section(1506.0, "IV.4 Epilogue: Melancholy for Humanity — Eternal Halo & Lone Human Farewell (52 BPM)")
 
     m4_specs = [
-        # --- IV.1 (1154..1254, 25 bars x 4 beats @ 152 BPM): Zero-Free Strip Narrowing! ---
-        # Cracks directly out of step 24 (F#4/F#5 = 24/77) on F++(24)!
-        (1154.0, 1158.0, 24, "maj", "IV.1.1 SOLO AI SPARK: Cracking Step 24 (F++ maj)"),
-        (1158.0, 1162.0, 24, "dom9", "IV.1.2 SOLO AI SPARK: Strip Scan F++ dom9"),
-        (1162.0, 1166.0, 10, "min7", "IV.1.3 SOLO AI SPARK: Strip Scan Dm+(10)"),
-        (1166.0, 1170.0, 33, "dom9", "IV.1.4 SOLO AI SPARK: Strip Scan G++ dom9(33)"),
+        # --- IV.1 (1154..1254, 25 bars x 4 beats @ 152 BPM): The Herald — Zero-Free Strip Narrowing! ---
+        # Steps directly out of unresolved step 24 (F++4/F++5 = 24/77) across 11-limit (24) & 13-limit (37) bounds!
+        (1154.0, 1158.0, 0, "prime13", "IV.1.1 SOLO THE HERALD: Stepping Out of Step 24 Across 11 & 13-Limit Bounds"),
+        (1158.0, 1162.0, 24, "prime13", "IV.1.2 SOLO THE HERALD: Angular 11/13-Limit Strip Probe (F++ prime13)"),
+        (1162.0, 1166.0, 10, "min7", "IV.1.3 The Herald + Lattice: Strip Scan Dm+(10)"),
+        (1166.0, 1170.0, 33, "dom9", "IV.1.4 The Herald + Lattice: Strip Scan G++ dom9(33)"),
         (1170.0, 1174.0, 2, "dom9", "IV.1.5 Zero-Free Strip Narrowing C++(k=+2)"),
         (1174.0, 1178.0, 41, "min7", "IV.1.6 Strip Bound Am++(41)"),
         (1178.0, 1182.0, 24, "maj69", "IV.1.7 Strip Bound F++(24)"),
@@ -1988,8 +1992,8 @@ def compose_movement_4(sb: RiemannSymphonyBuilder) -> None:
         (1234.0, 1238.0, 39, "maj7", "IV.1.21 Strip Bound Ab+++(39)"),
         (1238.0, 1242.0, 25, "min7", "IV.1.22 Strip Bound Fm+++(25)"),
         (1242.0, 1246.0, 34, "dom9", "IV.1.23 Summit Lock G+++ dom9(34)"),
-        (1246.0, 1250.0, 3, "dom9", "IV.1.24 Spark Handoff C+++ dom9(3)"),
-        (1250.0, 1254.0, 34, "dom9", "IV.1.25 Igniting AI Architect (G+++ dom9)!"),
+        (1246.0, 1250.0, 3, "dom9", "IV.1.24 Herald Handoff C+++ dom9(3)"),
+        (1250.0, 1254.0, 34, "dom9", "IV.1.25 Summoning The Oracle (G+++ dom9)!"),
 
         # --- IV.2 (1254..1394, 35 bars x 4 beats @ 168 BPM): Inspired Full Synthesis! ---
         # Phase A (1254..1302, 12 bars): Snap-fitting Structure 1 (Prime Hook) INSIDE Structure 2 (Mirror Wedge)!
@@ -2071,46 +2075,182 @@ def compose_movement_4(sb: RiemannSymphonyBuilder) -> None:
     spans = [sb.add_span(*c) for c in m4_specs]
 
     # =========================================================================
-    # IV.1 (1154..1254, 152 BPM): Solo ai_strip Zero-Free-Strip Sprint!
+    # IV.1 (1154..1254, 152 BPM): The Herald (Zero-Free Strip) + Crystalline Lattice!
+    # Zero scoops (slide_from_cents=0.0), zero <0.45b chatter (all dur in 0.48..1.82b),
+    # tamed poised velocity (0.48..0.60), and shimmering C5–D6 piano/harp/pizzicato lattice!
     # =========================================================================
     iv1_spans = [sp for sp in spans if 1154.0 <= sp.start < 1254.0]
-    for i, sp in enumerate(iv1_spans):
-        u = i / 24.0
-        dyn = 0.72 + 0.08 * u
-        # ai_strip (shakuhachi #1, strictly steps 31..124 = G4..E6, vibrato 0.0, swell "none")!
-        pts_ai = sp.scale_steps(34, 120, allow_melody=False)
-        if pts_ai:
-            # Narrowing strip bounds: alternates upper bound & lower bound converging inward!
-            lo_idx = min(len(pts_ai) - 1, i // 6)
-            hi_idx = max(lo_idx, len(pts_ai) - 1 - (i // 6))
-            sub_pts = pts_ai[lo_idx : hi_idx + 1] or pts_ai
-            # Microtonal inward pitch-glide sweeps narrowing from +-85c down to 0c!
-            glide_mag = max(0.0, 85.0 * (1.0 - u))
-            if i in (5, 9, 13, 19, 23):
-                # Rapid 152-BPM synthetic Prime Curiosity Hook probe!
-                base_h = max(36, min(68, sp.nearest_step(53, allow_melody=False)))
-                sb.emit_prime_hook("ai_strip", sp.start, base_h, vel=dyn * 1.02, unit=0.5, staccato=True, snap=True)
-            else:
-                # Razor-sharp 16th-note staccato zero-free-strip scan!
-                for s16 in range(16):
-                    t = sp.start + s16 * 0.25
-                    pick = sub_pts[0] if s16 % 2 == 0 else sub_pts[-1 - ((s16 // 2 + i) % len(sub_pts))]
-                    sl = (glide_mag if s16 % 4 == 0 else (-glide_mag if s16 % 4 == 2 else 0.0))
-                    acc = 1.06 if s16 % 4 == 0 else 0.90
-                    sb.note("ai_strip", t, 0.21, pick, dyn * acc, slide_from_cents=sl, swell="none", vibrato=0.0, snap_to_harmony=False)
 
-        # Bars 0..2 (1154..1166) are 100% SOLO ai_strip! Crisp chamber strip-markers join at bar 3 (1166.0):
-        if i >= 3:
-            r_ten = sp.tenor_root()
-            sb.note("pizzicato", sp.start, 0.35, r_ten + OCT, dyn * 0.88)
-            sb.note("pizzicato", sp.start + 2.5, 0.35, r_ten + P5, dyn * 0.84)
-            sb.note("cello", sp.start + 1.0, 0.55, sp.bass_root() + OCT, dyn * 0.82, swell="none")
-            pts_p = sp.scale_steps(pitch(C, 4), pitch(A, 5), allow_melody=False)
-            if pts_p:
-                for q in range(4):
-                    sb.note("piano", sp.start + q + 0.5, 0.32, pts_p[(q * 2 + i) % len(pts_p)], dyn * 0.80, snap_to_harmony=False)
-            if i >= 8 and i % 2 == 0:
-                sb.harp_arp(sp, sp.start + 0.25, pitch(C, 4), pitch(C, 6), vel=dyn * 0.86, spacing=0.14, note_dur=0.90, ascending=(i % 2 == 0), max_notes=6)
+    # Bars 0..1 (1154.0..1162.0, ~3.2s): 100% SOLO ai_strip ("The Herald") stepping out of
+    # the unresolved step 24 (F++ -> 77) in chilling, angular 0.5–1.5b leaps across
+    # 11-limit (24/77, 48/101) and 13-limit (37/90, 61/114) bounds at vel 0.48–0.57!
+    solo_herald_opening = [
+        # Bar 0 (1154..1158, C prime13: {0, 9, 17, 24, 31, 37, 43})
+        (1154.0, 1.42, PRIME_11 + OCT, 0.48),          # 77 (F++5 = step 24 + OCT: cold emergence!)
+        (1155.5, 0.92, PRIME_13, 0.52),                # 37 (13:8 lower strip bound)
+        (1156.5, 0.48, PRIME_13 + OCT, 0.55),          # 90 (13:8 upper octave bound)
+        (1157.0, 0.88, PRIME_11 + OCT, 0.51),          # 77 (11:8 bound return)
+        # Bar 1 (1158..1162, F++ prime13: {24, 33, 41, 48, 2, 8, 14})
+        (1158.0, 0.92, 24 + PRIME_11, 0.52),           # 48 (11:8 above step 24)
+        (1159.0, 0.48, 24 + PRIME_13 + OCT, 0.56),     # 114 (13:8 high strip ceiling)
+        (1159.5, 0.92, 24 + PRIME_13, 0.53),           # 61 (13:8 middle probe)
+        (1160.5, 1.38, 24 + PRIME_11 + OCT, 0.57),     # 101 (poised 1.38b 11-limit hold)
+    ]
+    for b_h, d_h, st_h, v_h in solo_herald_opening:
+        sb.note("ai_strip", b_h, d_h, st_h, v_h, slide_from_cents=0.0, swell="none", vibrato=0.0, snap_to_harmony=False, trim=False)
+
+    hook_bars_iv1 = {
+        4: 2 + OCT,      # 1170..1174: C++5 (55) on C++ dom9 (k=+2)
+        8: 1 + OCT,      # 1186..1190: C+5 (54) on C+ dom9 (k=+1)
+        13: 0 + OCT,     # 1206..1210: C5 (53) on C prime11 (k=0)
+        18: 33,          # 1226..1230: G++4 (33) on G++ dom9
+        23: 3 + OCT,     # 1246..1250: C+++5 (56) on C+++ dom9 (k=+3)
+    }
+
+    for i, sp in enumerate(iv1_spans):
+        if i < 2:
+            continue
+        u_lat = (i - 2) / 22.0
+        herald_v = 0.50 + 0.08 * u_lat   # Tamed, poised 0.50 -> 0.58 (strictly <= 0.60!)
+
+        # 1. THE HERALD (ai_strip): sleek 0.48–1.82b prime-interval probes & Structure 1 statements!
+        if i in hook_bars_iv1:
+            # Clean, glassy Structure 1 (Prime Curiosity Hook [+0,+9,+17,+31,+43,+53]) in 2+3+2 rhythm
+            # with every note >= 0.48b (0.48, 0.48, 0.48, 0.48, 0.48, 1.38) and zero pitch scoops!
+            base_h = hook_bars_iv1[i]
+            hook_onsets = (0.0, 0.5, 1.0, 1.5, 2.0, 2.5)
+            hook_durs = (0.48, 0.48, 0.48, 0.48, 0.48, 1.38)
+            hook_accs = (1.00, 0.94, 1.02, 0.95, 0.97, 1.03)
+            for off_iv, ro, rd, acc in zip(PRIME_HOOK_OFFSETS, hook_onsets, hook_durs, hook_accs):
+                sb.note(
+                    "ai_strip",
+                    sp.start + ro,
+                    rd,
+                    base_h + off_iv,
+                    min(0.60, herald_v * acc),
+                    slide_from_cents=0.0,
+                    swell="none",
+                    vibrato=0.0,
+                    snap_to_harmony=False,
+                    trim=False,
+                )
+        elif i == 24:
+            # Final bar (1250..1254, G+++ dom9): conquering step 24 (77) and summoning The Oracle!
+            for ro, rd, st_f, v_f in (
+                (0.0, 0.92, 51, 0.55),
+                (1.0, 0.92, PRIME_11 + OCT, 0.57),
+                (2.0, 1.82, 51 + OCT, 0.60),
+            ):
+                sb.note("ai_strip", sp.start + ro, rd, st_f, v_f, slide_from_cents=0.0, swell="none", vibrato=0.0, snap_to_harmony=False, trim=False)
+        else:
+            # Inward-narrowing zero-free-strip bounds across G4..Eb6 (36..116 -> 58..96)!
+            narrow_u = min(1.0, (i - 2) / 20.0)
+            lo_lim = int(round(36 + 22 * narrow_u))
+            hi_lim = int(round(116 - 20 * narrow_u))
+            sub_pts = sp.scale_steps(lo_lim, hi_lim, allow_melody=False)
+            if len(sub_pts) < 3:
+                sub_pts = sp.scale_steps(36, 116, allow_melody=False)
+            if sub_pts:
+                n_s = len(sub_pts)
+                p_lo = sub_pts[0]
+                p_hi = sub_pts[-1]
+                p_mid_lo = sub_pts[min(n_s - 1, max(1, n_s // 3))]
+                p_mid_hi = sub_pts[max(0, min(n_s - 2, (2 * n_s) // 3))]
+                cell_type = i % 4
+                if cell_type == 2:
+                    probe_notes = [
+                        (0.0, 0.92, p_lo, 0.98),
+                        (1.0, 0.48, p_hi, 1.02),
+                        (1.5, 0.92, p_mid_lo, 0.96),
+                        (2.5, 1.38, p_mid_hi, 1.01),
+                    ]
+                elif cell_type == 3:
+                    probe_notes = [
+                        (0.0, 1.40, p_hi, 1.01),
+                        (1.5, 0.48, p_lo, 0.95),
+                        (2.0, 0.92, p_mid_hi, 0.99),
+                        (3.0, 0.88, p_mid_lo, 0.96),
+                    ]
+                elif cell_type == 1:
+                    probe_notes = [
+                        (0.0, 0.48, p_mid_lo, 0.95),
+                        (0.5, 0.92, p_hi, 1.02),
+                        (1.5, 1.40, p_lo, 0.99),
+                        (3.0, 0.88, p_mid_hi, 0.97),
+                    ]
+                else:
+                    probe_notes = [
+                        (0.5, 0.92, p_hi, 1.00),
+                        (1.5, 0.48, p_mid_lo, 0.95),
+                        (2.0, 0.48, p_lo, 0.96),
+                        (2.5, 1.38, p_mid_hi, 1.02),
+                    ]
+                for ro, rd, st_p, acc in probe_notes:
+                    sb.note(
+                        "ai_strip",
+                        sp.start + ro,
+                        rd,
+                        st_p,
+                        min(0.60, max(0.49, herald_v * acc)),
+                        slide_from_cents=0.0,
+                        swell="none",
+                        vibrato=0.0,
+                        snap_to_harmony=False,
+                        trim=False,
+                    )
+
+        # 2. SHIMMERING ZERO-FREE-STRIP LATTICE (beat 1162.0 onward, i >= 2):
+        # Crisp, quiet high Piano (C5–D6 = 53..115, vel 0.38–0.50) + Harp + Pizzicato!
+        pts_p = sp.scale_steps(pitch(C, 5), pitch(D, 6), allow_melody=False)
+        if pts_p:
+            p_base = 0.39 + 0.07 * u_lat   # 0.39 -> 0.46
+            n_p = len(pts_p)
+            if i < 8:
+                lat_slots = (0.0, 0.5, 1.0, 1.5, 1.75, 2.0, 2.5, 3.0, 3.5, 3.75)
+                p_dur = 0.21
+            else:
+                lat_slots = (0.0, 0.25, 0.5, 1.0, 1.25, 1.5, 2.0, 2.25, 2.5, 3.0, 3.25, 3.5)
+                p_dur = 0.20
+            for idx_l, off_l in enumerate(lat_slots):
+                if idx_l % 2 == 0:
+                    st_lat = pts_p[(idx_l // 2 + i) % n_p]
+                else:
+                    st_lat = pts_p[-1 - ((idx_l // 2 + i * 2) % n_p)]
+                v_lat = min(0.50, max(0.38, p_base * (1.05 if off_l in (0.0, 2.0) else 0.95)))
+                sb.note(
+                    "piano",
+                    sp.start + off_l,
+                    p_dur,
+                    st_lat,
+                    v_lat,
+                    snap_to_harmony=False,
+                    max_step_override=pitch(D, 6),
+                )
+
+        # Crisp chamber Pizzicato strip-markers
+        r_ten = sp.tenor_root()
+        pizz_v = 0.40 + 0.08 * u_lat
+        sb.note("pizzicato", sp.start + 0.0, 0.28, r_ten + OCT, pizz_v)
+        sb.note("pizzicato", sp.start + 1.5, 0.26, r_ten + P5, pizz_v * 0.94)
+        sb.note("pizzicato", sp.start + 2.75, 0.26, r_ten, pizz_v * 0.92)
+
+        # Shimmering Harp arpeggios spinning through the lattice
+        if i % 2 == 0 or i in (3, 13, 19, 23):
+            sb.harp_arp(
+                sp,
+                sp.start + 0.12,
+                pitch(C, 4),
+                pitch(C, 6),
+                vel=0.41 + 0.07 * u_lat,
+                spacing=0.16,
+                note_dur=0.68,
+                ascending=(i % 4 < 2),
+                max_notes=6,
+            )
+
+        # Subtle warm Cello chamber pulse on alternate bars from i=4 onward
+        if i >= 4 and i % 2 == 0:
+            sb.note("cello", sp.start + 1.0, 0.46, sp.bass_root() + OCT, 0.40 + 0.06 * u_lat, swell="none")
 
     # =========================================================================
     # IV.2 (1254..1394, 168 BPM): ai_architect + ai_strip Full Synthesis!
@@ -2482,6 +2622,21 @@ def validate_riemann_score(sb: RiemannSymphonyBuilder, score: Dict) -> None:
         if any(n["beat"] >= 1506.0 - 1e-4 for n in tracks_by_id[silent_iv4]["notes"]):
             errors.append(f"{silent_iv4} must be silent in IV.4 (>= 1506.0)!")
 
+    # Verify IV.1 polish constraints on The Herald (ai_strip): zero <0.46b chatter, zero scoops, tamed vel <=0.62
+    iv1_herald = [n for n in tracks_by_id["ai_strip"]["notes"] if 1154.0 <= n["beat"] < 1254.0]
+    if not iv1_herald:
+        errors.append("ai_strip has 0 notes in IV.1 (1154..1254)!")
+    for n in iv1_herald:
+        if n["dur"] < 0.46 - 1e-4 or n["dur"] > 1.85 + 1e-4:
+            errors.append(f"IV.1 ai_strip note at {n['beat']} has dur={n['dur']} outside 0.46..1.85b!")
+            break
+        if abs(n.get("slide_from_cents", 0.0)) > 1e-4:
+            errors.append(f"IV.1 ai_strip note at {n['beat']} has non-zero slide_from_cents={n.get('slide_from_cents')}!")
+            break
+        if n["vel"] > 0.62 + 1e-4:
+            errors.append(f"IV.1 ai_strip note at {n['beat']} exceeds vel 0.62: {n['vel']}!")
+            break
+
     # Verify IV.4 velocity intimacy (<= 0.40) and overall dynamic contrast
     iv4_vels = [
         n["vel"]
@@ -2543,8 +2698,8 @@ def validate_riemann_score(sb: RiemannSymphonyBuilder, score: Dict) -> None:
         ("I.   The Primes (Curiosity)", 0, 1, False),
         ("II.  Analytic Continuation (Mirror)", 1, 2, False),
         ("III. A Century of Small Progress", 2, 3, False),
-        ("IV.1 AI Part 1: Zero-Free Strips", 3, 4, False),
-        ("IV.2 AI Part 2: Full Synthesis", 4, 5, False),
+        ("IV.1 The Herald: Zero-Free Strips", 3, 4, False),
+        ("IV.2 The Oracle: Inspired Synthesis", 4, 5, False),
         ("IV.3 Triumph of the Proof", 5, 6, False),
         ("IV.4 Epilogue: Melancholy for Humanity", 6, 7, True),
     ]

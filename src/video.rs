@@ -72,6 +72,22 @@ impl Rgb {
     }
 }
 
+fn is_ai_voice(track_id: &str, raw_name: &str) -> bool {
+    let id_lower = track_id.trim().to_ascii_lowercase();
+    let name_lower = raw_name.trim().to_ascii_lowercase();
+    id_lower.starts_with("ai_")
+        || name_lower.starts_with("ai ")
+        || name_lower.contains("herald")
+        || name_lower.contains("oracle")
+}
+
+fn track_color(track_id: &str, raw_name: &str, inst: &str) -> Rgb {
+    if is_ai_voice(track_id, raw_name) {
+        return Rgb::from_u8(92, 234, 255);
+    }
+    family_color(inst)
+}
+
 fn family_color(inst: &str) -> Rgb {
     match ScoreInstrument::parse(inst) {
         Ok(ScoreInstrument::Ektara | ScoreInstrument::Dotara) => Rgb::from_u8(240, 118, 178),
@@ -557,6 +573,20 @@ fn is_pythagorean_interval(delta_53: i32) -> bool {
     )
 }
 
+#[inline]
+fn is_prime_step_53(step: i32) -> bool {
+    matches!(
+        step,
+        2 | 3 | 5 | 7 | 11 | 13 | 17 | 19 | 23 | 29 | 31 | 37 | 41 | 43 | 47
+    )
+}
+
+#[inline]
+fn smoothstep01(x: f32) -> f32 {
+    let u = x.clamp(0.0, 1.0);
+    u * u * (3.0 - 2.0 * u)
+}
+
 fn comma_offset_from_anchor(step: i32) -> f64 {
     const ANCHORS: [i32; 12] = [0, 4, 9, 14, 17, 22, 26, 31, 36, 39, 44, 48];
     let pc = step.rem_euclid(OCT);
@@ -649,7 +679,56 @@ struct TrackAnim {
     label_y: f32,
     base_radius: f32,
     notes: Vec<TimedNote>,
+    presence_spans: Vec<(f64, f64)>,
     max_note_dur: f64,
+}
+
+fn build_presence_spans(notes: &[TimedNote], is_organ: bool) -> Vec<(f64, f64)> {
+    if is_organ || notes.is_empty() {
+        return Vec::new();
+    }
+    let mut spans: Vec<(f64, f64)> = Vec::new();
+    let mut cur_start = notes[0].start_s;
+    let mut cur_end = notes[0].end_s;
+    for n in &notes[1..] {
+        if n.start_s - cur_end <= 18.0 {
+            cur_end = cur_end.max(n.end_s);
+        } else {
+            spans.push((cur_start, cur_end));
+            cur_start = n.start_s;
+            cur_end = n.end_s;
+        }
+    }
+    spans.push((cur_start, cur_end));
+    spans
+}
+
+impl TrackAnim {
+    /// Returns `(presence_alpha, arrival_ring_progress)` at `t_sec`.
+    /// `church_organ` (`is_organ`) is permanently built into the rear hall wall (`alpha = 1.0`).
+    fn eval_presence(&self, t_sec: f64) -> (f32, f32) {
+        if self.is_organ {
+            return (1.0, 0.0);
+        }
+        let mut presence_alpha = 0.0_f32;
+        let mut arrival_ring_progress = 0.0_f32;
+        for &(s_start, s_end) in &self.presence_spans {
+            if t_sec < s_start - 1.8 || t_sec >= s_end + 5.2 {
+                continue;
+            }
+            if t_sec < s_start {
+                let prog = ((t_sec - (s_start - 1.8)) / 1.8).clamp(0.0, 1.0) as f32;
+                presence_alpha = presence_alpha.max(smoothstep01(prog));
+                arrival_ring_progress = arrival_ring_progress.max(prog);
+            } else if t_sec <= s_end + 1.4 {
+                presence_alpha = 1.0;
+            } else {
+                let fade_u = ((t_sec - (s_end + 1.4)) / (5.2 - 1.4)).clamp(0.0, 1.0) as f32;
+                presence_alpha = presence_alpha.max(1.0 - smoothstep01(fade_u));
+            }
+        }
+        (presence_alpha, arrival_ring_progress)
+    }
 }
 
 /// Precomputed layout and static background for blazing-fast per-frame animation.
@@ -778,17 +857,21 @@ impl VideoScene {
                 0.0
             };
 
+            let is_organ = track.instrument == "church_organ";
+            let presence_spans = build_presence_spans(&notes, is_organ);
+
             tracks.push(TrackAnim {
                 label: panel_label,
                 short_label,
-                is_organ: track.instrument == "church_organ",
-                color: family_color(&track.instrument),
+                is_organ,
+                color: track_color(&track.id, &raw_name, &track.instrument),
                 stage_x,
                 stage_y,
                 width_px,
                 label_y: stage_y + base_radius + 11.0 * sc,
                 base_radius,
                 notes,
+                presence_spans,
                 max_note_dur,
             });
         }
@@ -894,6 +977,11 @@ impl VideoScene {
         let musical_end_s = (max_note_end_s + stage_params.tail_seconds).max(1.0);
         let fallback_dur = musical_end_s + stage_params.end_silence_seconds;
         let total_dur_s = audio_duration_s.unwrap_or(fallback_dur).max(1.0);
+        for tr in &mut tracks {
+            if tr.is_organ {
+                tr.presence_spans = vec![(0.0, total_dur_s)];
+            }
+        }
 
         let mut sections: Vec<(f64, String)> = score
             .sections
@@ -969,8 +1057,9 @@ impl VideoScene {
         };
         let glow_mult = 1.0 - 0.55 * silence_fade;
 
-        // 1. Evaluate per-track live envelopes, recent note ripples, and active pitch classes
+        // 1. Evaluate per-track live envelopes, stage presence, recent note ripples, and active pitch classes
         let mut track_energies = vec![0.0_f32; self.tracks.len()];
+        let mut track_presences = vec![0.0_f32; self.tracks.len()];
         struct ActivePitch {
             wheel_pos: f32,
             energy: f32,
@@ -980,6 +1069,9 @@ impl VideoScene {
         let mut active_pitches: Vec<ActivePitch> = Vec::with_capacity(32);
 
         for (ti, tr) in self.tracks.iter().enumerate() {
+            let (presence_alpha, arrival_ring_progress) = tr.eval_presence(t_sec);
+            track_presences[ti] = presence_alpha;
+
             let mut energy = 0.0_f32;
             let mut ripple_ages: [f32; 3] = [-1.0; 3];
             let mut ripple_vels: [f32; 3] = [0.0; 3];
@@ -1016,6 +1108,46 @@ impl VideoScene {
             }
 
             track_energies[ti] = energy * glow_mult;
+
+            // Non-organ musicians materialize shortly before entrance and dissolve during long tacets / after exit
+            if !tr.is_organ && presence_alpha <= 0.004 {
+                continue;
+            }
+
+            // Subtle inward-gathering + expanding arrival halo ring while musician materializes onto stage
+            if !tr.is_organ && arrival_ring_progress > 0.001 && arrival_ring_progress < 0.999 {
+                let ring_bell = (arrival_ring_progress as f64 * PI).sin() as f32 * glow_mult;
+                c.add_radial_glow(
+                    tr.stage_x,
+                    tr.stage_y,
+                    (20.0 + 18.0 * presence_alpha) * sc,
+                    tr.color,
+                    0.20 * presence_alpha * glow_mult,
+                    Some(self.stage_clip),
+                );
+                let in_r = tr.base_radius + (3.0 + 42.0 * (1.0 - arrival_ring_progress)) * sc;
+                c.stroke_circle_aa(
+                    tr.stage_x,
+                    tr.stage_y,
+                    in_r,
+                    (1.1 + 0.9 * ring_bell) * sc,
+                    tr.color.lerp(Rgb::from_u8(255, 248, 228), 0.42),
+                    0.56 * ring_bell,
+                    true,
+                    Some(self.stage_clip),
+                );
+                let out_r = tr.base_radius + (2.0 + 24.0 * arrival_ring_progress) * sc;
+                c.stroke_circle_aa(
+                    tr.stage_x,
+                    tr.stage_y,
+                    out_r,
+                    1.0 * sc,
+                    tr.color.lerp(Rgb::from_u8(255, 250, 236), 0.55),
+                    0.26 * ring_bell,
+                    true,
+                    Some(self.stage_clip),
+                );
+            }
 
             // Draw live stage ripples & multi-layer glow for this musician
             let e = track_energies[ti];
@@ -1060,7 +1192,7 @@ impl VideoScene {
             // Expanding concentric acoustic ripple rings on note onsets
             for k in 0..ripple_count {
                 let age = ripple_ages[k];
-                let fade = (1.0 - age).powf(1.65) * ripple_vels[k] * glow_mult;
+                let fade = (1.0 - age).powf(1.65) * ripple_vels[k] * glow_mult * presence_alpha;
                 if fade > 0.02 {
                     let ring_r = tr.base_radius + (6.0 + 96.0 * age) * sc;
                     c.stroke_circle_aa(
@@ -1087,7 +1219,7 @@ impl VideoScene {
                     tr.stage_y,
                     (1.4 + 2.2 * e) * sc,
                     tr.color.lerp(Rgb::from_u8(255, 244, 214), 0.35),
-                    (0.18 + 0.42 * e).min(0.60),
+                    (0.18 + 0.42 * e).min(0.60) * presence_alpha,
                     true,
                     Some(self.stage_clip),
                 );
@@ -1099,7 +1231,7 @@ impl VideoScene {
                     tr.stage_y,
                     outer_r,
                     tr.color,
-                    0.46 * e,
+                    0.46 * e * presence_alpha,
                     Some(self.stage_clip),
                 );
                 let inner_r = (16.0 + 24.0 * e) * sc;
@@ -1108,7 +1240,7 @@ impl VideoScene {
                     tr.stage_y,
                     inner_r,
                     tr.color.lerp(Rgb::from_u8(255, 248, 224), 0.55),
-                    0.55 * e,
+                    0.55 * e * presence_alpha,
                     Some(self.stage_clip),
                 );
             }
@@ -1120,7 +1252,13 @@ impl VideoScene {
             } else {
                 tr.color.lerp(Rgb::from_u8(26, 36, 62), 0.62)
             };
-            c.fill_circle_aa(tr.stage_x, tr.stage_y, orb_r, orb_col, 0.96);
+            c.fill_circle_aa(
+                tr.stage_x,
+                tr.stage_y,
+                orb_r,
+                orb_col,
+                0.96 * presence_alpha,
+            );
             c.stroke_circle_aa(
                 tr.stage_x,
                 tr.stage_y,
@@ -1131,7 +1269,7 @@ impl VideoScene {
                 } else {
                     tr.color
                 },
-                if e > 0.05 { 0.85 } else { 0.42 },
+                (if e > 0.05 { 0.85 } else { 0.42 }) * presence_alpha,
                 false,
                 Some(self.stage_clip),
             );
@@ -1141,14 +1279,15 @@ impl VideoScene {
                     tr.stage_y,
                     (orb_r * 0.42).max(2.2),
                     Rgb::from_u8(255, 252, 242),
-                    (0.92 * e).min(0.95),
+                    (0.92 * e).min(0.95) * presence_alpha,
                 );
             }
 
             // Crisp illuminated label
             let lbl_col = Rgb::from_u8(138, 152, 184)
                 .lerp(Rgb::from_u8(252, 248, 236), (e * 1.4).min(1.0));
-            let lbl_alpha = (0.68 + 0.32 * e.min(1.0)) * (1.0 - 0.30 * silence_fade);
+            let lbl_alpha =
+                (0.68 + 0.32 * e.min(1.0)) * (1.0 - 0.30 * silence_fade) * presence_alpha;
             c.draw_text_vector(
                 &tr.short_label,
                 tr.stage_x,
@@ -1423,16 +1562,33 @@ impl VideoScene {
             TextAlign::Right,
         );
 
-        let max_rows = self.tracks.len().min(14);
-        let row_pitch = ((self.now_y1 - self.now_y0) / max_rows.max(1) as f32).min(27.0 * sc);
-        let bar_start_x = self.now_x0 + 258.0 * sc;
-        let bar_w = (self.now_x1 - bar_start_x).max(60.0 * sc);
-        let bar_h = (8.5 * sc).max(4.0);
+        // Dynamically collect currently present tracks (up to 20+ fit cleanly without clipping)
+        let visible: Vec<(usize, &TrackAnim, f32)> = self
+            .tracks
+            .iter()
+            .enumerate()
+            .filter_map(|(ti, tr)| {
+                let pa = track_presences[ti];
+                if tr.is_organ || pa > 0.02 {
+                    Some((ti, tr, if tr.is_organ { 1.0 } else { pa }))
+                } else {
+                    None
+                }
+            })
+            .collect();
 
-        for (idx, tr) in self.tracks.iter().take(max_rows).enumerate() {
-            let e = track_energies[idx];
-            let ry = self.now_y0 + idx as f32 * row_pitch;
-            let dot_y = ry + 5.5 * sc;
+        let dense = visible.len() > 14;
+        let font_h = if dense { 9.5 * sc } else { 10.5 * sc };
+        let font_stroke = if dense { 0.76 * sc } else { 0.82 * sc };
+        let row_pitch = ((self.now_y1 - self.now_y0) / visible.len().max(1) as f32).min(26.0 * sc);
+        let bar_start_x = self.now_x0 + (if dense { 244.0 } else { 258.0 }) * sc;
+        let bar_w = (self.now_x1 - bar_start_x).max(60.0 * sc);
+        let bar_h = (if dense { 7.2 * sc } else { 8.5 * sc }).max(3.5);
+
+        for (row_idx, &(ti, tr, row_alpha)) in visible.iter().enumerate() {
+            let e = track_energies[ti];
+            let ry = self.now_y0 + row_idx as f32 * row_pitch;
+            let dot_y = ry + 0.52 * font_h;
 
             // Activity indicator dot
             let dot_col = if e > 0.04 {
@@ -1441,9 +1597,23 @@ impl VideoScene {
                 tr.color.lerp(Rgb::from_u8(28, 38, 60), 0.72)
             };
             if e > 0.05 {
-                c.add_radial_glow(self.now_x0 + 6.0 * sc, dot_y, 12.0 * sc, tr.color, 0.45 * e, None);
+                c.add_radial_glow(
+                    self.now_x0 + 6.0 * sc,
+                    dot_y,
+                    12.0 * sc,
+                    tr.color,
+                    0.45 * e * row_alpha,
+                    None,
+                );
             }
-            c.fill_circle_aa(self.now_x0 + 6.0 * sc, dot_y, (4.0 + 1.2 * e) * sc, dot_col, 0.95);
+            let dot_r = (if dense { 3.5 } else { 4.0 } + 1.1 * e) * sc;
+            c.fill_circle_aa(
+                self.now_x0 + 6.0 * sc,
+                dot_y,
+                dot_r,
+                dot_col,
+                0.95 * row_alpha,
+            );
 
             // Instrument label
             let name_col = Rgb::from_u8(126, 140, 170)
@@ -1452,10 +1622,10 @@ impl VideoScene {
                 &tr.label,
                 self.now_x0 + 20.0 * sc,
                 ry,
-                10.5 * sc,
-                0.82 * sc,
+                font_h,
+                font_stroke,
                 name_col,
-                0.70 + 0.30 * e.min(1.0),
+                (0.70 + 0.30 * e.min(1.0)) * row_alpha,
                 TextAlign::Left,
             );
 
@@ -1467,7 +1637,7 @@ impl VideoScene {
                 dot_y + 0.5 * bar_h,
                 0.5 * bar_h,
                 Rgb::from_u8(18, 26, 46),
-                0.92,
+                0.92 * row_alpha,
                 None,
             );
 
@@ -1483,7 +1653,7 @@ impl VideoScene {
                     dot_y + 0.5 * bar_h,
                     0.5 * bar_h,
                     fill_col,
-                    0.92,
+                    0.92 * row_alpha,
                     None,
                 );
             }
@@ -1656,7 +1826,7 @@ fn concise_stage_label(raw_name: &str, instrument: &str) -> String {
     if let Some(lbl) = canonical {
         return lbl.to_string();
     }
-    clean_panel_label(raw_name, 14)
+    clean_panel_label(raw_name, 14).to_ascii_uppercase()
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -2078,13 +2248,30 @@ fn render_static_background(
         let cos_a = ang.cos() as f32;
         let sin_a = ang.sin() as f32;
         let anchor = ANCHOR_LABELS.iter().find(|&&(s, _)| s == step);
+        let is_prime = tuning == TuningMode::Edo53 && is_prime_step_53(step);
         let is_five = step % 5 == 0;
-        let (r_in, r_out, thick, alpha) = if anchor.is_some() {
-            (wheel_r - 9.0 * sc, wheel_r + 6.0 * sc, 1.45 * sc, 0.78)
+        let (r_in, r_out, thick, tick_col, alpha) = if anchor.is_some() && is_prime {
+            (
+                wheel_r - 9.5 * sc,
+                wheel_r + 6.5 * sc,
+                1.55 * sc,
+                gold_soft.lerp(Rgb::from_u8(132, 236, 255), 0.38),
+                0.86,
+            )
+        } else if anchor.is_some() {
+            (wheel_r - 9.0 * sc, wheel_r + 6.0 * sc, 1.45 * sc, gold_soft, 0.78)
+        } else if is_prime {
+            (
+                wheel_r - 7.6 * sc,
+                wheel_r + 5.0 * sc,
+                1.28 * sc,
+                gold_soft.lerp(Rgb::from_u8(132, 236, 255), 0.45),
+                0.72,
+            )
         } else if is_five {
-            (wheel_r - 7.0 * sc, wheel_r + 4.5 * sc, 1.2 * sc, 0.62)
+            (wheel_r - 7.0 * sc, wheel_r + 4.5 * sc, 1.2 * sc, gold_soft, 0.62)
         } else {
-            (wheel_r - 4.8 * sc, wheel_r + 2.8 * sc, 0.95 * sc, 0.42)
+            (wheel_r - 4.8 * sc, wheel_r + 2.8 * sc, 0.95 * sc, gold_soft, 0.42)
         };
         c.draw_capsule_aa(
             wheel_cx + cos_a * r_in,
@@ -2092,11 +2279,24 @@ fn render_static_background(
             wheel_cx + cos_a * r_out,
             wheel_cy + sin_a * r_out,
             thick * 0.5,
-            gold_soft,
+            tick_col,
             alpha,
             false,
             None,
         );
+        if is_prime {
+            let dot_r = wheel_r - 11.8 * sc;
+            let dx = wheel_cx + cos_a * dot_r;
+            let dy = wheel_cy + sin_a * dot_r;
+            c.add_radial_glow(dx, dy, 4.6 * sc, Rgb::from_u8(116, 232, 255), 0.20, None);
+            c.fill_circle_aa(
+                dx,
+                dy,
+                1.6 * sc,
+                Rgb::from_u8(168, 240, 255).lerp(gold_soft, 0.35),
+                0.78,
+            );
+        }
         if let Some(&(_, lbl)) = anchor {
             let lr = wheel_r + 21.0 * sc;
             let lx = wheel_cx + cos_a * lr;
@@ -2455,6 +2655,178 @@ mod tests {
         assert!(
             organ_active > organ_silent + 25.0,
             "Active pipe organ crown should brighten clearly (active={organ_active:.1}, silent={organ_silent:.1})"
+        );
+    }
+
+    #[test]
+    fn test_dynamic_stage_presence_organ_permanence_and_20_track_panel() {
+        // Verify 15 prime steps on the 53-EDO wheel
+        let prime_count = (0..53).filter(|&s| is_prime_step_53(s)).count();
+        assert_eq!(prime_count, 15);
+
+        // Build a 20-track score at 60 BPM (1 beat == 1.0 second):
+        // - Track 0 ("ai_strip", "The Herald (Zero-Free Strip)"): notes ONLY at t = 20..25s
+        // - Track 1 ("church_organ", "Cathedral Pipe Organ"): notes ONLY at t = 20..25s (silent at t = 2s & 35s)
+        // - Track 2 ("flute"): notes at 5..6s, 23.5..24.5s (gap 17.5s <= 18s -> merged), and 45..46s (gap 20.5s > 18s -> split)
+        // - Tracks 3..20: 17 extra orchestral voices active at t = 20..25s so all 20 tracks appear simultaneously at t = 22s
+        let mut tracks_json = vec![
+            r#"{
+                "id": "ai_strip",
+                "name": "The Herald (Zero-Free Strip)",
+                "instrument": "shakuhachi",
+                "x": -3.2,
+                "y": 5.2,
+                "notes": [{ "beat": 20.0, "dur": 5.0, "step": 23, "vel": 0.88 }]
+            }"#.to_string(),
+            r#"{
+                "id": "church_organ",
+                "name": "Cathedral Pipe Organ",
+                "instrument": "church_organ",
+                "x": 0.0,
+                "y": 10.6,
+                "notes": [{ "beat": 20.0, "dur": 5.0, "step": 0, "vel": 0.82 }]
+            }"#.to_string(),
+            r#"{
+                "id": "flute",
+                "name": "Solo Flute",
+                "instrument": "flute",
+                "x": 3.2,
+                "y": 5.2,
+                "notes": [
+                    { "beat": 5.0, "dur": 1.0, "step": 17, "vel": 0.75 },
+                    { "beat": 23.5, "dur": 1.0, "step": 31, "vel": 0.75 },
+                    { "beat": 45.0, "dur": 1.0, "step": 0, "vel": 0.75 }
+                ]
+            }"#.to_string(),
+        ];
+
+        let extra_insts = [
+            "piano", "harp", "nylon_guitar", "steel_guitar", "celesta",
+            "clarinet", "english_horn", "bassoon", "french_horn", "trombone",
+            "oboe", "violin", "viola", "cello", "contrabass",
+            "string_ensemble", "timpani",
+        ];
+        for (k, inst) in extra_insts.iter().enumerate() {
+            let x = -3.6 + (k % 6) as f64 * 1.44;
+            let y = 2.6 + (k / 6) as f64 * 2.4;
+            tracks_json.push(format!(
+                r#"{{
+                    "id": "extra_{k}",
+                    "name": "Player {k}",
+                    "instrument": "{inst}",
+                    "x": {x:.2},
+                    "y": {y:.2},
+                    "notes": [{{ "beat": 20.0, "dur": 5.0, "step": 0, "vel": 0.80 }}]
+                }}"#
+            ));
+        }
+
+        let json = format!(
+            r#"{{
+                "title": "Dynamic Presence Test",
+                "tail_seconds": 2.0,
+                "end_silence_seconds": 2.0,
+                "tempo": [{{"beat": 0.0, "bpm": 60.0}}],
+                "tracks": [{}]
+            }}"#,
+            tracks_json.join(",")
+        );
+
+        let score = parse_json_score(&json).expect("valid 20-track score");
+        let opts = VideoOptions {
+            width: 960,
+            height: 540,
+            fps: 24,
+            stage: None,
+            tuning: TuningMode::Edo53,
+        };
+        let scene = VideoScene::build(&score, &opts, Some(50.0)).expect("build scene");
+        assert_eq!(scene.tracks.len(), 20);
+
+        let ai_tr = &scene.tracks[0];
+        let organ_tr = &scene.tracks[1];
+        let flute_tr = &scene.tracks[2];
+
+        // AI color (cool celestial ice-cyan) vs human woodwind emerald, and concise stage label
+        assert_eq!(ai_tr.short_label, "THE HERALD");
+        assert!((ai_tr.color.0 - 92.0).abs() < 1e-3 && (ai_tr.color.1 - 234.0).abs() < 1e-3 && (ai_tr.color.2 - 255.0).abs() < 1e-3);
+        assert!((flute_tr.color.0 - 72.0).abs() < 1e-3 && (flute_tr.color.1 - 224.0).abs() < 1e-3);
+
+        // Span merging check (18.0s threshold)
+        assert_eq!(ai_tr.presence_spans, vec![(20.0, 25.0)]);
+        assert_eq!(flute_tr.presence_spans, vec![(5.0, 24.5), (45.0, 46.0)]);
+        assert!(organ_tr.is_organ);
+        assert_eq!(organ_tr.eval_presence(2.0).0, 1.0);
+        assert_eq!(organ_tr.eval_presence(35.0).0, 1.0);
+
+        // Presence curve & arrival ring check on non-organ track (notes 20..25s)
+        assert_eq!(ai_tr.eval_presence(2.0), (0.0, 0.0));
+        let (pa_arriving, ring_prog) = ai_tr.eval_presence(19.1);
+        assert!((pa_arriving - 0.5).abs() < 0.05 && (ring_prog - 0.5).abs() < 0.05);
+        assert_eq!(ai_tr.eval_presence(22.0), (1.0, 0.0));
+        assert_eq!(ai_tr.eval_presence(35.0), (0.0, 0.0));
+
+        let sample_patch_luma = |buf: &[u8], cx: f32, cy: f32, r: i32| -> f64 {
+            let mut sum = 0.0_f64;
+            let mut cnt = 0usize;
+            let icx = cx.round() as i32;
+            let icy = cy.round() as i32;
+            for dy in -r..=r {
+                for dx in -r..=r {
+                    let x = (icx + dx).clamp(0, scene.width as i32 - 1) as usize;
+                    let y = (icy + dy).clamp(0, scene.height as i32 - 1) as usize;
+                    let idx = (y * scene.width + x) * 3;
+                    sum += buf[idx] as f64 + buf[idx + 1] as f64 + buf[idx + 2] as f64;
+                    cnt += 1;
+                }
+            }
+            sum / cnt.max(1) as f64
+        };
+
+        let mut frame_t2 = vec![0u8; scene.width * scene.height * 3];
+        let mut frame_t22 = vec![0u8; scene.width * scene.height * 3];
+        let mut frame_t35 = vec![0u8; scene.width * scene.height * 3];
+        scene.render_frame(2.0, &mut frame_t2);
+        scene.render_frame(22.0, &mut frame_t22);
+        scene.render_frame(35.0, &mut frame_t35);
+
+        let bg_ai = sample_patch_luma(&scene.bg, ai_tr.stage_x, ai_tr.stage_y, 6);
+        let ai_t2 = sample_patch_luma(&frame_t2, ai_tr.stage_x, ai_tr.stage_y, 6);
+        let ai_t22 = sample_patch_luma(&frame_t22, ai_tr.stage_x, ai_tr.stage_y, 6);
+        let ai_t35 = sample_patch_luma(&frame_t35, ai_tr.stage_x, ai_tr.stage_y, 6);
+
+        assert!(
+            (ai_t2 - bg_ai).abs() < 0.05 && ai_t2 < 90.0,
+            "Non-organ track must be completely invisible before arrival at t=2.0s (ai_t2={ai_t2:.2}, bg={bg_ai:.2})"
+        );
+        assert!(
+            ai_t22 > ai_t2 + 80.0,
+            "Non-organ track must be bright and present on stage at t=22.0s (ai_t22={ai_t22:.2}, ai_t2={ai_t2:.2})"
+        );
+        assert!(
+            (ai_t35 - bg_ai).abs() < 0.05,
+            "Non-organ track must fade completely back to dark background by t=35.0s (ai_t35={ai_t35:.2}, bg={bg_ai:.2})"
+        );
+
+        // Pipe Organ stays permanently visible on stage even at t=2.0s and t=35.0s when silent
+        let bg_organ = sample_patch_luma(&scene.bg, organ_tr.stage_x, organ_tr.stage_y, 5);
+        let organ_t2 = sample_patch_luma(&frame_t2, organ_tr.stage_x, organ_tr.stage_y, 5);
+        let organ_t35 = sample_patch_luma(&frame_t35, organ_tr.stage_x, organ_tr.stage_y, 5);
+        assert!(
+            organ_t2 > bg_organ + 25.0 && organ_t35 > bg_organ + 25.0,
+            "Church organ must remain permanently visible on stage when silent (t2={organ_t2:.2}, t35={organ_t35:.2}, bg={bg_organ:.2})"
+        );
+
+        // Verify 20th row in NOW PLAYING panel is drawn inside now_y0..now_y1 at t=22.0s (no 14-track truncation)
+        let row_pitch_20 = ((scene.now_y1 - scene.now_y0) / 20.0).min(26.0 * scene.sc);
+        let row19_dot_x = scene.now_x0 + 6.0 * scene.sc;
+        let row19_dot_y = scene.now_y0 + 19.0 * row_pitch_20 + 0.52 * 9.5 * scene.sc;
+        assert!(row19_dot_y < scene.now_y1);
+        let bg_row19 = sample_patch_luma(&scene.bg, row19_dot_x, row19_dot_y, 2);
+        let t22_row19 = sample_patch_luma(&frame_t22, row19_dot_x, row19_dot_y, 2);
+        assert!(
+            t22_row19 > bg_row19 + 40.0,
+            "20th track row must render visibly inside NOW PLAYING at t=22.0s (t22={t22_row19:.2}, bg={bg_row19:.2})"
         );
     }
 }
