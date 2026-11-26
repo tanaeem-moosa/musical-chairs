@@ -16,15 +16,15 @@ use crate::indian::{render_dotara_track_with_tuning, render_ektara_track_with_tu
 use crate::reverb::{apply_hall_reverb_and_master_with_rt60, AudioStats};
 use crate::score::{TempoMap, TempoSegment};
 use crate::sf2_synth::{
-    load_soundfont_result, render_sf2_track_with_options, Sf2Instrument, Sf2Note,
+    load_soundfont_result, render_sf2_track_full, Sf2Instrument, Sf2Note, Sf2Pedal, SwellCurve,
     DEFAULT_SOUNDFONT_PATH,
 };
-use crate::spatial::{spatialize_track, StagePos};
+use crate::spatial::{spatialize_track_with_width, StagePos};
 use crate::synth::SAMPLE_RATE;
 use crate::wav::write_stereo_wav_16bit;
 
-/// All 21 instrument identifiers supported by the JSON score schema.
-pub const VALID_INSTRUMENTS: [&str; 21] = [
+/// All 24 instrument identifiers supported by the JSON score schema.
+pub const VALID_INSTRUMENTS: [&str; 24] = [
     "piano",
     "harp",
     "celesta",
@@ -33,6 +33,7 @@ pub const VALID_INSTRUMENTS: [&str; 21] = [
     "english_horn",
     "bassoon",
     "french_horn",
+    "trombone",
     "flute",
     "oboe",
     "shakuhachi",
@@ -41,8 +42,10 @@ pub const VALID_INSTRUMENTS: [&str; 21] = [
     "cello",
     "contrabass",
     "string_ensemble",
+    "tremolo_strings",
     "slow_strings",
     "pizzicato",
+    "timpani",
     "sitar",
     "ektara",
     "dotara",
@@ -134,13 +137,27 @@ pub struct JsonScore {
     pub end_silence_seconds: f64,
     #[serde(default = "default_tempo")]
     pub tempo: Vec<JsonTempoPoint>,
+    #[serde(default)]
+    pub sections: Vec<JsonSection>,
     pub tracks: Vec<JsonTrack>,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct JsonSection {
+    pub beat: f64,
+    pub title: String,
 }
 
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 pub struct JsonTempoPoint {
     pub beat: f64,
     pub bpm: f64,
+}
+
+#[derive(Clone, Copy, Debug, Serialize, Deserialize)]
+pub struct JsonPedalSpan {
+    pub beat: f64,
+    pub dur: f64,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -153,10 +170,14 @@ pub struct JsonTrack {
     pub x: f64,
     #[serde(default = "default_y")]
     pub y: f64,
+    #[serde(default)]
+    pub width: f64,
     #[serde(default = "default_gain")]
     pub gain: f64,
     #[serde(default)]
     pub warm_lowpass_hz: Option<f64>,
+    #[serde(default)]
+    pub pedals: Vec<JsonPedalSpan>,
     #[serde(default)]
     pub notes: Vec<JsonNote>,
 }
@@ -167,7 +188,7 @@ impl JsonTrack {
     }
 }
 
-#[derive(Clone, Copy, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct JsonNote {
     pub beat: f64,
     pub dur: f64,
@@ -181,6 +202,10 @@ pub struct JsonNote {
     #[serde(default)]
     pub breath_swell: bool,
     #[serde(default)]
+    pub swell: Option<String>,
+    #[serde(default)]
+    pub vibrato: f32,
+    #[serde(default)]
     pub meend_cents: f32,
 }
 
@@ -191,6 +216,8 @@ pub struct StagePlayerPlacement {
     pub x: Option<f64>,
     #[serde(default)]
     pub y: Option<f64>,
+    #[serde(default)]
+    pub width: Option<f64>,
     #[serde(default)]
     pub gain: Option<f64>,
     /// `None` = omitted (inherit inline), `Some(None)` = explicit `null` (disable LP), `Some(Some(hz))` = override LP.
@@ -249,6 +276,13 @@ impl StageConfig {
                     return Err(format!("stage.players[{key}].y={y} must be finite"));
                 }
             }
+            if let Some(w) = p.width {
+                if !w.is_finite() || w < 0.0 {
+                    return Err(format!(
+                        "stage.players[{key}].width={w} must be finite and >= 0.0"
+                    ));
+                }
+            }
             if let Some(g) = p.gain {
                 if !g.is_finite() || g < 0.0 {
                     return Err(format!(
@@ -296,6 +330,7 @@ pub struct ResolvedStageParams {
 pub struct ResolvedTrackPlacement {
     pub x: f64,
     pub y: f64,
+    pub width: f64,
     pub gain: f64,
     pub warm_lowpass_hz: Option<f64>,
 }
@@ -343,6 +378,10 @@ pub fn resolve_track_placement(
         .and_then(|p| p.y)
         .or_else(|| by_inst.and_then(|p| p.y))
         .unwrap_or(track.y);
+    let width = by_id
+        .and_then(|p| p.width)
+        .or_else(|| by_inst.and_then(|p| p.width))
+        .unwrap_or(track.width);
     let gain = by_id
         .and_then(|p| p.gain)
         .or_else(|| by_inst.and_then(|p| p.gain))
@@ -355,6 +394,7 @@ pub fn resolve_track_placement(
     ResolvedTrackPlacement {
         x,
         y,
+        width,
         gain,
         warm_lowpass_hz,
     }
@@ -411,6 +451,7 @@ pub struct TrackSummary {
     pub instrument: String,
     pub note_count: usize,
     pub pos: StagePos,
+    pub width: f64,
     pub gain: f64,
     pub warm_lowpass_hz: Option<f64>,
 }
@@ -474,6 +515,17 @@ impl JsonScore {
                 ));
             }
         }
+        for (si, sec) in self.sections.iter().enumerate() {
+            if !sec.beat.is_finite() || sec.beat < 0.0 {
+                return Err(format!(
+                    "sections[{si}].beat={} must be finite and >= 0.0",
+                    sec.beat
+                ));
+            }
+            if sec.title.trim().is_empty() {
+                return Err(format!("sections[{si}].title must be non-empty"));
+            }
+        }
         for (ti, track) in self.tracks.iter().enumerate() {
             if track.id.trim().is_empty()
                 || track.id.contains('/')
@@ -493,6 +545,12 @@ impl JsonScore {
                     track.id, track.x, track.y
                 ));
             }
+            if !track.width.is_finite() || track.width < 0.0 {
+                return Err(format!(
+                    "tracks[{ti}] (`{}`): width {} must be finite and >= 0.0",
+                    track.id, track.width
+                ));
+            }
             if !track.gain.is_finite() || track.gain < 0.0 {
                 return Err(format!(
                     "tracks[{ti}] (`{}`): gain {} must be finite and >= 0.0",
@@ -504,6 +562,15 @@ impl JsonScore {
                     return Err(format!(
                         "tracks[{ti}] (`{}`): warm_lowpass_hz {} must be finite and > 0.0",
                         track.id, hz
+                    ));
+                }
+            }
+            for (pi, ped) in track.pedals.iter().enumerate() {
+                if !ped.beat.is_finite() || ped.beat < 0.0 || !ped.dur.is_finite() || ped.dur <= 0.0
+                {
+                    return Err(format!(
+                        "tracks[{ti}] (`{}`).pedals[{pi}] must have finite beat >= 0.0 and dur > 0.0",
+                        track.id
                     ));
                 }
             }
@@ -523,13 +590,18 @@ impl JsonScore {
                 if !note.vel.is_finite()
                     || !note.cents.is_finite()
                     || !note.slide_from_cents.is_finite()
+                    || !note.vibrato.is_finite()
+                    || note.vibrato < 0.0
                     || !note.meend_cents.is_finite()
                 {
                     return Err(format!(
-                        "tracks[{ti}] (`{}`).notes[{ni}] contains non-finite float values",
+                        "tracks[{ti}] (`{}`).notes[{ni}] contains invalid or non-finite float values",
                         track.id
                     ));
                 }
+                SwellCurve::parse(note.swell.as_deref(), note.breath_swell).map_err(|e| {
+                    format!("tracks[{ti}] (`{}`).notes[{ni}]: {e}", track.id)
+                })?;
             }
         }
         Ok(())
@@ -655,11 +727,13 @@ fn render_single_track_dry(
                     let start_sample = beat_to_sample(tempo, n.beat, sample_rate);
                     let end_sample = beat_to_sample(tempo, n.beat + n.dur, sample_rate)
                         .max(start_sample + 1);
-                    let slide = if n.slide_from_cents.abs() > 0.0 {
+                     let slide = if n.slide_from_cents.abs() > 0.0 {
                         n.slide_from_cents
                     } else {
                         n.meend_cents
                     };
+                    let swell = SwellCurve::parse(n.swell.as_deref(), n.breath_swell)
+                        .unwrap_or(SwellCurve::None);
                     Sf2Note {
                         start_sample,
                         end_sample,
@@ -668,16 +742,33 @@ fn render_single_track_dry(
                         velocity: n.vel,
                         slide_from_cents: slide,
                         breath_swell: n.breath_swell,
+                        swell,
+                        vibrato: n.vibrato,
                     }
                 })
                 .collect();
-            render_sf2_track_with_options(
+            let pedals: Vec<Sf2Pedal> = track
+                .pedals
+                .iter()
+                .map(|p| {
+                    let start_sample = beat_to_sample(tempo, p.beat, sample_rate);
+                    let end_sample =
+                        beat_to_sample(tempo, p.beat + p.dur, sample_rate).max(start_sample + 1);
+                    Sf2Pedal {
+                        start_sample,
+                        end_sample,
+                    }
+                })
+                .collect();
+            render_sf2_track_full(
                 sf_arc,
                 sf2_inst,
                 &notes,
+                &pedals,
                 total_samples,
                 sample_rate,
                 quantize_12tet,
+                placement.width > 0.25,
             )
         }
         ScoreInstrument::Ektara | ScoreInstrument::Dotara => {
@@ -859,7 +950,8 @@ pub fn render_json_score(
                     quantize_12tet,
                 );
                 let pos = StagePos::new(placement.x, placement.y);
-                let (direct, send) = spatialize_track(&dry, pos, sr);
+                let (direct, send) =
+                    spatialize_track_with_width(&dry, pos, placement.width, sr);
 
                 let (opt_mono, track_peak) = if want_stems {
                     let mut mono = Vec::with_capacity(musical_samples);
@@ -955,6 +1047,7 @@ pub fn render_json_score(
             instrument: t.instrument.clone(),
             note_count: t.notes.len(),
             pos: StagePos::new(p.x, p.y),
+            width: p.width,
             gain: p.gain,
             warm_lowpass_hz: p.warm_lowpass_hz,
         })
@@ -1019,7 +1112,7 @@ mod tests {
         assert_eq!(tr.warm_lowpass_hz, None);
 
         assert_eq!(tr.notes.len(), 1);
-        let n = tr.notes[0];
+        let n = &tr.notes[0];
         assert!((n.beat - 0.0).abs() < 1e-9);
         assert!((n.dur - 1.5).abs() < 1e-9);
         assert_eq!(n.step, 0);
@@ -1091,7 +1184,7 @@ mod tests {
         assert!((score.tracks[0].y - 3.4).abs() < 1e-9);
         assert!((score.tracks[0].gain - 0.95).abs() < 1e-9);
         assert_eq!(score.tracks[1].warm_lowpass_hz, Some(2900.0));
-        let n = score.tracks[0].notes[0];
+        let n = &score.tracks[0].notes[0];
         assert!((n.vel - 0.82).abs() < 1e-6);
         assert!((n.cents - 1.5).abs() < 1e-6);
         assert!((n.slide_from_cents - (-12.0)).abs() < 1e-6);

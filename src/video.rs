@@ -80,6 +80,7 @@ fn family_color(inst: &str) -> Rgb {
             "Strings" => Rgb::from_u8(106, 178, 255),
             "Woodwinds" | "Woodwinds & World" => Rgb::from_u8(72, 224, 158),
             "Brass" => Rgb::from_u8(245, 148, 72),
+            "Percussion" => Rgb::from_u8(255, 128, 118),
             "Indian Classical" => Rgb::from_u8(240, 118, 178),
             "Organ" => Rgb::from_u8(178, 132, 255),
             _ => Rgb::from_u8(160, 180, 220),
@@ -644,6 +645,7 @@ struct TrackAnim {
     color: Rgb,
     stage_x: f32,
     stage_y: f32,
+    width_px: f32,
     label_y: f32,
     base_radius: f32,
     notes: Vec<TimedNote>,
@@ -658,6 +660,8 @@ pub struct VideoScene {
     pub musical_end_s: f64,
     tuning: TuningMode,
     sc: f32,
+    sx: f32,
+    sy: f32,
     stage_clip: (usize, usize, usize, usize),
     stage_cx: f32,
     stage_cy: f32,
@@ -668,6 +672,7 @@ pub struct VideoScene {
     now_y0: f32,
     now_x1: f32,
     now_y1: f32,
+    sections: Vec<(f64, String)>,
     bg: Vec<u8>,
     tracks: Vec<TrackAnim>,
 }
@@ -767,6 +772,11 @@ impl VideoScene {
             let raw_name = track.display_name().to_string();
             let panel_label = clean_panel_label(&raw_name, 26);
             let short_label = concise_stage_label(&raw_name, &track.instrument);
+            let width_px = if placement.width > 0.35 {
+                (placement.width as f32 * px_per_m).clamp(0.0, 560.0 * sc)
+            } else {
+                0.0
+            };
 
             tracks.push(TrackAnim {
                 label: panel_label,
@@ -775,6 +785,7 @@ impl VideoScene {
                 color: family_color(&track.instrument),
                 stage_x,
                 stage_y,
+                width_px,
                 label_y: stage_y + base_radius + 11.0 * sc,
                 base_radius,
                 notes,
@@ -884,6 +895,18 @@ impl VideoScene {
         let fallback_dur = musical_end_s + stage_params.end_silence_seconds;
         let total_dur_s = audio_duration_s.unwrap_or(fallback_dur).max(1.0);
 
+        let mut sections: Vec<(f64, String)> = score
+            .sections
+            .iter()
+            .map(|s| {
+                (
+                    tempo.beat_to_seconds(s.beat),
+                    shorten_label(&s.title.to_ascii_uppercase(), 38),
+                )
+            })
+            .collect();
+        sections.sort_by(|a, b| a.0.total_cmp(&b.0));
+
         // Pre-render static background ONCE
         let mut bg = vec![0u8; w * h * 3];
         render_static_background(
@@ -913,6 +936,8 @@ impl VideoScene {
             musical_end_s,
             tuning: opts.tuning,
             sc,
+            sx,
+            sy,
             stage_clip,
             stage_cx,
             stage_cy,
@@ -923,6 +948,7 @@ impl VideoScene {
             now_y0,
             now_x1,
             now_y1,
+            sections,
             bg,
             tracks,
         })
@@ -1050,7 +1076,22 @@ impl VideoScene {
                 }
             }
 
-            // Multi-layer additive radial glow bloom
+            // Multi-layer additive radial glow bloom (+ ensemble width bar when wide)
+            if tr.width_px > 20.0 * sc && e > 0.02 {
+                let wx0 = (tr.stage_x - 0.5 * tr.width_px).max(self.stage_clip.0 as f32 + 12.0 * sc);
+                let wx1 = (tr.stage_x + 0.5 * tr.width_px).min(self.stage_clip.2 as f32 - 12.0 * sc);
+                c.draw_capsule_aa(
+                    wx0,
+                    tr.stage_y,
+                    wx1,
+                    tr.stage_y,
+                    (1.4 + 2.2 * e) * sc,
+                    tr.color.lerp(Rgb::from_u8(255, 244, 214), 0.35),
+                    (0.18 + 0.42 * e).min(0.60),
+                    true,
+                    Some(self.stage_clip),
+                );
+            }
             if e > 0.015 {
                 let outer_r = (36.0 + 68.0 * e) * sc;
                 c.add_radial_glow(
@@ -1448,6 +1489,38 @@ impl VideoScene {
             }
         }
 
+        // 3.5 Live Movement / Section Badge in Top Header Card (when score defines sections[])
+        if !self.sections.is_empty() && silence_fade < 0.92 {
+            let idx = self.sections.partition_point(|(s, _)| *s <= t_sec + 0.03);
+            if idx > 0 {
+                let (_, sec_lbl) = &self.sections[idx - 1];
+                let tw = measure_vector_text(sec_lbl, 11.5 * sc);
+                let pill_x1 = 1528.0 * self.sx;
+                let pill_w = (tw + 30.0 * sc).clamp(120.0 * sc, 460.0 * sc);
+                let pill_x0 = pill_x1 - pill_w;
+                c.fill_rounded_rect(
+                    pill_x0,
+                    36.0 * self.sy,
+                    pill_x1,
+                    74.0 * self.sy,
+                    19.0 * sc,
+                    Rgb::from_u8(20, 28, 52),
+                    0.88 * (1.0 - 0.5 * silence_fade),
+                    Some((Rgb::from_u8(236, 196, 108), 0.62 * (1.0 - 0.5 * silence_fade), 1.2 * sc)),
+                );
+                c.draw_text_vector(
+                    sec_lbl,
+                    0.5 * (pill_x0 + pill_x1),
+                    49.5 * self.sy,
+                    11.5 * sc,
+                    0.88 * sc,
+                    Rgb::from_u8(252, 228, 158),
+                    0.95 * (1.0 - 0.5 * silence_fade),
+                    TextAlign::Center,
+                );
+            }
+        }
+
         // 4. Serene Contemplative Silence caption during intentional trailing silence
         if silence_fade > 0.02 {
             let cap_y = self.stage_cy - 72.0 * sc;
@@ -1557,8 +1630,10 @@ fn concise_stage_label(raw_name: &str, instrument: &str) -> String {
         "celesta" if lower.contains("celesta") => Some("CELESTA"),
         "church_organ" if lower.contains("organ") => Some("PIPE ORGAN"),
         "string_ensemble" if lower.contains("string") => Some("STRINGS"),
+        "tremolo_strings" if lower.contains("tremolo") || lower.contains("string") => Some("TREMOLO STR"),
         "slow_strings" if lower.contains("string") => Some("SLOW STRINGS"),
         "pizzicato" if lower.contains("pizzicato") => Some("PIZZICATO"),
+        "timpani" if lower.contains("timpani") => Some("TIMPANI"),
         "violin" if lower.contains("violin") => Some("VIOLIN"),
         "viola" if lower.contains("viola") => Some("VIOLA"),
         "cello" if lower.contains("cello") => Some("CELLO"),
@@ -1570,6 +1645,7 @@ fn concise_stage_label(raw_name: &str, instrument: &str) -> String {
         "bassoon" if lower.contains("bassoon") => Some("BASSOON"),
         "shakuhachi" if lower.contains("shakuhachi") => Some("SHAKUHACHI"),
         "french_horn" if lower.contains("french horn") || lower.contains("horn") => Some("FRENCH HORN"),
+        "trombone" if lower.contains("trombone") => Some("TROMBONE"),
         "sitar" if lower.contains("sitar") => Some("SITAR"),
         "ektara" if lower.contains("ektara") => Some("EKTARA"),
         "dotara" if lower.contains("dotara") => Some("DOTARA"),

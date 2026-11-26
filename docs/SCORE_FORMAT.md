@@ -35,6 +35,9 @@ cargo run --release -- render scores/sample_5min.json output/sample_5min.wav \
   --stage stages/concert_hall.json \
   --stems-dir output/stems_5min
 
+# Audit a score in ~2 ms (15-ch voice stealing, <C3 mud, comma clashes, comma-drift contour)
+cargo run --release -- analyze scores/sample_5min.json --stage stages/concert_hall.json
+
 # Fast standalone SVG visualization (~6 ms, no audio rendering required; defaults to output/<stem>.svg)
 cargo run --release -- visualize scores/sample_5min.json output/sample_5min.svg \
   --stage stages/concert_hall.json \
@@ -70,6 +73,7 @@ cargo test --release
 | | `--stems-dir <dir>` | Exports synchronized centered dry stems `<dir>/<track.id>.wav` (including trailing silence). |
 | | `--image <out.svg>` | Also writes a 1600×960 dark-studio SVG (2D stage map + pitch-roll timeline). |
 | | `--soundfont <path>` | Custom SoundFont2 file (default: `soundfonts/GeneralUser-GS.sf2`). |
+| `analyze <score.json>` | `--stage <stage.json>`, `--json` | Audits 15-channel SF2 polyphony/voice-stealing, `< C3` low-register mud, cross-track comma clashes (`1..=3` steps mod 53), section timestamps, and comma-drift contour. |
 | `visualize <score.json> [out.svg]` | `--stage <stage.json>`, `--tuning <53edo\|12tet>`, `--end-silence <seconds>` | Pure-Rust SVG generator (`out.svg` defaults to `output/<stem>.svg`). |
 | `render-video <score.json> <audio.wav> [output.webm]` | `--stage <stage.json>`, `--tuning <53edo\|12tet>`, `--fps <24>`, `--width <1920>`, `--height <1080>` | Pure-Rust animated 1080p VP9 (`yuv420p`) + 192k Opus WebM video piped to `ffmpeg` (`output.webm` defaults to `output/<score_stem>.webm`). Reads exact WAV duration including trailing silence. |
 | `audition` | *(none)* | Generates isolated instrument auditions + fusion showcase under `output/`. |
@@ -129,6 +133,7 @@ Recommended practice is to keep `score.json` **purely musical** (omitting `x`, `
 | `reverb_rt60` | `number` | No | `2.25` | 8-channel Walsh-Hadamard FDN hall decay time in seconds (`>= 0.0`). Overridden by `stage.json` if set there. |
 | `end_silence_seconds` | `number` | No | `0.0` | Clean trailing silence `(0.0, 0.0)` appended *after* the mastered reverb tail without altering RMS or peak normalization. Precedence: CLI `--end-silence` > `stage.json` > `score.json` > `0.0`. |
 | `tempo` | `TempoPoint[]` | No | `[{"beat": 0.0, "bpm": 70.0}]` | Non-empty piecewise-linear BPM map (see below). |
+| `sections` | `Section[]` | No | `[]` | Optional movement/section markers `[{"beat": 0.0, "title": "I. Adagio"}]` rendered on SVG timelines, 1080p WebM video headers, `analyze`, and Studio UI jump buttons. |
 | `tracks` | `Track[]` | **Yes** | — | Array of instrument tracks (rendered in parallel across CPU threads). |
 
 #### `TempoPoint` Object (`tempo[]`)
@@ -149,10 +154,12 @@ Recommended practice is to keep `score.json` **purely musical** (omitting `x`, `
 |---|---|---|---|---|
 | `id` | `string` | **Yes** | — | Unique non-empty slug with no path separators (`/`, `\`, `..`). Used as stem filename `<stems-dir>/<id>.wav` and primary lookup key in `stage.json`. |
 | `name` | `string \| null` | No | `id` | Display name for CLI logs & SVG stage labels. |
-| `instrument` | `string` | **Yes** | — | Must be one of the 21 supported instrument IDs in Section 4. Also used as fallback lookup key in `stage.json`. |
+| `instrument` | `string` | **Yes** | — | Must be one of the 24 supported instrument IDs in Section 4. Also used as fallback lookup key in `stage.json`. |
 | `notes` | `Note[]` | No | `[]` | Array of note events on this track. |
+| `pedals` | `PedalSpan[]` | No | `[]` | Optional MIDI `CC 64` damper sustain pedal spans `[{"beat": 0.0, "dur": 3.85}]` for `piano` / `harp` sympathetic resonance. |
 | `x` *(optional inline)* | `number` | No | `0.0` | Stage horizontal position in meters (`-6.0` left to `+6.0` right). Prefer setting in `stage.json`. |
 | `y` *(optional inline)* | `number` | No | `4.5` | Stage depth in meters (`2.0` front to `14.0` rear). Prefer setting in `stage.json`. |
+| `width` *(optional inline)* | `number` | No | `0.0` | Physical ensemble stereo spread in meters (`0.0` = pinpoint soloist; `1.4`–`4.8` = wide piano / string orchestra / pipe organ). Prefer setting in `stage.json`. |
 | `gain` *(optional inline)* | `number` | No | `1.0` | Linear track mix gain (`>= 0.0`, `0.4`–`1.2` typical). Prefer setting in `stage.json`. |
 | `warm_lowpass_hz` *(optional inline)* | `number \| null` | No | `null` | Optional 2-pole Butterworth low-pass cutoff in Hz (`> 0.0`, clamped internally to `[40, 0.45*sr]`) applied to L/R before spatialization. Prefer setting in `stage.json`. |
 
@@ -166,7 +173,9 @@ Recommended practice is to keep `score.json` **purely musical** (omitting `x`, `
 | `vel` | `number` | No | `0.75` | Normalized velocity (`0.05`–`1.0`). Shape dynamically (`0.40`–`0.92`) for musical phrasing. |
 | `cents` | `number` | No | `0.0` | Extra fine microtonal pitch offset in cents added on top of `step`. |
 | `slide_from_cents` | `number` | No | `0.0` | **SF2 instruments** (fallback for `ektara`). Smooth 140 ms quadratic pitch-bend glide *from* `step + cents + slide_from_cents` *into* `step + cents`. Negative slides up; positive slides down. Keep within `[-150, +150]` (clamped at `±195¢`). Ignored in `--tuning 12tet`. |
-| `breath_swell` | `boolean` | No | `false` | **SF2 instruments only.** Smooth MIDI CC 11 expression arch (`82 → 124 → 82`) on notes longer than ~50 ms. Set `true` on winds & brass (`clarinet`, `english_horn`, `bassoon`, `french_horn`). |
+| `breath_swell` | `boolean` | No | `false` | **SF2 instruments only.** Shorthand for `swell: "arch"` (`82 → 124 → 82`). |
+| `swell` | `string \| null` | No | `null` | **SF2 instruments only.** Directional CC 11 expression curve: `"none"`, `"arch"`, `"cresc"` (`68 → 126`), `"dim"` (`125 → 68`), or `"sfz"` (`127 → 80 → 114`). Works on winds, brass, and strings! |
+| `vibrato` | `number` | No | `0.0` | **SF2 instruments only.** Delayed `CC 1` vibrato depth (`0.0`–`1.0`) blooming smoothly ~160 ms after attack so pure 53-EDO intervals lock cleanly first. |
 | `meend_cents` | `number` | No | `0.0` | **`ektara` physical model** (fallback for SF2 slides). Initial elastic pitch-relaxation offset in cents (exponential decay, τ = 110 ms) into `step`. Positive (`+12` to `+28`) gives authentic gourd-string pluck relaxation. Ignored in `--tuning 12tet`. |
 
 ---
@@ -349,20 +358,23 @@ All **21 supported `instrument` IDs** render in exact 53-EDO (or 12-TET with `--
 - **19 SoundFont2 instruments** (`GeneralUser-GS.sf2` via `rustysynth`): each track gets **15 dedicated melodic MIDI channels** (channels 0–8, 10–15) with ±2-semitone 14-bit pitch bend so chords never collide in pitch bend, and SF2 chorus/reverb are disabled so 53-EDO intervals stay acoustically pure.
 - **2 Pure-Rust Physical Models** (`src/indian.rs`): Karplus-Strong waveguide models with cubic fractional delay, body formants, and exact 53-EDO pitch (`ektara`, `dotara`).
 
-### Full 21-Instrument Catalog
+### Full 24-Instrument Catalog
 
 | `instrument` ID | Engine | Tier | Sweet-Spot Steps (Pitch) | Concert Hall `(x, y)` | Features & Acoustic Notes |
 |---|---|---|---|---|---|
-| `piano` | SF2 GM 0 | **Warm Core** | `-106..+92` (C2–A5) | `(-2.3, 3.3)` | Crisp Mozartian clarity & rich chords; user favorite. |
-| `harp` | SF2 GM 46 | **Warm Core** | `-84..+106` (F2–C6) | `(-3.4, 3.7)` | Silky full 53-EDO arpeggios & harmonic sweeps; stop notes cleanly before chord changes. |
-| `pizzicato` | SF2 GM 45 | **Warm Core** | `-53..+70` (C3–E5) | `(1.1, 4.3)` | Crisp plucked pulse for Mozartian lightness. |
-| `string_ensemble` | SF2 GM 48 | **Warm Core** | `-53..+84` (C3–G5) | `(0.0, 7.6)` | Lush full-orchestra sustained bed; gorgeous for pure 5-limit/7-limit swells. |
-| `viola` | SF2 GM 41 | **Warm Core** | `-53..+53` (C3–C5) | `(-1.8, 4.5)` | Rich, warm alto inner counterpoint; far smoother than GM solo violin. |
-| `cello` | SF2 GM 42 | **Warm Core** | `-106..+17` (C2–E4) | `(2.4, 4.1)` | Singing tenor/bass melodies and warm harmonic anchor. |
-| `clarinet` | SF2 GM 71 | **Warm Core** | `-36..+70` (E3–E5) | `(-1.2, 5.6)` | Velvety woody voice; use `breath_swell: true`. |
-| `english_horn` | SF2 GM 69 | **Warm Core** | `-31..+53` (F3–C5) | `(1.4, 5.4)` | Dark, expressive alto double-reed; user favorite — use `breath_swell: true`. |
+| `piano` | SF2 GM 0 | **Warm Core** | `-106..+92` (C2–A5) | `(-2.3, 3.3)` | Crisp Mozartian clarity, `width: 1.4`, supports `pedals` (`CC 64`). |
+| `harp` | SF2 GM 46 | **Warm Core** | `-84..+106` (F2–C6) | `(-3.4, 3.7)` | Silky full 53-EDO arpeggios & harmonic sweeps (`width: 1.0`). |
+| `pizzicato` | SF2 GM 45 | **Warm Core** | `-53..+70` (C3–E5) | `(1.1, 4.3)` | Crisp plucked pulse for Mozartian lightness (`width: 2.2`). |
+| `string_ensemble` | SF2 GM 48 | **Warm Core** | `-53..+84` (C3–G5) | `(0.0, 7.6)` | Wide (`width: 4.8`) lush orchestral bed; supports `swell` (`cresc`/`dim`/`arch`). |
+| `tremolo_strings` | SF2 GM 44 | **Warm Core** | `-53..+84` (C3–G5) | `(0.6, 7.9)` | Wide (`width: 4.4`) shimmering Brucknerian/Debussyan string tremolando. |
+| `viola` | SF2 GM 41 | **Warm Core** | `-53..+53` (C3–C5) | `(-1.8, 4.5)` | Rich, warm alto inner counterpoint; supports `vibrato` & `swell`. |
+| `cello` | SF2 GM 42 | **Warm Core** | `-106..+17` (C2–E4) | `(2.4, 4.1)` | Singing tenor/bass melodies; supports `vibrato` & `slide_from_cents`. |
+| `clarinet` | SF2 GM 71 | **Warm Core** | `-36..+70` (E3–E5) | `(-1.2, 5.6)` | Velvety woody voice; use `swell` / `breath_swell: true`. |
+| `english_horn` | SF2 GM 69 | **Warm Core** | `-31..+53` (F3–C5) | `(1.4, 5.4)` | Dark, expressive alto double-reed; use `swell` + subtle `vibrato`. |
 | `bassoon` | SF2 GM 70 | **Warm Core** | `-106..0` (C2–C4) | `(0.4, 6.4)` | Warm woody bass foundation without contrabass bow buzz; use `breath_swell: true`. |
-| `french_horn` | SF2 GM 60 | **Warm Core** | `-75..+31` (G2–G4) | `(2.3, 7.8)` | Noble Beethovenian warmth & glowing mid-register pads; use `breath_swell: true`. |
+| `french_horn` | SF2 GM 60 | **Warm Core** | `-75..+31` (G2–G4) | `(2.3, 7.8)` | Noble Beethovenian warmth & glowing mid-register pads; use `swell`. |
+| `trombone` | SF2 GM 57 | **Warm Core** | `-89..0` (E2–C4) | `(3.1, 8.5)` | Solemn symphonic brass chorales (`LP 3600 Hz` in `concert_hall.json`); use `swell`. |
+| `timpani` | SF2 GM 47 | **Warm Core** | `-106..0` (C2–C4) | `(-2.2, 8.8)` | Exact 53-EDO tuned orchestral timpani strokes & dramatic rolls (`width: 1.2`). |
 | `dotara` | Phys. Model | **Indian Color** | `-53..+53` (C3–C5) | `(2.0, 2.8)` | Crisp wooden-plectrum folk lute with goatskin body & sympathetic 12th. |
 | `ektara` | Phys. Model | **Indian Color** | `-84..+17` (F2–E4) | `(-0.5, 3.1)` | Warm single-string gourd drone/pulse; supports `meend_cents` (`+12`..`+28`). |
 | `sitar` | SF2 GM 104 | **Indian Color** | `-53..+31` (C3–G4) | `(-1.5, 2.7)` | Supports `slide_from_cents` meend glides. **Tip:** `stages/concert_hall.json` applies `warm_lowpass_hz: 2700.0`; stay in C3–G4 and keep slides `<= 40¢` in dense textures. |

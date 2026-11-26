@@ -95,6 +95,30 @@
       gap: 6px;
       margin-top: 10px;
     }
+    .score-picker {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 7px;
+      margin-bottom: 12px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid rgba(42, 50, 66, 0.65);
+    }
+    .score-pill {
+      background: rgba(15, 17, 22, 0.72);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      padding: 6px 12px;
+      border-radius: 999px;
+      cursor: pointer;
+      font-size: 0.81rem;
+      font-weight: 600;
+    }
+    .score-pill.active {
+      background: var(--accent-2);
+      color: #0b0e14;
+      border-color: var(--accent-2);
+    }
     .jump-btn {
       background: rgba(23, 27, 36, 0.85);
       border: 1px solid rgba(122, 162, 247, 0.35);
@@ -343,6 +367,30 @@
       gap: 6px;
       margin-top: 10px;
     }
+    .score-picker {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 7px;
+      margin-bottom: 12px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid rgba(42, 50, 66, 0.65);
+    }
+    .score-pill {
+      background: rgba(15, 17, 22, 0.72);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      padding: 6px 12px;
+      border-radius: 999px;
+      cursor: pointer;
+      font-size: 0.81rem;
+      font-weight: 600;
+    }
+    .score-pill.active {
+      background: var(--accent-2);
+      color: #0b0e14;
+      border-color: var(--accent-2);
+    }
     .mixer-list { display: flex; flex-direction: column; gap: 7px; }
     .stem-row {
       display: grid;
@@ -386,11 +434,14 @@
     </header>
 
     <div class="card hero">
-      <div class="hero-head">
-        <h2>Featured: 5-Minute Symphony Showcase — Harmonia Mundi (53-EDO vs 12-TET A/B)</h2>
-        <span class="pill">2-Input Stage Engine &middot; 320k MP3 &middot; +30s Contemplative Silence</span>
+      <div class="score-picker" id="score-picker" style="display:none;">
+        <span class="muted" style="font-weight:700; font-size:0.79rem; text-transform:uppercase; letter-spacing:0.04em;">Select Score:</span>
       </div>
-      <div class="muted">
+      <div class="hero-head">
+        <h2 id="hero-title">Featured: 5-Minute Symphony Showcase — Harmonia Mundi (53-EDO vs 12-TET A/B)</h2>
+        <span class="pill" id="hero-pill">2-Input Stage Engine &middot; 53-EDO vs 12-TET</span>
+      </div>
+      <div class="muted" id="hero-desc">
         Pure music score (<code>scores/sample_5min.json</code>) rendered through <code>stages/concert_hall.json</code>:
         Mozartian poise &rarr; Debussy 7-limit (4:5:6:7:9) &amp; Indian shruti mist (+1 comma lift) &rarr;
         Beethovenian chromatic-mediant diesis summit (+3) &amp; triple downward comma cascade home &rarr;
@@ -401,7 +452,7 @@
         <div class="hero-player-box active-ab" id="ab-box-53">
           <div class="hero-player-title">
             <span>A. Exact 53-EDO Just Intonation</span>
-            <a class="badge" style="text-decoration:none;" href="../output/sample_5min.wav" target="_blank">WAV</a>
+            <a class="badge" id="hero-wav-53" style="text-decoration:none;" href="../output/sample_5min.wav" target="_blank">WAV</a>
           </div>
           <div class="muted">Beat-free 5-limit triads, 7:4 harmonic 7ths, 22-shruti glides &amp; smooth comma/diesis shifts.</div>
           <audio id="symphony-5min-audio" controls preload="auto" src="../output/sample_5min.mp3"></audio>
@@ -409,32 +460,34 @@
         <div class="hero-player-box" id="ab-box-12">
           <div class="hero-player-title">
             <span>B. 12-TET Standard Approximation</span>
-            <a class="badge" style="text-decoration:none;" href="../output/sample_5min_12tet.wav" target="_blank">WAV</a>
+            <a class="badge" id="hero-wav-12" style="text-decoration:none;" href="../output/sample_5min_12tet.wav" target="_blank">WAV</a>
           </div>
-          <div class="muted">Same score &amp; stage quantized to 12-EDO semitones (listen at 2:55–3:45 to hear the difference!).</div>
+          <div class="muted" id="hero-12-note">Same score &amp; stage quantized to 12-EDO semitones (toggle A/B at any moment to compare!).</div>
           <audio id="symphony-12tet-audio" controls preload="auto" src="../output/sample_5min_12tet.mp3"></audio>
         </div>
       </div>
 
-      <div class="hero-jumps" style="align-items:center;">
+      <div class="hero-jumps" id="hero-jumps-bar" style="align-items:center;">
         <button class="btn primary" id="ab-flip-btn" style="padding:5px 12px; font-size:0.8rem;" title="Rewinds 10 seconds so you immediately compare the exact phrase in the other tuning">A/B Switch (&minus;10s)</button>
         <span class="muted" style="font-size:0.77rem;">Rewinds 10s so you compare the exact phrase</span>
-        <button class="jump-btn" data-jump="0">I. Dawn (0:00)</button>
-        <button class="jump-btn" data-jump="73.5">II. Lotus &amp; Mist (1:14)</button>
-        <button class="jump-btn" data-jump="151">III. Tempest (2:31)</button>
-        <button class="jump-btn" data-jump="174.8">Diesis Summit (2:55)</button>
-        <button class="jump-btn" data-jump="198.2">Comma Cascade (3:18)</button>
-        <button class="jump-btn" data-jump="227">IV. Transfiguration (3:47)</button>
-        <button class="jump-btn" data-jump="247.6">Pipe Organ (4:08)</button>
-        <a class="jump-btn" style="text-decoration:none; border-color:rgba(187,154,247,0.55); color:var(--accent-2);" href="../output/sample_5min.webm" target="_blank">YouTube 1080p WebM</a>
+        <span id="dynamic-jumps" style="display:contents;">
+          <button class="jump-btn" data-jump="0">I. Dawn (0:00)</button>
+          <button class="jump-btn" data-jump="73.5">II. Lotus &amp; Mist (1:14)</button>
+          <button class="jump-btn" data-jump="151">III. Tempest (2:31)</button>
+          <button class="jump-btn" data-jump="174.8">Diesis Summit (2:55)</button>
+          <button class="jump-btn" data-jump="198.2">Comma Cascade (3:18)</button>
+          <button class="jump-btn" data-jump="227">IV. Transfiguration (3:47)</button>
+          <button class="jump-btn" data-jump="247.6">Pipe Organ (4:08)</button>
+        </span>
+        <a class="jump-btn" id="hero-webm-link" style="text-decoration:none; border-color:rgba(187,154,247,0.55); color:var(--accent-2);" href="../output/sample_5min.webm" target="_blank">YouTube 1080p WebM</a>
         <a class="jump-btn" style="text-decoration:none; border-color:rgba(245,158,11,0.55); color:#fbbf24;" href="../docs/harmonia_mundi_poster.svg" target="_blank">Artistic Poster (SVG)</a>
       </div>
 
-      <details class="hero-svg-details" open>
-        <summary>Score &amp; 2D Concert Stage Visualization (SVG) &mdash; <a href="../output/sample_5min.svg" target="_blank" style="color:var(--accent-2);">Open Full-Screen</a></summary>
+      <details class="hero-svg-details" id="hero-svg-box" open>
+        <summary>Score &amp; 2D Concert Stage Visualization (SVG) &mdash; <a id="hero-svg-link" href="../output/sample_5min.svg" target="_blank" style="color:var(--accent-2);">Open Full-Screen</a></summary>
         <div class="hero-svg-frame">
-          <a href="../output/sample_5min.svg" target="_blank">
-            <img src="../output/sample_5min.svg" alt="5-Minute 53-EDO Symphony Stage Map and Pitch-Roll Timeline" loading="lazy" />
+          <a id="hero-svg-anchor" href="../output/sample_5min.svg" target="_blank">
+            <img id="hero-svg-img" src="../output/sample_5min.svg" alt="53-EDO Score Stage Map and Pitch-Roll Timeline" loading="lazy" />
           </a>
         </div>
       </details>
@@ -484,6 +537,9 @@
 
     <!-- TAB 2: INTERACTIVE 2D STAGE & SPATIAL MIXER -->
     <section id="tab-stage" class="section">
+      <div class="score-picker" id="stem-set-picker" style="display:none; margin-bottom:10px;">
+        <span class="muted" style="font-weight:700; font-size:0.79rem; text-transform:uppercase;">Stem Set:</span>
+      </div>
       <div class="mixer-transport">
         <button class="btn primary" id="mix-play">Play Spatial Stage</button>
         <button class="btn" id="mix-pause">Pause</button>
@@ -578,13 +634,16 @@
       });
     }
 
-    document.querySelectorAll('.jump-btn').forEach((btn) => {
-      btn.addEventListener('click', () => {
-        const audio = activeHeroAudio || audio53;
-        const t = parseFloat(btn.dataset.jump) || 0;
-        seekAndPlay(audio, t, true);
+    function bindJumpButtons() {
+      document.querySelectorAll('#dynamic-jumps .jump-btn').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const audio = activeHeroAudio || audio53;
+          const t = parseFloat(btn.dataset.jump) || 0;
+          seekAndPlay(audio, t, true);
+        });
       });
-    });
+    }
+    bindJumpButtons();
 
     document.querySelectorAll('.tab-btn').forEach((btn) => {
       btn.addEventListener('click', () => {
@@ -738,6 +797,8 @@
       'Strings': '#7aa2f7',
       'Woodwinds': '#4ade80',
       'Brass': '#fb7185',
+      'Percussion': '#ff7b72',
+      'Organ': '#a371f7',
     };
 
     function createConcertHallIR(ctx) {
@@ -1062,10 +1123,19 @@
       } catch (_) {}
     });
 
-    function buildMixerUI() {
+    function buildMixerUI(stemsArray = null) {
+      pauseMixer();
+      stemState.length = 0;
+      stemsLoaded = false;
+      loadingPromise = null;
+      offsetSeconds = 0;
+      durationSeconds = 0;
+
+      const specs = stemsArray || (manifest ? manifest.fusion_stems : []);
       const list = document.getElementById('mixer-list');
       list.innerHTML = '';
-      for (const spec of manifest.fusion_stems) {
+      document.getElementById('mix-status').textContent = `Click Play to load ${specs.length} synced stems (HRTF 3D + Hall Reverb)`;
+      for (const spec of specs) {
         const row = document.createElement('div');
         row.className = 'stem-row';
         const color = FAMILY_COLORS[spec.family] || '#7aa2f7';
@@ -1123,6 +1193,114 @@
       drawStage();
     }
 
+    function selectComposition(comp, pickerBar) {
+      audio53.pause();
+      audio12.pause();
+      document.getElementById('hero-title').textContent = comp.title;
+      document.getElementById('hero-pill').textContent = `${comp.track_count} tracks · ${comp.note_count} notes · ${comp.score_path}`;
+      document.getElementById('hero-desc').textContent = comp.description || `Stage-independent 53-EDO score (${comp.score_path}).`;
+
+      audio53.src = comp.audio_53;
+      const wav53 = document.getElementById('hero-wav-53');
+      if (comp.wav_53) { wav53.href = comp.wav_53; wav53.style.display = ''; }
+      else { wav53.style.display = 'none'; }
+
+      const wav12 = document.getElementById('hero-wav-12');
+      const note12 = document.getElementById('hero-12-note');
+      if (comp.audio_12) {
+        audio12.src = comp.audio_12;
+        audio12.style.display = '';
+        abFlipBtn.disabled = false;
+        note12.textContent = 'Same score & stage quantized to 12-EDO semitones (click A/B Switch −10s to compare any phrase!).';
+        if (comp.wav_12) { wav12.href = comp.wav_12; wav12.style.display = ''; }
+        else { wav12.style.display = 'none'; }
+      } else {
+        audio12.removeAttribute('src');
+        audio12.style.display = 'none';
+        abFlipBtn.disabled = true;
+        wav12.style.display = 'none';
+        note12.textContent = 'Render with `--tuning 12tet` to enable instant 12-TET A/B comparison.';
+      }
+      setHeroActive(audio53);
+
+      const dynJumps = document.getElementById('dynamic-jumps');
+      dynJumps.innerHTML = '';
+      for (const sec of (comp.sections || [])) {
+        const b = document.createElement('button');
+        b.className = 'jump-btn';
+        b.dataset.jump = sec.seconds;
+        b.textContent = sec.title.includes('(') ? sec.title : `${sec.title} (${sec.mm_ss})`;
+        dynJumps.appendChild(b);
+      }
+      bindJumpButtons();
+
+      const webmLink = document.getElementById('hero-webm-link');
+      if (comp.webm) { webmLink.href = comp.webm; webmLink.style.display = ''; }
+      else { webmLink.style.display = 'none'; }
+
+      const svgBox = document.getElementById('hero-svg-box');
+      if (comp.svg) {
+        svgBox.style.display = '';
+        document.getElementById('hero-svg-link').href = comp.svg;
+        document.getElementById('hero-svg-anchor').href = comp.svg;
+        document.getElementById('hero-svg-img').src = comp.svg;
+      } else {
+        svgBox.style.display = 'none';
+      }
+
+      if (pickerBar) {
+        pickerBar.querySelectorAll('.score-pill').forEach(p => {
+          p.classList.toggle('active', p.dataset.id === comp.id);
+        });
+      }
+    }
+
+    async function initLibrary() {
+      try {
+        const resp = await fetch('/api/library');
+        if (!resp.ok) return;
+        const lib = await resp.json();
+        const comps = lib.compositions || [];
+        if (comps.length > 0) {
+          const picker = document.getElementById('score-picker');
+          picker.style.display = 'flex';
+          for (const comp of comps) {
+            const btn = document.createElement('button');
+            btn.className = 'score-pill';
+            btn.dataset.id = comp.id;
+            btn.textContent = comp.title.split('—')[0].trim();
+            btn.addEventListener('click', () => selectComposition(comp, picker));
+            picker.appendChild(btn);
+          }
+          selectComposition(comps[0], picker);
+
+          // Populate stem-set switcher in Tab 2 if any composition has exported stems
+          const withStems = comps.filter(c => c.stems && c.stems.length > 0);
+          if (withStems.length > 0 && manifest) {
+            const stemPicker = document.getElementById('stem-set-picker');
+            stemPicker.style.display = 'flex';
+            const sets = [
+              { id: 'fusion_default', label: 'East–West Chamber Fusion (11 stems)', stems: manifest.fusion_stems },
+              ...withStems.map(c => ({ id: c.id, label: `${c.title.split('—')[0].trim()} (${c.stems.length} stems)`, stems: c.stems })),
+            ];
+            sets.forEach((setObj, idx) => {
+              const b = document.createElement('button');
+              b.className = `score-pill ${idx === 0 ? 'active' : ''}`;
+              b.textContent = setObj.label;
+              b.addEventListener('click', () => {
+                stemPicker.querySelectorAll('.score-pill').forEach(x => x.classList.remove('active'));
+                b.classList.add('active');
+                buildMixerUI(setObj.stems);
+              });
+              stemPicker.appendChild(b);
+            });
+          }
+        }
+      } catch (_) {
+        // Static file fallback — keeps hardcoded sample_5min defaults
+      }
+    }
+
     async function init() {
       const resp = await fetch('../output/audition/manifest.json');
       manifest = await resp.json();
@@ -1149,6 +1327,7 @@
       renderSoloUI('All');
       updateSummary();
       buildMixerUI();
+      await initLibrary();
     }
 
     init();

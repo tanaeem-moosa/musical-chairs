@@ -1,3 +1,4 @@
+mod analyze;
 mod audition;
 mod indian;
 mod preview;
@@ -17,6 +18,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::time::Instant;
 
+use analyze::{analyze_score, format_analysis_report};
 use preview::build_preview_score;
 use score_json::{
     load_json_score, load_stage_config, render_json_score, RenderOptions, TuningMode,
@@ -37,6 +39,7 @@ fn print_usage() {
     eprintln!("    --stems-dir <dir>          Also export synchronized centered dry stems");
     eprintln!("    --image <out.svg>          Also render 1600x960 dark-studio SVG score & stage map");
     eprintln!("    --soundfont <path>         Custom SoundFont2 path (default: soundfonts/GeneralUser-GS.sf2)");
+    eprintln!("  edo53_music analyze <score.json> [--stage <stage.json>] [--json]");
     eprintln!("  edo53_music visualize <score.json> [out.svg] [--stage <stage.json>] [--tuning <53edo|12tet>] [--end-silence <seconds>]");
     eprintln!("  edo53_music render-video <score.json> <audio.wav> [output.webm] [OPTIONS]");
     eprintln!("    --stage <stage.json>       Decoupled stage placement & hall config");
@@ -242,8 +245,13 @@ fn run_render_cli(args: &[String]) {
             Some(hz) => format!(" | LP {hz:.0} Hz"),
             None => String::new(),
         };
+        let w_str = if tr.width > 0.05 {
+            format!(" | width {:.1}m", tr.width)
+        } else {
+            String::new()
+        };
         println!(
-            "  - {:<18} ({:<24}) | {:<15} | {:>5} notes | pos ({:>5.1}, {:>4.1}) | gain {:.2}{}",
+            "  - {:<18} ({:<24}) | {:<16} | {:>5} notes | pos ({:>5.1}, {:>4.1}) | gain {:.2}{}{}",
             tr.id,
             tr.name,
             tr.instrument,
@@ -251,6 +259,7 @@ fn run_render_cli(args: &[String]) {
             tr.pos.x,
             tr.pos.y,
             tr.gain,
+            w_str,
             lp_str
         );
     }
@@ -490,6 +499,71 @@ fn run_render_video_cli(args: &[String]) {
     }
 }
 
+fn run_analyze_cli(args: &[String]) {
+    let mut positional: Vec<String> = Vec::new();
+    let mut stage_path: Option<PathBuf> = None;
+    let mut json_out = false;
+
+    let mut i = 0;
+    while i < args.len() {
+        let arg = &args[i];
+        if arg == "--help" || arg == "-h" {
+            print_usage();
+            return;
+        } else if arg == "--stage" || arg.starts_with("--stage=") {
+            stage_path = Some(PathBuf::from(parse_flag_value("--stage", args, &mut i)));
+        } else if arg == "--json" {
+            json_out = true;
+        } else if arg.starts_with('-') {
+            eprintln!("Error: unknown option `{arg}`.");
+            print_usage();
+            std::process::exit(1);
+        } else {
+            positional.push(arg.clone());
+        }
+        i += 1;
+    }
+
+    if positional.len() != 1 {
+        eprintln!("Error: `analyze` expects <score.json>.");
+        print_usage();
+        std::process::exit(1);
+    }
+
+    let input_path = PathBuf::from(&positional[0]);
+    let score = match load_json_score(&input_path) {
+        Ok(s) => s,
+        Err(e) => {
+            eprintln!("Error loading {}: {e}", input_path.display());
+            std::process::exit(1);
+        }
+    };
+    let stage = stage_path.as_ref().map(|p| match load_stage_config(p) {
+        Ok(s) => s,
+        Err(e) => {
+            eprintln!("Error loading stage {}: {e}", p.display());
+            std::process::exit(1);
+        }
+    });
+
+    let report = match analyze_score(&score, stage.as_ref()) {
+        Ok(r) => r,
+        Err(e) => {
+            eprintln!("Error analyzing {}: {e}", input_path.display());
+            std::process::exit(1);
+        }
+    };
+
+    if json_out {
+        println!(
+            "{}",
+            serde_json::to_string_pretty(&report).expect("serialize analysis JSON")
+        );
+    } else {
+        print!("{}", format_analysis_report(&report));
+    }
+}
+
 fn main() {
     let args: Vec<String> = env::args().collect();
     let mode = args.get(1).map(|s| s.as_str()).unwrap_or("audition");
@@ -497,6 +571,9 @@ fn main() {
     match mode {
         "render" => {
             run_render_cli(&args[2..]);
+        }
+        "analyze" => {
+            run_analyze_cli(&args[2..]);
         }
         "visualize" => {
             run_visualize_cli(&args[2..]);

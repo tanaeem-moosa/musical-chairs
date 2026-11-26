@@ -18,6 +18,7 @@ enum InstrumentFamily {
     Strings,
     Woodwinds,
     Brass,
+    Percussion,
     Indian,
     Organ,
 }
@@ -31,6 +32,7 @@ impl InstrumentFamily {
                 "Strings" => Self::Strings,
                 "Woodwinds" | "Woodwinds & World" => Self::Woodwinds,
                 "Brass" => Self::Brass,
+                "Percussion" => Self::Percussion,
                 "Indian Classical" => Self::Indian,
                 "Organ" => Self::Organ,
                 _ => Self::Strings,
@@ -45,6 +47,7 @@ impl InstrumentFamily {
             Self::Strings => "#58a6ff",
             Self::Woodwinds => "#3dd68c",
             Self::Brass => "#f0883e",
+            Self::Percussion => "#ff7b72",
             Self::Indian => "#e86ca8",
             Self::Organ => "#a371f7",
         }
@@ -56,17 +59,19 @@ impl InstrumentFamily {
             Self::Strings => "Strings",
             Self::Woodwinds => "Woodwinds",
             Self::Brass => "Brass",
+            Self::Percussion => "Timpani & Perc.",
             Self::Indian => "Indian Classical",
             Self::Organ => "Pipe Organ",
         }
     }
 
-    fn all() -> [Self; 6] {
+    fn all() -> [Self; 7] {
         [
             Self::KeysPlucked,
             Self::Strings,
             Self::Woodwinds,
             Self::Brass,
+            Self::Percussion,
             Self::Indian,
             Self::Organ,
         ]
@@ -362,6 +367,7 @@ pub fn render_score_svg(
     struct StageNode {
         sx: f64,
         sy: f64,
+        width_px: f64,
         label_y: f64,
         radius: f64,
         color: &'static str,
@@ -378,10 +384,16 @@ pub fn render_score_svg(
             let fam = InstrumentFamily::from_instrument(&track.instrument);
             let sx = (stage_cx + p.x * px_per_m).clamp(62.0, 502.0);
             let sy = (stage_cy - p.y * px_per_m).clamp(172.0, 706.0);
+            let width_px = if p.width > 0.35 {
+                (p.width * px_per_m).clamp(0.0, 380.0)
+            } else {
+                0.0
+            };
             let radius = (7.5 + 3.5 * p.gain.clamp(0.4, 1.3)).clamp(8.0, 12.5);
             StageNode {
                 sx,
                 sy,
+                width_px,
                 label_y: sy - radius - 5.0,
                 radius,
                 color: fam.color(),
@@ -405,6 +417,20 @@ pub fn render_score_svg(
     }
 
     for node in &nodes {
+        if node.width_px > 12.0 {
+            let wx0 = (node.sx - 0.5 * node.width_px).clamp(48.0, 516.0);
+            let wx1 = (node.sx + 0.5 * node.width_px).clamp(48.0, 516.0);
+            let _ = writeln!(
+                svg,
+                r##"    <line x1="{wx0:.1}" y1="{y:.1}" x2="{wx1:.1}" y2="{y:.1}" stroke="{c}" stroke-opacity="0.38" stroke-width="2.0" stroke-dasharray="4 3"/>
+    <circle cx="{wx0:.1}" cy="{y:.1}" r="2.3" fill="{c}" fill-opacity="0.55"/>
+    <circle cx="{wx1:.1}" cy="{y:.1}" r="2.3" fill="{c}" fill-opacity="0.55"/>"##,
+                wx0 = wx0,
+                wx1 = wx1,
+                y = node.sy,
+                c = node.color,
+            );
+        }
         let _ = writeln!(
             svg,
             r##"    <circle cx="{x:.1}" cy="{y:.1}" r="{glow:.1}" fill="{c}" fill-opacity="0.18"/>"##,
@@ -451,19 +477,19 @@ pub fn render_score_svg(
         let col = idx % 2;
         let row = idx / 2;
         let lx = 50.0 + col as f64 * 238.0;
-        let ly = 816.0 + row as f64 * 34.0;
+        let ly = 812.0 + row as f64 * 28.0;
         let _ = writeln!(
             svg,
-            r##"  <rect x="{x:.1}" y="{ry:.1}" width="222" height="26" rx="6" fill="#0e1625" stroke="#1e293b" stroke-width="1"/>
-  <circle cx="{cx:.1}" cy="{cy:.1}" r="5.5" fill="{c}"/>
-  <text x="{tx:.1}" y="{ty:.1}" class="sans" font-size="12" fill="#e2e8f0">{lbl}</text>"##,
+            r##"  <rect x="{x:.1}" y="{ry:.1}" width="222" height="23" rx="6" fill="#0e1625" stroke="#1e293b" stroke-width="1"/>
+  <circle cx="{cx:.1}" cy="{cy:.1}" r="5.0" fill="{c}"/>
+  <text x="{tx:.1}" y="{ty:.1}" class="sans" font-size="11.5" fill="#e2e8f0">{lbl}</text>"##,
             x = lx,
-            ry = ly - 14.0,
+            ry = ly - 13.0,
             cx = lx + 16.0,
-            cy = ly - 1.0,
+            cy = ly - 1.5,
             c = fam.color(),
             tx = lx + 30.0,
-            ty = ly + 3.0,
+            ty = ly + 2.5,
             lbl = xml_escape(fam.label()),
         );
     }
@@ -573,6 +599,53 @@ pub fn render_score_svg(
             c = n.color,
             op = op,
         );
+    }
+
+    // Optional Movement / Section vertical markers & header pills inside pitch-roll
+    if !score.sections.is_empty() {
+        let mut sorted_secs: Vec<(f64, &str)> = score
+            .sections
+            .iter()
+            .map(|s| (tempo.beat_to_seconds(s.beat), s.title.as_str()))
+            .collect();
+        sorted_secs.sort_by(|a, b| a.0.total_cmp(&b.0));
+
+        let mut last_lbl_end_x = -999.0_f64;
+        let mut row_toggle = 0usize;
+        for (sec_s, sec_title) in &sorted_secs {
+            if *sec_s > timeline_dur_s + 0.5 {
+                continue;
+            }
+            let xs = time_to_x(*sec_s);
+            let _ = writeln!(
+                svg,
+                r##"    <line x1="{xs:.1}" y1="{y0:.1}" x2="{xs:.1}" y2="{y1:.1}" stroke="#f5c542" stroke-opacity="0.46" stroke-width="1.2" stroke-dasharray="4 4"/>"##,
+                xs = xs,
+                y0 = roll_y,
+                y1 = roll_y + roll_h,
+            );
+            let short_t: String = sec_title.chars().take(24).collect();
+            let est_w = (short_t.chars().count() as f64 * 6.2 + 12.0).max(36.0);
+            let ly = if xs < last_lbl_end_x + 6.0 {
+                row_toggle = 1 - row_toggle;
+                roll_y + 8.0 + row_toggle as f64 * 20.0
+            } else {
+                row_toggle = 0;
+                roll_y + 8.0
+            };
+            last_lbl_end_x = xs + est_w;
+            let _ = writeln!(
+                svg,
+                r##"    <rect x="{rx:.1}" y="{ry:.1}" width="{rw:.1}" height="17" rx="4" fill="#131c2e" fill-opacity="0.90" stroke="#f5c542" stroke-opacity="0.55" stroke-width="0.9"/>
+    <text x="{tx:.1}" y="{ty:.1}" class="sans" font-size="10" font-weight="600" fill="#fde68a">{lbl}</text>"##,
+                rx = xs + 3.0,
+                ry = ly,
+                rw = est_w,
+                tx = xs + 8.0,
+                ty = ly + 12.0,
+                lbl = xml_escape(&short_t),
+            );
+        }
     }
     svg.push_str("  </g>\n");
 

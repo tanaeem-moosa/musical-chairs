@@ -16,7 +16,7 @@ use crate::reverb::{
 };
 use crate::score::{TempoMap, TempoSegment};
 use crate::sf2_synth::{
-    load_soundfont, master_with_gentle_hall, render_sf2_track, Sf2Instrument, Sf2Note,
+    load_soundfont, master_with_gentle_hall, render_sf2_track, Sf2Instrument, Sf2Note, SwellCurve,
     DEFAULT_SOUNDFONT_PATH,
 };
 use crate::spatial::{spatialize_track, StagePos};
@@ -131,7 +131,32 @@ fn render_solo_audition(sf: &Arc<SoundFont>, inst: Sf2Instrument) {
         notes.push(n);
     }
 
-    if inst.is_polyphonic() {
+    if inst == Sf2Instrument::Timpani {
+        // Orchestral Timpani solo showcase: 53-EDO tonic/fifth strokes + crescendo roll!
+        for k in 0..16 {
+            let b = 4.0 + k as f64 * 0.22;
+            let v = 0.44 + 0.03 * k as f32;
+            notes.push(Sf2Note::simple(
+                beat_to_sample(&tempo, b),
+                beat_to_sample(&tempo, b + 0.45),
+                base + if k % 2 == 0 { 0 } else { P5 },
+                v.min(0.94),
+            ));
+        }
+        for &(b, st, vel) in &[
+            (8.0, base + P4, 0.84),
+            (9.0, base + P5, 0.88),
+            (10.0, base, 0.92),
+            (11.0, base + OCT, 0.90),
+        ] {
+            notes.push(Sf2Note::simple(
+                beat_to_sample(&tempo, b),
+                beat_to_sample(&tempo, b + 1.2),
+                st,
+                vel,
+            ));
+        }
+    } else if inst.is_polyphonic() {
         let triad = major_triad(base);
         for (i, &st) in triad.iter().enumerate() {
             let offset = if inst == Sf2Instrument::Harp { i as f64 * 0.08 } else { 0.0 };
@@ -171,7 +196,9 @@ fn render_solo_audition(sf: &Arc<SoundFont>, inst: Sf2Instrument) {
         }
     }
 
-    if inst.is_polyphonic() {
+    if inst == Sf2Instrument::Timpani {
+        // Timpani cadence strokes already scheduled above
+    } else if inst.is_polyphonic() {
         let chords: [(f64, f64, Vec<i32>, f32); 4] = [
             (8.0, 0.92, major_triad(base + P4 - OCT), 0.70),
             (9.0, 0.92, major_triad(base + P4 - m3), 0.68),
@@ -288,6 +315,8 @@ fn render_sitar_audition(sf: &Arc<SoundFont>) {
             velocity: vel,
             slide_from_cents: slide,
             breath_swell: false,
+            swell: SwellCurve::None,
+            vibrato: 0.0,
         });
     }
 
@@ -438,6 +467,8 @@ fn push_sitar(
         velocity: vel.clamp(0.05, 1.0),
         slide_from_cents,
         breath_swell: false,
+        swell: SwellCurve::None,
+        vibrato: 0.0,
     });
 }
 
