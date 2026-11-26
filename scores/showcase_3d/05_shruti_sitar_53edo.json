@@ -1,0 +1,199 @@
+{
+  "title": "The 22-Shruti Sympathetic Sitar & Gourd Monochord",
+  "description": "Intimate 53-EDO meend string deflections and sympathetic taraf shimmer over Ektara drone.",
+  "sample_rate": 48000,
+  "tail_seconds": 1.5,
+  "reverb_rt60": 2.1,
+  "end_silence_seconds": 0.4,
+  "tempo": [
+    {
+      "beat": 0.0,
+      "bpm": 90.0
+    }
+  ],
+  "tracks": [
+    {
+      "id": "sitar",
+      "name": "22-Shruti Sitar",
+      "instrument": "sitar",
+      "notes": [
+        {
+          "beat": 0.2,
+          "dur": 1.5,
+          "step": 0,
+          "vel": 0.78
+        },
+        {
+          "beat": 1.9,
+          "dur": 1.4,
+          "step": 12,
+          "vel": 0.8,
+          "slide_from_cents": -45.28
+        },
+        {
+          "beat": 3.5,
+          "dur": 1.4,
+          "step": 17,
+          "vel": 0.82,
+          "slide_from_cents": -67.92
+        },
+        {
+          "beat": 5.1,
+          "dur": 1.6,
+          "step": 26,
+          "vel": 0.84,
+          "slide_from_cents": -45.28
+        },
+        {
+          "beat": 6.9,
+          "dur": 1.8,
+          "step": 31,
+          "vel": 0.86
+        },
+        {
+          "beat": 8.9,
+          "dur": 1.4,
+          "step": 35,
+          "vel": 0.8,
+          "slide_from_cents": 45.28
+        },
+        {
+          "beat": 10.5,
+          "dur": 1.6,
+          "step": 43,
+          "vel": 0.82,
+          "slide_from_cents": -45.28
+        },
+        {
+          "beat": 12.3,
+          "dur": 1.6,
+          "step": 53,
+          "vel": 0.86,
+          "slide_from_cents": -67.92
+        },
+        {
+          "beat": 14.1,
+          "dur": 3.2,
+          "step": 31,
+          "vel": 0.76,
+          "slide_from_cents": 22.64
+        }
+      ]
+    },
+    {
+      "id": "ektara",
+      "name": "Ektara Monochord",
+      "instrument": "ektara",
+      "notes": [
+        {
+          "beat": 0.0,
+          "dur": 0.88,
+          "step": -53,
+          "vel": 0.72
+        },
+        {
+          "beat": 1.0,
+          "dur": 0.88,
+          "step": -53,
+          "vel": 0.58
+        },
+        {
+          "beat": 2.0,
+          "dur": 0.88,
+          "step": -22,
+          "vel": 0.72
+        },
+        {
+          "beat": 3.0,
+          "dur": 0.88,
+          "step": -53,
+          "vel": 0.58
+        },
+        {
+          "beat": 4.0,
+          "dur": 0.88,
+          "step": -53,
+          "vel": 0.72
+        },
+        {
+          "beat": 5.0,
+          "dur": 0.88,
+          "step": -53,
+          "vel": 0.58
+        },
+        {
+          "beat": 6.0,
+          "dur": 0.88,
+          "step": -22,
+          "vel": 0.72
+        },
+        {
+          "beat": 7.0,
+          "dur": 0.88,
+          "step": -53,
+          "vel": 0.58
+        },
+        {
+          "beat": 8.0,
+          "dur": 0.88,
+          "step": -53,
+          "vel": 0.72
+        },
+        {
+          "beat": 9.0,
+          "dur": 0.88,
+          "step": -53,
+          "vel": 0.58
+        },
+        {
+          "beat": 10.0,
+          "dur": 0.88,
+          "step": -22,
+          "vel": 0.72
+        },
+        {
+          "beat": 11.0,
+          "dur": 0.88,
+          "step": -53,
+          "vel": 0.58
+        },
+        {
+          "beat": 12.0,
+          "dur": 0.88,
+          "step": -53,
+          "vel": 0.72
+        },
+        {
+          "beat": 13.0,
+          "dur": 0.88,
+          "step": -53,
+          "vel": 0.58
+        },
+        {
+          "beat": 14.0,
+          "dur": 0.88,
+          "step": -22,
+          "vel": 0.72
+        },
+        {
+          "beat": 15.0,
+          "dur": 0.88,
+          "step": -53,
+          "vel": 0.58
+        },
+        {
+          "beat": 16.0,
+          "dur": 0.88,
+          "step": -53,
+          "vel": 0.72
+        },
+        {
+          "beat": 17.0,
+          "dur": 0.88,
+          "step": -53,
+          "vel": 0.58
+        }
+      ]
+    }
+  ]
+}

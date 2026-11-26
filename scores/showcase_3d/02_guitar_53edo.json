@@ -1,0 +1,426 @@
+{
+  "title": "The 53-Fret Logarithmic Concert Guitar",
+  "description": "Discrete micro-fretted campanella cascades inside single 12-TET semitones & ringing 53-EDO chords.",
+  "sample_rate": 48000,
+  "tail_seconds": 1.5,
+  "reverb_rt60": 2.1,
+  "end_silence_seconds": 0.4,
+  "tempo": [
+    {
+      "beat": 0.0,
+      "bpm": 116.0
+    }
+  ],
+  "tracks": [
+    {
+      "id": "steel_guitar",
+      "name": "53-Fret Steel Guitar",
+      "instrument": "steel_guitar",
+      "notes": [
+        {
+          "beat": 0.0,
+          "dur": 1.35,
+          "step": -1,
+          "vel": 0.72
+        },
+        {
+          "beat": 0.48,
+          "dur": 1.35,
+          "step": 31,
+          "vel": 0.72
+        },
+        {
+          "beat": 0.96,
+          "dur": 1.35,
+          "step": 18,
+          "vel": 0.72
+        },
+        {
+          "beat": 1.44,
+          "dur": 1.35,
+          "step": 1,
+          "vel": 0.72
+        },
+        {
+          "beat": 1.92,
+          "dur": 1.35,
+          "step": 17,
+          "vel": 0.72
+        },
+        {
+          "beat": 2.4,
+          "dur": 1.35,
+          "step": 0,
+          "vel": 0.72
+        },
+        {
+          "beat": 3.0,
+          "dur": 1.35,
+          "step": -1,
+          "vel": 0.75
+        },
+        {
+          "beat": 3.48,
+          "dur": 1.35,
+          "step": 31,
+          "vel": 0.75
+        },
+        {
+          "beat": 3.96,
+          "dur": 1.35,
+          "step": 18,
+          "vel": 0.75
+        },
+        {
+          "beat": 4.44,
+          "dur": 1.35,
+          "step": 1,
+          "vel": 0.75
+        },
+        {
+          "beat": 4.92,
+          "dur": 1.35,
+          "step": 17,
+          "vel": 0.75
+        },
+        {
+          "beat": 5.4,
+          "dur": 1.35,
+          "step": 0,
+          "vel": 0.75
+        },
+        {
+          "beat": 6.0,
+          "dur": 1.35,
+          "step": -1,
+          "vel": 0.78
+        },
+        {
+          "beat": 6.48,
+          "dur": 1.35,
+          "step": 31,
+          "vel": 0.78
+        },
+        {
+          "beat": 6.96,
+          "dur": 1.35,
+          "step": 18,
+          "vel": 0.78
+        },
+        {
+          "beat": 7.44,
+          "dur": 1.35,
+          "step": 1,
+          "vel": 0.78
+        },
+        {
+          "beat": 7.92,
+          "dur": 1.35,
+          "step": 17,
+          "vel": 0.78
+        },
+        {
+          "beat": 8.4,
+          "dur": 1.35,
+          "step": 0,
+          "vel": 0.78
+        },
+        {
+          "beat": 9.0,
+          "dur": 1.35,
+          "step": -1,
+          "vel": 0.81
+        },
+        {
+          "beat": 9.48,
+          "dur": 1.35,
+          "step": 31,
+          "vel": 0.81
+        },
+        {
+          "beat": 9.96,
+          "dur": 1.35,
+          "step": 18,
+          "vel": 0.81
+        },
+        {
+          "beat": 10.44,
+          "dur": 1.35,
+          "step": 1,
+          "vel": 0.81
+        },
+        {
+          "beat": 10.92,
+          "dur": 1.35,
+          "step": 17,
+          "vel": 0.81
+        },
+        {
+          "beat": 11.4,
+          "dur": 1.35,
+          "step": 0,
+          "vel": 0.81
+        },
+        {
+          "beat": 12.5,
+          "dur": 3.6,
+          "step": -53,
+          "vel": 0.8
+        },
+        {
+          "beat": 12.58,
+          "dur": 3.52,
+          "step": -22,
+          "vel": 0.8
+        },
+        {
+          "beat": 12.66,
+          "dur": 3.44,
+          "step": 0,
+          "vel": 0.8
+        },
+        {
+          "beat": 12.74,
+          "dur": 3.36,
+          "step": 17,
+          "vel": 0.8
+        },
+        {
+          "beat": 12.82,
+          "dur": 3.28,
+          "step": 31,
+          "vel": 0.8
+        },
+        {
+          "beat": 12.9,
+          "dur": 3.2,
+          "step": 43,
+          "vel": 0.8
+        },
+        {
+          "beat": 20.1,
+          "dur": 4.2,
+          "step": -49,
+          "vel": 0.84
+        },
+        {
+          "beat": 20.18,
+          "dur": 4.12,
+          "step": -18,
+          "vel": 0.84
+        },
+        {
+          "beat": 20.26,
+          "dur": 4.04,
+          "step": 4,
+          "vel": 0.84
+        },
+        {
+          "beat": 20.34,
+          "dur": 3.96,
+          "step": 21,
+          "vel": 0.84
+        },
+        {
+          "beat": 20.42,
+          "dur": 3.88,
+          "step": 35,
+          "vel": 0.84
+        },
+        {
+          "beat": 20.5,
+          "dur": 3.8,
+          "step": 57,
+          "vel": 0.84
+        }
+      ]
+    },
+    {
+      "id": "nylon_guitar",
+      "name": "53-Fret Nylon Guitar",
+      "instrument": "nylon_guitar",
+      "notes": [
+        {
+          "beat": 0.24,
+          "dur": 1.35,
+          "step": 17,
+          "vel": 0.72
+        },
+        {
+          "beat": 0.72,
+          "dur": 1.35,
+          "step": 0,
+          "vel": 0.72
+        },
+        {
+          "beat": 1.2,
+          "dur": 1.35,
+          "step": 32,
+          "vel": 0.72
+        },
+        {
+          "beat": 1.68,
+          "dur": 1.35,
+          "step": -10,
+          "vel": 0.72
+        },
+        {
+          "beat": 2.16,
+          "dur": 1.35,
+          "step": 30,
+          "vel": 0.72
+        },
+        {
+          "beat": 2.64,
+          "dur": 1.35,
+          "step": -9,
+          "vel": 0.72
+        },
+        {
+          "beat": 3.24,
+          "dur": 1.35,
+          "step": 17,
+          "vel": 0.75
+        },
+        {
+          "beat": 3.72,
+          "dur": 1.35,
+          "step": 0,
+          "vel": 0.75
+        },
+        {
+          "beat": 4.2,
+          "dur": 1.35,
+          "step": 32,
+          "vel": 0.75
+        },
+        {
+          "beat": 4.68,
+          "dur": 1.35,
+          "step": -10,
+          "vel": 0.75
+        },
+        {
+          "beat": 5.16,
+          "dur": 1.35,
+          "step": 30,
+          "vel": 0.75
+        },
+        {
+          "beat": 5.64,
+          "dur": 1.35,
+          "step": -9,
+          "vel": 0.75
+        },
+        {
+          "beat": 6.24,
+          "dur": 1.35,
+          "step": 17,
+          "vel": 0.78
+        },
+        {
+          "beat": 6.72,
+          "dur": 1.35,
+          "step": 0,
+          "vel": 0.78
+        },
+        {
+          "beat": 7.2,
+          "dur": 1.35,
+          "step": 32,
+          "vel": 0.78
+        },
+        {
+          "beat": 7.68,
+          "dur": 1.35,
+          "step": -10,
+          "vel": 0.78
+        },
+        {
+          "beat": 8.16,
+          "dur": 1.35,
+          "step": 30,
+          "vel": 0.78
+        },
+        {
+          "beat": 8.64,
+          "dur": 1.35,
+          "step": -9,
+          "vel": 0.78
+        },
+        {
+          "beat": 9.24,
+          "dur": 1.35,
+          "step": 17,
+          "vel": 0.81
+        },
+        {
+          "beat": 9.72,
+          "dur": 1.35,
+          "step": 0,
+          "vel": 0.81
+        },
+        {
+          "beat": 10.2,
+          "dur": 1.35,
+          "step": 32,
+          "vel": 0.81
+        },
+        {
+          "beat": 10.68,
+          "dur": 1.35,
+          "step": -10,
+          "vel": 0.81
+        },
+        {
+          "beat": 11.16,
+          "dur": 1.35,
+          "step": 30,
+          "vel": 0.81
+        },
+        {
+          "beat": 11.64,
+          "dur": 1.35,
+          "step": -9,
+          "vel": 0.81
+        },
+        {
+          "beat": 16.3,
+          "dur": 3.6,
+          "step": -68,
+          "vel": 0.82
+        },
+        {
+          "beat": 16.38,
+          "dur": 3.52,
+          "step": -37,
+          "vel": 0.82
+        },
+        {
+          "beat": 16.46,
+          "dur": 3.44,
+          "step": -15,
+          "vel": 0.82
+        },
+        {
+          "beat": 16.54,
+          "dur": 3.36,
+          "step": 2,
+          "vel": 0.82
+        },
+        {
+          "beat": 16.62,
+          "dur": 3.28,
+          "step": 16,
+          "vel": 0.82
+        },
+        {
+          "beat": 16.7,
+          "dur": 3.2,
+          "step": 38,
+          "vel": 0.82
+        }
+      ]
+    }
+  ]
+}

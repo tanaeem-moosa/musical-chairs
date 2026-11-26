@@ -15,18 +15,40 @@ import mathutils
 
 
 STEP_COLOR_MAP: dict[int, tuple[float, float, float]] = {
-    0: (0.95, 0.16, 0.22),   # Tonic / Octave: Ruby
-    5: (0.98, 0.62, 0.12),   # Whole-step / 5-step: Amber
-    17: (0.12, 0.86, 0.42),  # Just Major 3rd (5/4): Emerald
-    31: (0.18, 0.56, 0.98),  # Just Fifth (3/2): Sapphire
-    43: (0.68, 0.28, 0.96),  # Septimal Seventh: Amethyst
+    0: (0.95, 0.14, 0.20),   # Tonic / Octave: Ruby
+    5: (0.98, 0.56, 0.08),   # Whole-step / 5-step: Amber
+    17: (0.10, 0.86, 0.40),  # Just Major 3rd (5/4): Emerald
+    31: (0.16, 0.54, 0.98),  # Just Fifth (3/2): Sapphire
+    43: (0.68, 0.24, 0.96),  # Septimal Seventh: Amethyst
 }
-DEFAULT_GOLD_COLOR: tuple[float, float, float] = (0.90, 0.72, 0.30)
+DEFAULT_GOLD_COLOR: tuple[float, float, float] = (0.96, 0.52, 0.08)
 
 
 def color_for_53edo_step(step: int) -> tuple[float, float, float]:
     """Return an RGB tuple identifying canonical 53-EDO pitch classes."""
     return STEP_COLOR_MAP.get(step % 53, DEFAULT_GOLD_COLOR)
+
+
+def vivid_53edo_color(step: int) -> tuple[float, float, float]:
+    """Return a deeply saturated AgX-safe RGB jewel hue for every 53-EDO step."""
+    pc = step % 53
+    if pc in STEP_COLOR_MAP:
+        return STEP_COLOR_MAP[pc]
+    # Smooth HSV wheel across remaining 53 steps, high saturation (0.88) & vivid value (0.95)
+    hue = (pc / 53.0) % 1.0
+    col = mathutils.Color()
+    col.hsv = (hue, 0.88, 0.95)
+    return (col.r, col.g, col.b)
+
+
+def fold_step_to_range(step: int, step_min: int, step_max: int) -> int:
+    """Octave-fold a 53-EDO pitch step by multiples of 53 into [step_min, step_max]."""
+    s = int(step)
+    while s < step_min:
+        s += 53
+    while s > step_max:
+        s -= 53
+    return max(step_min, min(step_max, s))
 
 
 def reset_scene(
@@ -60,7 +82,7 @@ def reset_scene(
 
     # Color management: AgX handles bright emissive pluck blooms cleanly
     scene.view_settings.view_transform = "AgX"
-    scene.view_settings.exposure = 0.15
+    scene.view_settings.exposure = -0.28
 
     # GPU Compositor with FOG_GLOW glare (Blender 4.2 replacement for eevee.use_bloom)
     scene.render.compositor_device = "GPU"
@@ -72,7 +94,7 @@ def reset_scene(
         glare = tree.nodes.new("CompositorNodeGlare")
         glare.glare_type = "FOG_GLOW"
         glare.quality = "MEDIUM"
-        glare.threshold = 0.85
+        glare.threshold = 1.10
         glare.size = 6
         w_out = rl.outputs["Image"]
         tree.links.new(w_out, glare.inputs["Image"])
@@ -105,9 +127,9 @@ def _make_principled(
 
 def _make_luminous_element_material(
     name: str = "LuminousElement",
-    max_emission_strength: float = 16.0,
-    roughness: float = 0.20,
-    metallic: float = 0.45,
+    max_emission_strength: float = 7.5,
+    roughness: float = 0.22,
+    metallic: float = 0.40,
 ) -> bpy.types.Material:
     """Create ONE shared shader reading per-object Object Info Color (RGB) + Alpha (glow)."""
     mat = bpy.data.materials.new(name=name)
@@ -172,25 +194,52 @@ def create_studio_materials() -> dict[str, bpy.types.Material]:
         ),
         "IvoryKey": _make_principled(
             "IvoryKey",
-            (0.92, 0.89, 0.80, 1.0),
-            roughness=0.18,
-            coat_weight=0.35,
+            (0.62, 0.58, 0.50, 1.0),
+            roughness=0.26,
+            coat_weight=0.20,
         ),
         "CopperString": _make_principled(
             "CopperString", (0.82, 0.44, 0.22, 1.0), metallic=0.92, roughness=0.18
         ),
+        "HammeredCopper": _make_principled(
+            "HammeredCopper", (0.84, 0.40, 0.18, 1.0), metallic=0.94, roughness=0.24
+        ),
+        "SilverMetal": _make_principled(
+            "SilverMetal", (0.82, 0.84, 0.88, 1.0), metallic=0.96, roughness=0.18
+        ),
+        "PewterMetal": _make_principled(
+            "PewterMetal", (0.58, 0.60, 0.64, 1.0), metallic=0.92, roughness=0.28
+        ),
+        "Grenadilla": _make_principled(
+            "Grenadilla",
+            (0.032, 0.024, 0.020, 1.0),
+            roughness=0.18,
+            coat_weight=0.35,
+        ),
+        "CalfskinHead": _make_principled(
+            "CalfskinHead",
+            (0.74, 0.66, 0.50, 1.0),
+            roughness=0.48,
+            specular=0.35,
+        ),
+        "Horsehair": _make_principled(
+            "Horsehair",
+            (0.84, 0.80, 0.70, 1.0),
+            roughness=0.44,
+        ),
         "StageFloor": _make_principled(
             "StageFloor",
             (0.015, 0.018, 0.028, 1.0),
-            roughness=0.16,
-            specular=0.58,
-            coat_weight=0.25,
+            roughness=0.24,
+            specular=0.48,
+            coat_weight=0.14,
         ),
         "PedestalWood": _make_principled(
             "PedestalWood",
             (0.040, 0.030, 0.036, 1.0),
-            roughness=0.22,
-            coat_weight=0.40,
+            roughness=0.42,
+            specular=0.35,
+            coat_weight=0.08,
         ),
         "LuminousElement": _make_luminous_element_material(),
     }
@@ -270,10 +319,10 @@ def build_concert_stage(
     col.objects.link(ring)
 
     target = (0.0, 0.0, light_target_z)
-    _add_area_light(col, "KeyLight", (3.6, -3.8, 3.4), target, energy=1500.0, color=(1.0, 0.93, 0.85), size=2.4)
-    _add_area_light(col, "FillLight", (-4.2, -2.5, 2.5), target, energy=520.0, color=(0.58, 0.76, 1.0), size=3.4)
-    _add_area_light(col, "RimLight", (-1.8, 4.2, 3.0), target, energy=1350.0, color=(1.0, 0.84, 0.64), size=2.2)
-    _add_area_light(col, "TopAccent", (0.2, 0.4, 4.4), target, energy=780.0, color=(0.92, 0.95, 1.0), size=2.8)
+    _add_area_light(col, "KeyLight", (3.6, -3.8, 3.4), target, energy=780.0, color=(1.0, 0.93, 0.85), size=3.0)
+    _add_area_light(col, "FillLight", (-4.2, -2.5, 2.5), target, energy=380.0, color=(0.58, 0.76, 1.0), size=3.6)
+    _add_area_light(col, "RimLight", (-1.8, 4.2, 3.0), target, energy=760.0, color=(1.0, 0.84, 0.64), size=2.8)
+    _add_area_light(col, "TopAccent", (0.2, 0.4, 4.4), target, energy=440.0, color=(0.92, 0.95, 1.0), size=3.4)
     return col
 
 
@@ -338,6 +387,9 @@ def load_score_timeline(
                     "start_s": s_t,
                     "end_s": e_t,
                     "dur_s": max(0.04, e_t - s_t),
+                    "slide_from_cents": float(n.get("slide_from_cents", 0.0)),
+                    "swell": n.get("swell"),
+                    "vibrato": float(n.get("vibrato", 0.0)),
                 }
             )
 
@@ -358,6 +410,102 @@ def load_score_timeline(
 def sec_to_frame(sec: float, fps: int = 24) -> int:
     """Convert timeline seconds to 1-based Blender frame index."""
     return max(1, round(sec * fps) + 1)
+
+
+def slice_timeline(
+    timeline: dict[str, Any],
+    start_s: float,
+    dur_s: float,
+    *,
+    track_ids: set[str] | None = None,
+    instrument_names: set[str] | None = None,
+) -> dict[str, Any]:
+    """Filter timeline events to [start_s, start_s + dur_s] and specific tracks/instruments."""
+    win_end = start_s + dur_s
+    fps = int(timeline.get("fps", 24))
+    out_notes: list[dict[str, Any]] = []
+    out_pedals: list[dict[str, Any]] = []
+
+    def _matches(ev: dict[str, Any]) -> bool:
+        if track_ids is not None and ev.get("track_id") not in track_ids:
+            return False
+        if instrument_names is not None and ev.get("instrument") not in instrument_names:
+            return False
+        return True
+
+    for n in timeline.get("notes", []):
+        if not _matches(n):
+            continue
+        if n["end_s"] <= start_s or n["start_s"] >= win_end:
+            continue
+        ns = max(0.0, n["start_s"] - start_s)
+        ne = min(dur_s, n["end_s"] - start_s)
+        if ne <= ns:
+            continue
+        out_notes.append(
+            {
+                **n,
+                "start_s": ns,
+                "end_s": ne,
+                "dur_s": max(0.04, ne - ns),
+            }
+        )
+
+    for p in timeline.get("pedals", []):
+        if track_ids is not None and p.get("track_id") not in track_ids:
+            continue
+        if p["end_s"] <= start_s or p["start_s"] >= win_end:
+            continue
+        ps = max(0.0, p["start_s"] - start_s)
+        pe = min(dur_s, p["end_s"] - start_s)
+        if pe <= ps:
+            continue
+        out_pedals.append({**p, "start_s": ps, "end_s": pe})
+
+    return {
+        "title": timeline.get("title", ""),
+        "duration_s": dur_s,
+        "fps": fps,
+        "total_frames": max(1, math.ceil(dur_s * fps)),
+        "notes": out_notes,
+        "pedals": out_pedals,
+    }
+
+
+def parent_collection_to_anchor(
+    col: bpy.types.Collection,
+    anchor_name: str,
+    location: tuple[float, float, float] = (0.0, 0.0, 0.0),
+    rotation_z_deg: float = 0.0,
+    scale: float = 1.0,
+) -> bpy.types.Object:
+    """Attach all top-level objects in col to an anchor Empty so stage placement preserves keyframes."""
+    anchor = bpy.data.objects.new(anchor_name, None)
+    anchor.empty_display_type = "PLAIN_AXES"
+    anchor.location = location
+    anchor.rotation_euler = (0.0, 0.0, math.radians(rotation_z_deg))
+    anchor.scale = (scale, scale, scale)
+    col.objects.link(anchor)
+
+    ident = mathutils.Matrix.Identity(4)
+    for obj in list(col.objects):
+        if obj is anchor or obj.parent is not None:
+            continue
+        obj.parent = anchor
+        obj.matrix_parent_inverse = ident.copy()
+    return anchor
+
+
+def set_constant_segment(obj_or_id: Any, data_path: str, index: int, frames: set[int]) -> None:
+    """Force CONSTANT interpolation on specified keyframe X-coordinates so glow never ramps early."""
+    ad = obj_or_id.animation_data
+    if not ad or not ad.action:
+        return
+    for fc in ad.action.fcurves:
+        if fc.data_path == data_path and (index < 0 or fc.array_index == index):
+            for kp in fc.keyframe_points:
+                if int(round(kp.co.x)) in frames:
+                    kp.interpolation = "CONSTANT"
 
 
 def setup_orbit_camera(

@@ -1,0 +1,174 @@
+{
+  "title": "The Sympathetic 53-EDO Concert Viol & Floating Bow",
+  "description": "Bowed 5:4, 6:5, and 7:4 double-stops illuminating beatless string vibration and bow direction.",
+  "sample_rate": 48000,
+  "tail_seconds": 1.5,
+  "reverb_rt60": 2.1,
+  "end_silence_seconds": 0.4,
+  "tempo": [
+    {
+      "beat": 0.0,
+      "bpm": 88.0
+    }
+  ],
+  "tracks": [
+    {
+      "id": "cello",
+      "name": "53-EDO Concert Viol",
+      "instrument": "cello",
+      "notes": [
+        {
+          "beat": 0.2,
+          "dur": 2.4,
+          "step": -53,
+          "vel": 0.74,
+          "swell": "arch",
+          "vibrato": 0.35
+        },
+        {
+          "beat": 0.28,
+          "dur": 2.28,
+          "step": -22,
+          "vel": 0.651,
+          "swell": "arch",
+          "vibrato": 0.3
+        },
+        {
+          "beat": 2.8,
+          "dur": 2.2,
+          "step": -36,
+          "vel": 0.78,
+          "swell": "cresc",
+          "vibrato": 0.35
+        },
+        {
+          "beat": 2.88,
+          "dur": 2.08,
+          "step": -5,
+          "vel": 0.686,
+          "swell": "cresc",
+          "vibrato": 0.3
+        },
+        {
+          "beat": 5.2,
+          "dur": 2.4,
+          "step": -22,
+          "vel": 0.8,
+          "swell": "arch",
+          "vibrato": 0.35
+        },
+        {
+          "beat": 5.28,
+          "dur": 2.28,
+          "step": 9,
+          "vel": 0.704,
+          "swell": "arch",
+          "vibrato": 0.3
+        },
+        {
+          "beat": 7.8,
+          "dur": 2.4,
+          "step": -39,
+          "vel": 0.76,
+          "swell": "arch",
+          "vibrato": 0.35
+        },
+        {
+          "beat": 7.88,
+          "dur": 2.28,
+          "step": -8,
+          "vel": 0.669,
+          "swell": "arch",
+          "vibrato": 0.3
+        },
+        {
+          "beat": 10.4,
+          "dur": 2.8,
+          "step": -53,
+          "vel": 0.82,
+          "swell": "cresc",
+          "vibrato": 0.35
+        },
+        {
+          "beat": 10.48,
+          "dur": 2.68,
+          "step": -22,
+          "vel": 0.722,
+          "swell": "cresc",
+          "vibrato": 0.3
+        },
+        {
+          "beat": 13.4,
+          "dur": 4.2,
+          "step": -53,
+          "vel": 0.84,
+          "swell": "dim",
+          "vibrato": 0.35
+        },
+        {
+          "beat": 13.48,
+          "dur": 4.08,
+          "step": -22,
+          "vel": 0.739,
+          "swell": "dim",
+          "vibrato": 0.3
+        }
+      ]
+    },
+    {
+      "id": "viola",
+      "name": "Sympathetic Viola",
+      "instrument": "viola",
+      "notes": [
+        {
+          "beat": 0.35,
+          "dur": 2.22,
+          "step": -22,
+          "vel": 0.666,
+          "swell": "arch",
+          "vibrato": 0.45
+        },
+        {
+          "beat": 2.95,
+          "dur": 2.02,
+          "step": 0,
+          "vel": 0.702,
+          "swell": "cresc",
+          "vibrato": 0.45
+        },
+        {
+          "beat": 5.35,
+          "dur": 2.22,
+          "step": 17,
+          "vel": 0.72,
+          "swell": "arch",
+          "vibrato": 0.45
+        },
+        {
+          "beat": 7.95,
+          "dur": 2.22,
+          "step": -10,
+          "vel": 0.684,
+          "swell": "arch",
+          "vibrato": 0.45
+        },
+        {
+          "beat": 10.55,
+          "dur": 2.62,
+          "step": -10,
+          "vel": 0.738,
+          "swell": "cresc",
+          "vibrato": 0.45
+        },
+        {
+          "beat": 13.55,
+          "dur": 4.02,
+          "step": 0,
+          "vel": 0.756,
+          "swell": "dim",
+          "vibrato": 0.45
+        }
+      ]
+    }
+  ]
+}

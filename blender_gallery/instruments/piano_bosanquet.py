@@ -1072,6 +1072,41 @@ def _tune_studio_look(
                 node.inputs[1].default_value = 6.2
 
 
+def build_instrument(
+    mats: dict[str, bpy.types.Material],
+    timeline: dict[str, Any],
+    *,
+    collection_name: str = "BosanquetPiano",
+    anchor_location: tuple[float, float, float] = (0.0, 0.0, 0.0),
+    anchor_rotation_z_deg: float = 0.0,
+    anchor_scale: float = 1.0,
+) -> bpy.types.Object:
+    """Build and animate the Bosanquet Piano inside its own collection mounted to an anchor Empty."""
+    piano_col = bpy.data.collections.new(collection_name)
+    bpy.context.scene.collection.children.link(piano_col)
+
+    _build_cabinet_and_legs(piano_col, mats)
+    damper_pedal = _build_pedal_lyre(piano_col, mats)
+    _build_interior_harp_and_strings(piano_col, mats)
+    keys, hammers = _build_bosanquet_keyboard_and_hammers(piano_col, mats)
+
+    folded_timeline = {
+        **timeline,
+        "notes": [
+            {**n, "step": common.fold_step_to_range(int(n["step"]), KEY_STEP_MIN, KEY_STEP_MAX)}
+            for n in timeline.get("notes", [])
+        ],
+    }
+    _animate_timeline(folded_timeline, keys, hammers, damper_pedal)
+    return common.parent_collection_to_anchor(
+        piano_col,
+        f"{collection_name}_Anchor",
+        location=anchor_location,
+        rotation_z_deg=anchor_rotation_z_deg,
+        scale=anchor_scale,
+    )
+
+
 def build_scene() -> dict[str, Any]:
     """Assemble the full Bosanquet 53-EDO Concert Grand Piano scene & timeline."""
     scene = common.reset_scene(fps=24, res_x=1920, res_y=1080, taa_samples=16)

@@ -603,15 +603,21 @@
       </div>
     </section>
 
-    <!-- TAB 3: 3D INSTRUMENTS (BLENDER 4.2 EEVEE NEXT) -->
+    <!-- TAB 3: 3D INSTRUMENTS & CONCERT STAGE (BLENDER 4.2 EEVEE NEXT) -->
     <section id="tab-gallery3d" class="section">
-      <div class="card" style="margin-bottom:16px;">
+      <div class="card hero" style="margin-bottom:18px;">
         <div class="hero-head">
-          <h2>53-EDO Fictional Concert Instruments &mdash; Blender 4.2 Stage Prototypes</h2>
-          <span class="badge">1080p24 VP9+Opus &bull; EEVEE Next</span>
+          <h2>Harmonia Mundi &mdash; Live 7-Instrument 3D Concert Stage (222s&ndash;257s Climax)</h2>
+          <span class="badge">35.0s &bull; 1080p24 VP9+Opus &bull; EEVEE Next</span>
         </div>
-        <div class="muted">
-          Modular 3D instrument rigs rendered on a unified midnight concert pedestal (<code>z = 0.09m</code>) for upcoming placement onto the full <em>Ode to the Primes</em> concert stage.
+        <div class="muted" style="margin-bottom:12px;">
+          All 7 acoustic 53-EDO instruments mounted onto a terraced midnight-mahogany amphitheater ringed by a glowing 53-division floor compass: Cathedral Pipe Organ &amp; Copper Timpani on the rear riser (<code>z = 0.45m</code>), flanked by the Bosanquet 5-Tier Piano, Alexandrian Arch-Harp, Concert Viol &amp; Viola, 53-Fret Guitar, 22-Shruti Sitar &amp; Ektara, and Clarinet/Horn/Trombone Consort synced to <code>scores/sample_5min.json</code>.
+        </div>
+        <video class="gallery3d-video" controls preload="metadata" loop src="../output/showcase_3d/harmonia_mundi_stage.webm"></video>
+        <div class="gallery3d-meta" style="margin-top:10px;">
+          <span class="gallery3d-tag">Stage Script: <code>blender_gallery/stage_mundi.py</code></span>
+          <span class="gallery3d-tag">Scene: <code>output/showcase_3d/harmonia_mundi_stage.blend</code></span>
+          <span class="gallery3d-tag">Score: <code>scores/sample_5min.json</code> (222s&ndash;257s)</span>
         </div>
       </div>
 
@@ -622,7 +628,7 @@
             <span class="badge">138 Strings &bull; 14.25s</span>
           </div>
           <div class="muted">
-            ~2.0m rosewood &amp; mahogany concert harp with 53 individual strings per octave color-coded across canonical 53-EDO intervals (Ruby Tonic, Amber 5-step, Emerald 5/4 Major 3rd, Sapphire 3/2 Fifth, Amethyst 7-limit 7th, Gold), damped pluck displacement, emission bloom, and golden bead pulses.
+            ~2.0m rosewood &amp; mahogany concert harp with 53 individual strings per octave color-coded across canonical 53-EDO intervals, damped pluck displacement, emission bloom, and golden bead pulses.
           </div>
           <video class="gallery3d-video" controls preload="metadata" loop src="../output/showcase_3d/01_harp_53edo.webm"></video>
           <div class="gallery3d-meta">
@@ -634,17 +640,113 @@
 
         <div class="gallery3d-card">
           <div class="hero-head">
-            <h3>03. Bosanquet 5-Tier Concert Grand Piano</h3>
-            <span class="badge">162 Keys &bull; 5 Comma Planes &bull; 13.82s</span>
+            <h3>02. 53-Fret Logarithmic Guitar</h3>
+            <span class="badge">53 Micro-Frets &bull; 14.48s</span>
           </div>
           <div class="muted">
-            Gloss-ebony S-rim grand piano featuring 5 elevated syntonic comma terraces (<code>k = -2..+2</code>), propped 34&deg; lid revealing a cast-gold interior harp plate with 95 overstrung strings, synchronized interior hammers, and an animated right damper pedal.
+            Flamed rosewood &amp; antique spruce concert acoustic guitar tilted on an ebony cradle with 53 logarithmically spaced brass frets, vibrating strings, and luminous fret markers across steel &amp; nylon voices.
+          </div>
+          <video class="gallery3d-video" controls preload="metadata" loop src="../output/showcase_3d/02_guitar_53edo.webm"></video>
+          <div class="gallery3d-meta">
+            <span class="gallery3d-tag">Model: <code>blender_gallery/instruments/guitar_53edo.py</code></span>
+            <span class="gallery3d-tag">Scene: <code>output/showcase_3d/02_guitar_53edo.blend</code></span>
+            <span class="gallery3d-tag">Score: <code>scores/showcase_3d/02_guitar_53edo.json</code></span>
+          </div>
+        </div>
+
+        <div class="gallery3d-card">
+          <div class="hero-head">
+            <h3>03. Bosanquet 5-Tier Concert Grand Piano</h3>
+            <span class="badge">162 Keys &bull; 5 Comma Planes &bull; 13.83s</span>
+          </div>
+          <div class="muted">
+            Gloss-ebony S-rim grand piano featuring 5 elevated syntonic comma terraces (<code>k = -2..+2</code>), propped 34&deg; lid revealing a cast-gold interior harp plate with 95 overstrung strings, hammers, and damper pedal.
           </div>
           <video class="gallery3d-video" controls preload="metadata" loop src="../output/showcase_3d/03_piano_bosanquet.webm"></video>
           <div class="gallery3d-meta">
             <span class="gallery3d-tag">Model: <code>blender_gallery/instruments/piano_bosanquet.py</code></span>
             <span class="gallery3d-tag">Scene: <code>output/showcase_3d/03_piano_bosanquet.blend</code></span>
             <span class="gallery3d-tag">Score: <code>scores/showcase_3d/03_piano_bosanquet.json</code></span>
+          </div>
+        </div>
+
+        <div class="gallery3d-card">
+          <div class="hero-head">
+            <h3>04. Sympathetic Concert Viol &amp; Viola</h3>
+            <span class="badge">Floating Bow &bull; 13.91s</span>
+          </div>
+          <div class="muted">
+            Archtop 53-EDO Concert Viol on a brass endpin paired with a companion Viola and floating Pernambuco bow sweeping smoothly across glowing strings in beatless 5:4, 6:5, and 7:4 double-stops.
+          </div>
+          <video class="gallery3d-video" controls preload="metadata" loop src="../output/showcase_3d/04_viol_53edo.webm"></video>
+          <div class="gallery3d-meta">
+            <span class="gallery3d-tag">Model: <code>blender_gallery/instruments/viol_53edo.py</code></span>
+            <span class="gallery3d-tag">Scene: <code>output/showcase_3d/04_viol_53edo.blend</code></span>
+            <span class="gallery3d-tag">Score: <code>scores/showcase_3d/04_viol_53edo.json</code></span>
+          </div>
+        </div>
+
+        <div class="gallery3d-card">
+          <div class="hero-head">
+            <h3>05. 22-Shruti Sympathetic Sitar &amp; Ektara</h3>
+            <span class="badge">Meend Bends &bull; 13 Taraf &bull; 13.83s</span>
+          </div>
+          <div class="muted">
+            Carved teak &amp; gourd Sitar with 22 arched brass frets, expressive lateral <em>meend</em> string deflections on comma glides, and 13 shimmering sympathetic <em>taraf</em> strings beside a standing Gourd Ektara.
+          </div>
+          <video class="gallery3d-video" controls preload="metadata" loop src="../output/showcase_3d/05_shruti_sitar_53edo.webm"></video>
+          <div class="gallery3d-meta">
+            <span class="gallery3d-tag">Model: <code>blender_gallery/instruments/sitar_shruti_53edo.py</code></span>
+            <span class="gallery3d-tag">Scene: <code>output/showcase_3d/05_shruti_sitar_53edo.blend</code></span>
+            <span class="gallery3d-tag">Score: <code>scores/showcase_3d/05_shruti_sitar_53edo.json</code></span>
+          </div>
+        </div>
+
+        <div class="gallery3d-card">
+          <div class="hero-head">
+            <h3>06. Micro-Valve Brass &amp; Woodwind Consort</h3>
+            <span class="badge">Clarinet &bull; Horn &bull; Trombone &bull; 13.80s</span>
+          </div>
+          <div class="muted">
+            Museum trio of grenadilla 53-Key Clarinet with silver key cups, coiled 53-Valve French Horn with rotary paddles, and telescoping 53-Position Slide Trombone whose brass U-slide tracks pitch glides live.
+          </div>
+          <video class="gallery3d-video" controls preload="metadata" loop src="../output/showcase_3d/06_winds_brass_53edo.webm"></video>
+          <div class="gallery3d-meta">
+            <span class="gallery3d-tag">Model: <code>blender_gallery/instruments/winds_brass_53edo.py</code></span>
+            <span class="gallery3d-tag">Scene: <code>output/showcase_3d/06_winds_brass_53edo.blend</code></span>
+            <span class="gallery3d-tag">Score: <code>scores/showcase_3d/06_winds_brass_53edo.json</code></span>
+          </div>
+        </div>
+
+        <div class="gallery3d-card">
+          <div class="hero-head">
+            <h3>07. 53-Rank Pipe Organ &amp; Copper Timpani</h3>
+            <span class="badge">53 Pipes &bull; 4 Kettles &bull; 14.16s</span>
+          </div>
+          <div class="muted">
+            ~2.55m dark-rosewood architectural cathedral organ with 53 graduated pewter &amp; gold facade pipes flanked by 4 hammered-copper timpani struck by animated felt mallets with luminous drumhead shockwaves.
+          </div>
+          <video class="gallery3d-video" controls preload="metadata" loop src="../output/showcase_3d/07_organ_timpani_53edo.webm"></video>
+          <div class="gallery3d-meta">
+            <span class="gallery3d-tag">Model: <code>blender_gallery/instruments/organ_timpani_53edo.py</code></span>
+            <span class="gallery3d-tag">Scene: <code>output/showcase_3d/07_organ_timpani_53edo.blend</code></span>
+            <span class="gallery3d-tag">Score: <code>scores/showcase_3d/07_organ_timpani_53edo.json</code></span>
+          </div>
+        </div>
+
+        <div class="gallery3d-card">
+          <div class="hero-head">
+            <h3>08. The Herald &amp; The Oracle (AI Polyhedra)</h3>
+            <span class="badge">Zero-Free Strip &amp; Re(s)=1/2 &bull; 14.17s</span>
+          </div>
+          <div class="muted">
+            Twin levitating geodesic constructs above an obsidian-and-gold telemetry plinth: cyan-sapphire icosahedral Herald orbiting alongside the golden-amethyst Critical-Line Oracle linked by a harmonic mirror beam.
+          </div>
+          <video class="gallery3d-video" controls preload="metadata" loop src="../output/showcase_3d/08_herald_oracle_ai.webm"></video>
+          <div class="gallery3d-meta">
+            <span class="gallery3d-tag">Model: <code>blender_gallery/instruments/herald_oracle_ai.py</code></span>
+            <span class="gallery3d-tag">Scene: <code>output/showcase_3d/08_herald_oracle_ai.blend</code></span>
+            <span class="gallery3d-tag">Score: <code>scores/showcase_3d/08_herald_oracle_ai.json</code></span>
           </div>
         </div>
       </div>

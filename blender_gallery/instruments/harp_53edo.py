@@ -19,7 +19,9 @@ from blender_gallery.common import (
     build_concert_stage,
     color_for_53edo_step,
     create_studio_materials,
+    fold_step_to_range,
     load_score_timeline,
+    parent_collection_to_anchor,
     render_diagnostic_stills,
     render_video,
     reset_scene,
@@ -1019,6 +1021,43 @@ def setup_harp_camera(total_frames: int) -> None:
         (total_frames, polar(92.0, 4.95, 1.26)),
     ]
     setup_orbit_camera(target, keyframes, lens_mm=42.0, dof_fstop=5.6)
+
+
+def build_instrument(
+    mats: dict[str, bpy.types.Material],
+    timeline: dict,
+    *,
+    collection_name: str = "AlexandrianArchHarp",
+    anchor_location: tuple[float, float, float] = (0.0, 0.0, 0.0),
+    anchor_rotation_z_deg: float = 0.0,
+    anchor_scale: float = 1.0,
+) -> bpy.types.Object:
+    """Build and animate the Arch-Harp inside its own collection mounted to an anchor Empty."""
+    harp_col = bpy.data.collections.new(collection_name)
+    bpy.context.scene.collection.children.link(harp_col)
+
+    pedal_objs = build_pedestal_and_pedals(harp_col, mats)
+    build_soundbox_and_soundboard(harp_col, mats)
+    build_forepillar_and_crown(harp_col, mats)
+    build_harmonic_neck_and_pins(harp_col, mats)
+    strings_by_step = build_strings(harp_col, mats)
+    beads = build_pluck_beads(harp_col, mats, count=8)
+
+    folded_timeline = {
+        **timeline,
+        "notes": [
+            {**n, "step": fold_step_to_range(int(n["step"]), STEP_MIN, STEP_MAX)}
+            for n in timeline.get("notes", [])
+        ],
+    }
+    animate_harp(folded_timeline, strings_by_step, beads, pedal_objs)
+    return parent_collection_to_anchor(
+        harp_col,
+        f"{collection_name}_Anchor",
+        location=anchor_location,
+        rotation_z_deg=anchor_rotation_z_deg,
+        scale=anchor_scale,
+    )
 
 
 def build_scene() -> dict:

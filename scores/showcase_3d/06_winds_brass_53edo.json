@@ -1,0 +1,225 @@
+{
+  "title": "The Micro-Valve Brass & Woodwind Consort",
+  "description": "Micro-keyed Clarinet prime hooks answered by sliding 53-EDO Trombone & French Horn pure 4:5:6:7 brass.",
+  "sample_rate": 48000,
+  "tail_seconds": 1.5,
+  "reverb_rt60": 2.1,
+  "end_silence_seconds": 0.4,
+  "tempo": [
+    {
+      "beat": 0.0,
+      "bpm": 112.0
+    }
+  ],
+  "tracks": [
+    {
+      "id": "clarinet",
+      "name": "53-Key Clarinet",
+      "instrument": "clarinet",
+      "notes": [
+        {
+          "beat": 0.2,
+          "dur": 0.55,
+          "step": 0,
+          "vel": 0.78,
+          "swell": "arch",
+          "vibrato": 0.25
+        },
+        {
+          "beat": 0.85,
+          "dur": 0.55,
+          "step": 9,
+          "vel": 0.78,
+          "swell": "arch",
+          "vibrato": 0.25
+        },
+        {
+          "beat": 1.5,
+          "dur": 0.55,
+          "step": 17,
+          "vel": 0.78,
+          "swell": "arch",
+          "vibrato": 0.25
+        },
+        {
+          "beat": 2.15,
+          "dur": 0.55,
+          "step": 31,
+          "vel": 0.78,
+          "swell": "arch",
+          "vibrato": 0.25
+        },
+        {
+          "beat": 2.8,
+          "dur": 0.75,
+          "step": 43,
+          "vel": 0.78,
+          "swell": "arch",
+          "vibrato": 0.25
+        },
+        {
+          "beat": 3.7,
+          "dur": 1.5,
+          "step": 53,
+          "vel": 0.78,
+          "swell": "arch",
+          "vibrato": 0.25
+        },
+        {
+          "beat": 5.4,
+          "dur": 0.55,
+          "step": -22,
+          "vel": 0.78,
+          "swell": "arch",
+          "vibrato": 0.25
+        },
+        {
+          "beat": 6.05,
+          "dur": 0.55,
+          "step": -13,
+          "vel": 0.78,
+          "swell": "arch",
+          "vibrato": 0.25
+        },
+        {
+          "beat": 6.7,
+          "dur": 0.55,
+          "step": -5,
+          "vel": 0.78,
+          "swell": "arch",
+          "vibrato": 0.25
+        },
+        {
+          "beat": 7.35,
+          "dur": 0.55,
+          "step": 9,
+          "vel": 0.78,
+          "swell": "arch",
+          "vibrato": 0.25
+        },
+        {
+          "beat": 8.0,
+          "dur": 0.75,
+          "step": 21,
+          "vel": 0.78,
+          "swell": "arch",
+          "vibrato": 0.25
+        },
+        {
+          "beat": 8.9,
+          "dur": 1.5,
+          "step": 31,
+          "vel": 0.78,
+          "swell": "arch",
+          "vibrato": 0.25
+        },
+        {
+          "beat": 10.76,
+          "dur": 2.22,
+          "step": 31,
+          "vel": 0.72,
+          "swell": "sfz",
+          "vibrato": 0.22
+        },
+        {
+          "beat": 13.36,
+          "dur": 2.22,
+          "step": 17,
+          "vel": 0.702,
+          "swell": "arch",
+          "vibrato": 0.22
+        },
+        {
+          "beat": 15.96,
+          "dur": 2.22,
+          "step": 22,
+          "vel": 0.738,
+          "swell": "cresc",
+          "vibrato": 0.22
+        },
+        {
+          "beat": 18.56,
+          "dur": 3.62,
+          "step": 17,
+          "vel": 0.774,
+          "swell": "cresc",
+          "vibrato": 0.22
+        }
+      ]
+    },
+    {
+      "id": "french_horn",
+      "name": "53-Valve French Horn",
+      "instrument": "french_horn",
+      "notes": [
+        {
+          "beat": 10.68,
+          "dur": 2.3,
+          "step": -36,
+          "vel": 0.752,
+          "swell": "sfz",
+          "vibrato": 0.18
+        },
+        {
+          "beat": 13.28,
+          "dur": 2.3,
+          "step": -10,
+          "vel": 0.733,
+          "swell": "arch",
+          "vibrato": 0.18
+        },
+        {
+          "beat": 15.88,
+          "dur": 2.3,
+          "step": 0,
+          "vel": 0.771,
+          "swell": "cresc",
+          "vibrato": 0.18
+        },
+        {
+          "beat": 18.48,
+          "dur": 3.7,
+          "step": -10,
+          "vel": 0.808,
+          "swell": "cresc",
+          "vibrato": 0.18
+        }
+      ]
+    },
+    {
+      "id": "trombone",
+      "name": "53-Position Trombone",
+      "instrument": "trombone",
+      "notes": [
+        {
+          "beat": 10.6,
+          "dur": 2.4,
+          "step": -53,
+          "vel": 0.8,
+          "swell": "sfz"
+        },
+        {
+          "beat": 13.2,
+          "dur": 2.4,
+          "step": -36,
+          "vel": 0.78,
+          "swell": "arch"
+        },
+        {
+          "beat": 15.8,
+          "dur": 2.4,
+          "step": -44,
+          "vel": 0.82,
+          "swell": "cresc"
+        },
+        {
+          "beat": 18.4,
+          "dur": 3.8,
+          "step": -53,
+          "vel": 0.86,
+          "swell": "cresc"
+        }
+      ]
+    }
+  ]
+}
